@@ -1,0 +1,13 @@
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/*/
+!contracts/evidence/
+
+# editors / os
+.DS_Store
+*.pem
+
+# env files — never commit key material
+.env*
+!.env.example

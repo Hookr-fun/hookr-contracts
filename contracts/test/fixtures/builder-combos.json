@@ -1,0 +1,5329 @@
+{
+ "combos": [
+  {
+   "name": "mask0-def",
+   "blocks": [],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask1-def",
+   "blocks": [
+    "snipe"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask1-min",
+   "blocks": [
+    "snipe"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask1-max",
+   "blocks": [
+    "snipe"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask2-def",
+   "blocks": [
+    "fee"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask2-min",
+   "blocks": [
+    "fee"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask2-max",
+   "blocks": [
+    "fee"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask3-def",
+   "blocks": [
+    "snipe",
+    "fee"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask3-min",
+   "blocks": [
+    "snipe",
+    "fee"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask3-max",
+   "blocks": [
+    "snipe",
+    "fee"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask4-def",
+   "blocks": [
+    "burn"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask4-min",
+   "blocks": [
+    "burn"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask4-max",
+   "blocks": [
+    "burn"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask5-def",
+   "blocks": [
+    "snipe",
+    "burn"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask5-min",
+   "blocks": [
+    "snipe",
+    "burn"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask5-max",
+   "blocks": [
+    "snipe",
+    "burn"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask6-def",
+   "blocks": [
+    "fee",
+    "burn"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask6-min",
+   "blocks": [
+    "fee",
+    "burn"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask6-max",
+   "blocks": [
+    "fee",
+    "burn"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask7-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask7-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask7-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask8-def",
+   "blocks": [
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask8-min",
+   "blocks": [
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask8-max",
+   "blocks": [
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask9-def",
+   "blocks": [
+    "snipe",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask9-min",
+   "blocks": [
+    "snipe",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask9-max",
+   "blocks": [
+    "snipe",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask10-def",
+   "blocks": [
+    "fee",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask10-min",
+   "blocks": [
+    "fee",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask10-max",
+   "blocks": [
+    "fee",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask11-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask11-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask11-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask12-def",
+   "blocks": [
+    "burn",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask12-min",
+   "blocks": [
+    "burn",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask12-max",
+   "blocks": [
+    "burn",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask13-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask13-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask13-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask14-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask14-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask14-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask15-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask15-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask15-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask16-def",
+   "blocks": [
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask16-min",
+   "blocks": [
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask16-max",
+   "blocks": [
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask17-def",
+   "blocks": [
+    "snipe",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask17-min",
+   "blocks": [
+    "snipe",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask17-max",
+   "blocks": [
+    "snipe",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask18-def",
+   "blocks": [
+    "fee",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask18-min",
+   "blocks": [
+    "fee",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask18-max",
+   "blocks": [
+    "fee",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask19-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask19-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask19-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask20-def",
+   "blocks": [
+    "burn",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask20-min",
+   "blocks": [
+    "burn",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask20-max",
+   "blocks": [
+    "burn",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask21-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask21-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask21-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask22-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask22-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask22-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask23-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask23-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask23-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask24-def",
+   "blocks": [
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask24-min",
+   "blocks": [
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask24-max",
+   "blocks": [
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask25-def",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask25-min",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask25-max",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask26-def",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask26-min",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask26-max",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask27-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask27-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask27-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask28-def",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask28-min",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask28-max",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask29-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask29-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask29-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask30-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask30-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask30-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask31-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask31-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask31-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "0",
+    "potEveryNBuys": "0",
+    "potMinBuyWei": "0",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask32-def",
+   "blocks": [
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask32-min",
+   "blocks": [
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask32-max",
+   "blocks": [
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask33-def",
+   "blocks": [
+    "snipe",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask33-min",
+   "blocks": [
+    "snipe",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask33-max",
+   "blocks": [
+    "snipe",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask34-def",
+   "blocks": [
+    "fee",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask34-min",
+   "blocks": [
+    "fee",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask34-max",
+   "blocks": [
+    "fee",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask35-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask35-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask35-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask36-def",
+   "blocks": [
+    "burn",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask36-min",
+   "blocks": [
+    "burn",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask36-max",
+   "blocks": [
+    "burn",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask37-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask37-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask37-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask38-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask38-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask38-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask39-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask39-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask39-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask40-def",
+   "blocks": [
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask40-min",
+   "blocks": [
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask40-max",
+   "blocks": [
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask41-def",
+   "blocks": [
+    "snipe",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask41-min",
+   "blocks": [
+    "snipe",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask41-max",
+   "blocks": [
+    "snipe",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask42-def",
+   "blocks": [
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask42-min",
+   "blocks": [
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask42-max",
+   "blocks": [
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask43-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask43-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask43-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask44-def",
+   "blocks": [
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask44-min",
+   "blocks": [
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask44-max",
+   "blocks": [
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask45-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask45-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask45-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask46-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask46-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask46-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask47-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask47-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask47-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "0",
+    "buybackDrawdownBps": "0",
+    "buybackCooldownBlocks": "0",
+    "buybackMinSpendWei": "0",
+    "buybackMaxSpendWei": "0"
+   }
+  },
+  {
+   "name": "mask48-def",
+   "blocks": [
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask48-min",
+   "blocks": [
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask48-max",
+   "blocks": [
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask49-def",
+   "blocks": [
+    "snipe",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask49-min",
+   "blocks": [
+    "snipe",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask49-max",
+   "blocks": [
+    "snipe",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask50-def",
+   "blocks": [
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask50-min",
+   "blocks": [
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask50-max",
+   "blocks": [
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask51-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask51-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask51-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask52-def",
+   "blocks": [
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask52-min",
+   "blocks": [
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask52-max",
+   "blocks": [
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask53-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask53-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask53-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask54-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask54-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask54-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask55-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask55-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask55-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "0",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask56-def",
+   "blocks": [
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask56-min",
+   "blocks": [
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask56-max",
+   "blocks": [
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask57-def",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask57-min",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask57-max",
+   "blocks": [
+    "snipe",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask58-def",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask58-min",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask58-max",
+   "blocks": [
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask59-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask59-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask59-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "0",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask60-def",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask60-min",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask60-max",
+   "blocks": [
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask61-def",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask61-min",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask61-max",
+   "blocks": [
+    "snipe",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "3000",
+    "maxFeePips": "3000",
+    "surgeSens": "0",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask62-def",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask62-min",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask62-max",
+   "blocks": [
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "0",
+    "maxBuyBps": "0",
+    "snipeTaxPips": "0",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  },
+  {
+   "name": "mask63-def",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "def",
+   "params": {
+    "guardBlocks": "100",
+    "maxBuyBps": "50",
+    "snipeTaxPips": "400000",
+    "baseFeePips": "3000",
+    "maxFeePips": "30000",
+    "surgeSens": "5",
+    "burnBps": "100",
+    "burnTriggerWei": "0",
+    "lpBps": "25",
+    "potBps": "50",
+    "potEveryNBuys": "500",
+    "potMinBuyWei": "10000000000000000",
+    "buybackBps": "50",
+    "buybackDrawdownBps": "1000",
+    "buybackCooldownBlocks": "30",
+    "buybackMinSpendWei": "10000000000000000",
+    "buybackMaxSpendWei": "500000000000000000"
+   }
+  },
+  {
+   "name": "mask63-min",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "min",
+   "params": {
+    "guardBlocks": "5",
+    "maxBuyBps": "10",
+    "snipeTaxPips": "0",
+    "baseFeePips": "500",
+    "maxFeePips": "10000",
+    "surgeSens": "1",
+    "burnBps": "10",
+    "burnTriggerWei": "0",
+    "lpBps": "5",
+    "potBps": "10",
+    "potEveryNBuys": "100",
+    "potMinBuyWei": "1000000000000000",
+    "buybackBps": "10",
+    "buybackDrawdownBps": "100",
+    "buybackCooldownBlocks": "1",
+    "buybackMinSpendWei": "1000000000000000",
+    "buybackMaxSpendWei": "10000000000000000"
+   }
+  },
+  {
+   "name": "mask63-max",
+   "blocks": [
+    "snipe",
+    "fee",
+    "burn",
+    "lp",
+    "buyback",
+    "pot"
+   ],
+   "variant": "max",
+   "params": {
+    "guardBlocks": "500",
+    "maxBuyBps": "500",
+    "snipeTaxPips": "450000",
+    "baseFeePips": "10000",
+    "maxFeePips": "100000",
+    "surgeSens": "10",
+    "burnBps": "500",
+    "burnTriggerWei": "0",
+    "lpBps": "100",
+    "potBps": "200",
+    "potEveryNBuys": "5000",
+    "potMinBuyWei": "1000000000000000000",
+    "buybackBps": "200",
+    "buybackDrawdownBps": "5000",
+    "buybackCooldownBlocks": "1000",
+    "buybackMinSpendWei": "1000000000000000000",
+    "buybackMaxSpendWei": "10000000000000000000"
+   }
+  }
+ ]
+}
