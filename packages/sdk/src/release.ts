@@ -86,6 +86,11 @@ export const HOOKR_V5_RELEASE = Object.freeze({
 export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
   schemaVersion: "hookr.integration-capabilities.v1",
   updatedAt: "2026-08-26",
+  release: {
+    chainId: HOOKR_CHAIN_ID,
+    generation: 5,
+    publicSourceStatus: "current" as const,
+  },
   capabilities: {
     fiveBlockComposer: {
       availability: "live" as IntegrationAvailability,
@@ -96,6 +101,7 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
       availability: "release-candidate" as IntegrationAvailability,
       package: "@hookr/sdk",
       version: "0.1.0-rc.1",
+      generation: 5,
       tracks: ["launchpad_sdk", "hook_generator"] satisfies readonly PartnerIntegrationTrack[],
       note: "Source, tests, examples, and package smoke checks exist; npm publication is a separate release action.",
     },
@@ -109,20 +115,147 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
       tracks: ["existing_token_pool"] satisfies readonly PartnerIntegrationTrack[],
       note: "A hook cannot be attached to an existing pool. The path creates a new reviewed PoolKey.",
     },
+    v6IntegrationModel: {
+      availability: "source-review" as IntegrationAvailability,
+      production: false,
+      sdkTransactionApi: false,
+      poolKeyRoot: {
+        rootHookSlots: 1,
+        checkoutSelection: "one-root-profile" as const,
+      },
+      paths: {
+        nativeRootBlocks: {
+          requiresNewImmutableHookrGeneration: true,
+          composition: "reviewed-schema-only" as const,
+        },
+        typedSubordinateExecutor: {
+          optional: true,
+          binding: "exact-versioned-profile" as const,
+        },
+        exclusiveExternalRoot: {
+          composesWithNativeBlocks: false,
+          requiredPolicyBindings: [
+            "purpose-built-adapter",
+            "router-policy",
+            "quoter-policy",
+          ] as const,
+        },
+        existingToken: {
+          poolSemantics: "new-pool-key" as const,
+          existingPoolsChanged: false,
+        },
+        launchpadAdapter: {
+          binding: "atomic" as const,
+          exactFields: [
+            "profile",
+            "config",
+            "caller",
+            "creator",
+            "beneficiary",
+            "funding",
+            "deadline",
+            "nonce",
+          ] as const,
+        },
+      },
+      existingDeployedHookAsNativeBlock: "unsupported" as const,
+      monetization: {
+        availability: "explicit-versioned-policy-only" as const,
+        feePolicyIdentity: "versioned-feePolicyHash" as const,
+        recipientAccounting: "explicit" as const,
+      },
+    },
     arbRecapture: {
-      name: "Arb Recapture",
+      name: "WTH Arb Recapture",
       availability: "source-review" as IntegrationAvailability,
       tracks: ["executor_adapter", "hook_token_launch", "existing_token_pool"] satisfies readonly PartnerIntegrationTrack[],
       production: false,
       routeSigning: false,
-      appliesTo: "Eligible new V6 Hookr pools after a supported second venue exists",
-      behavior: "Attempts one bounded, signer-approved post-swap correction and allocates realized quote profit.",
-      compatibleHookBlocks: ["anti-snipe", "surge-fees", "auto-burn", "nth-buy-pot"],
+      activationStatus: "inactive" as const,
+      selection: "optional" as const,
+      integrationProfile: {
+        profileLabel: "WTH" as const,
+        profileLabelStatus: "source-label" as const,
+        serviceIdentity: {
+          status: "unverified" as const,
+          productionRecipient: null,
+          externalAbiAcceptance: "unaccepted" as const,
+        },
+        integrationIdPreimage: "hookr.integration.wth-arb.v1",
+        integrationId:
+          "0x96b4bee6c464c61145bc4ddbff93ba0bc5e303003b633a6676dbe491acd3e651" as Hex,
+        feePolicyIdPreimage:
+          "hookr.fee-policy.wth-arb.v1:creator=4000,trader=2000,trigger-pool-lp=2000,wth=1000,hookr=1000",
+        feePolicyId:
+          "0xe786145bacf8a9afb49db278f5c581557d335b51cebbed990a5c5e0871910499" as Hex,
+        binding: "release-required" as const,
+      },
+      feePolicy: {
+        basis: "gross-realized-quote-profit" as const,
+        fixed: true,
+        creatorBps: 4_000,
+        authenticatedSwapRecipientBps: 2_000,
+        triggerPoolLpsBps: 2_000,
+        wthBps: 1_000,
+        hookrBps: 1_000,
+      },
+      v6Sdk: {
+        availability: "held" as const,
+        transactionApi: false,
+        reason: "No promoted V6 release manifest or canary readback",
+      },
+      existingTokenAttach: {
+        poolSemantics: "new-pool-key" as const,
+        existingPoolsChanged: false,
+        creatorBeneficiary: "authorized-attacher" as const,
+        admission: {
+          scope: "initial-pull-only" as const,
+          requiredDecimals: 18,
+          initialFactoryBalanceDelta: "exact-requested-amount" as const,
+          laterMutableTransferSemantics: "unsupported" as const,
+          unsupportedLaterBehaviors: [
+            "transfer-tax",
+            "rebase",
+            "pause-or-freeze",
+            "blacklist",
+            "callback-or-reentrancy",
+            "code-loss",
+          ] as const,
+        },
+      },
+      triggerPoolLpDelivery: {
+        status: "adapter-escrow" as const,
+        distributed: false,
+        claimableByLps: false,
+        distributorStatus: "absent" as const,
+        note: "Source reserves a PoolId-scoped amount for one adapter; adapter withdrawal is not LP distribution and does not prove delivery to eligible LP positions.",
+      },
+      appliesTo:
+        "Intended for eligible new V6 Hookr pools only after service verification, profile activation, and a supported second venue",
+      behavior:
+        "Source design for attempting one bounded, signer-approved post-swap correction and applying the fixed 40/20/20/10/10 realized-profit waterfall; no WTH service is active.",
+      compatibleHookBlocks: ["surge-fees", "auto-burn", "nth-buy-pot"],
+      conditionalHookBlocks: [
+        {
+          block: "anti-snipe",
+          duringGuard: {
+            outerBuyCorrection: "supported" as const,
+            outerSellCorrection: "fail-open" as const,
+            outerSellRequirement: "exact-output-target-buy" as const,
+          },
+          afterGuard: "supported" as const,
+          note: "During the Anti-Snipe guard, outer-buy Arb corrections can operate. Outer-sell corrections require an exact-output target buy and fail open until the guard ends.",
+        },
+      ],
       incompatibleHookBlocks: ["lp-rewards"],
       boundaries: [
         "Does not retrofit an existing V5 pool",
         "Does not apply to every external hook",
         "Does not guarantee that arbitrage is prevented or captured",
+        "WTH is a source profile label; service identity and external ABI acceptance are unverified",
+        "LP source allocation remains adapter escrow, is not distributed, and is not claimable by LPs",
+        "Existing-token checks cover only 18 decimals and the exact initial factory balance delta; later mutable token behavior is unsupported",
+        "The public SDK remains V5-only and exposes no V6 transaction API",
         "Has no production deployment or route-signing manifest",
       ],
     },

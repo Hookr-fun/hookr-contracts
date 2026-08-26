@@ -18,9 +18,27 @@ published. The public V5 source is synchronized in this release candidate; merge
 authority, provenance publication, registry readback, and an exact-version consumer smoke remain
 separate gates before this candidate can become stable.
 
-Arb Recapture is described by capability metadata only. The reviewed V6 design has no production
-deployment or route-signing manifest, so this SDK intentionally exposes no Arb transaction or
-signature API.
+Arb Recapture is described by capability metadata only. “WTH” is a source profile label, not proof
+of a verified service or partnership: service/operator identity, production recipient, external
+ABI acceptance, and an LP distributor are all absent or unverified. The profile is inactive and
+the reviewed V6 design has no production deployment or route-signing manifest, so this SDK
+intentionally exposes no Arb transaction or signature API.
+
+The capability record also keeps two accounting boundaries explicit. Existing-token admission
+checks only 18 decimals and the exact balance delta during the initial factory pull; later mutable
+tax, rebase, pause/freeze, blacklist, callback/reentrancy, or code behavior is unsupported. The
+proposed 20% LP amount is PoolId-scoped adapter escrow, not distributed or claimable by LPs.
+Anti-Snipe compatibility is conditional: while its opening guard is active, outer-buy Arb
+corrections can operate, but outer-sell corrections require an exact-output target buy and fail
+open until the guard ends.
+
+Its `v6IntegrationModel` is architecture metadata, not executable SDK support. It fixes one root
+hook profile per `PoolKey`; separates reviewed native blocks, an optional exact-profile subordinate
+executor, and an exclusive external root; requires existing-token integrations to create a new
+pool; and requires launchpad adapters to atomically bind profile, config, caller, creator,
+beneficiary, funding, deadline, and nonce. Existing deployed hooks cannot be inserted as native
+blocks, and monetization requires an explicit versioned `feePolicyHash` plus recipient accounting.
+No V6 transaction entrypoint is exported.
 
 ## Install
 

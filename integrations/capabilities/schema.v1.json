@@ -21,28 +21,242 @@
     "capabilities": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["fiveBlockComposer", "partnerSdk", "externalHooks", "existingTokenPool", "arbRecapture"],
+      "required": ["fiveBlockComposer", "partnerSdk", "externalHooks", "existingTokenPool", "v6IntegrationModel", "arbRecapture"],
       "properties": {
         "fiveBlockComposer": { "$ref": "#/$defs/capability" },
         "partnerSdk": { "$ref": "#/$defs/capability" },
         "externalHooks": { "$ref": "#/$defs/capability" },
         "existingTokenPool": { "$ref": "#/$defs/capability" },
+        "v6IntegrationModel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "production", "sdkTransactionApi", "poolKeyRoot", "paths", "existingDeployedHookAsNativeBlock", "monetization"],
+          "properties": {
+            "availability": { "const": "source-review" },
+            "production": { "const": false },
+            "sdkTransactionApi": { "const": false },
+            "poolKeyRoot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rootHookSlots", "checkoutSelection"],
+              "properties": {
+                "rootHookSlots": { "const": 1 },
+                "checkoutSelection": { "const": "one-root-profile" }
+              }
+            },
+            "paths": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["nativeRootBlocks", "typedSubordinateExecutor", "exclusiveExternalRoot", "existingToken", "launchpadAdapter"],
+              "properties": {
+                "nativeRootBlocks": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["requiresNewImmutableHookrGeneration", "composition"],
+                  "properties": {
+                    "requiresNewImmutableHookrGeneration": { "const": true },
+                    "composition": { "const": "reviewed-schema-only" }
+                  }
+                },
+                "typedSubordinateExecutor": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["optional", "binding"],
+                  "properties": {
+                    "optional": { "const": true },
+                    "binding": { "const": "exact-versioned-profile" }
+                  }
+                },
+                "exclusiveExternalRoot": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["composesWithNativeBlocks", "requiredPolicyBindings"],
+                  "properties": {
+                    "composesWithNativeBlocks": { "const": false },
+                    "requiredPolicyBindings": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "enum": ["purpose-built-adapter", "router-policy", "quoter-policy"]
+                      }
+                    }
+                  }
+                },
+                "existingToken": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["poolSemantics", "existingPoolsChanged"],
+                  "properties": {
+                    "poolSemantics": { "const": "new-pool-key" },
+                    "existingPoolsChanged": { "const": false }
+                  }
+                },
+                "launchpadAdapter": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["binding", "exactFields"],
+                  "properties": {
+                    "binding": { "const": "atomic" },
+                    "exactFields": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "minItems": 8,
+                      "maxItems": 8,
+                      "items": {
+                        "enum": ["profile", "config", "caller", "creator", "beneficiary", "funding", "deadline", "nonce"]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "existingDeployedHookAsNativeBlock": { "const": "unsupported" },
+            "monetization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["availability", "feePolicyIdentity", "recipientAccounting"],
+              "properties": {
+                "availability": { "const": "explicit-versioned-policy-only" },
+                "feePolicyIdentity": { "const": "versioned-feePolicyHash" },
+                "recipientAccounting": { "const": "explicit" }
+              }
+            }
+          }
+        },
         "arbRecapture": {
           "allOf": [
             { "$ref": "#/$defs/capability" },
             {
               "type": "object",
-              "required": ["name", "production", "routeSigning", "appliesTo", "behavior", "compatibleHookBlocks", "incompatibleHookBlocks", "boundaries"],
+              "required": ["name", "production", "routeSigning", "activationStatus", "selection", "integrationProfile", "feePolicy", "v6Sdk", "existingTokenAttach", "triggerPoolLpDelivery", "appliesTo", "behavior", "compatibleHookBlocks", "conditionalHookBlocks", "incompatibleHookBlocks", "boundaries"],
               "properties": {
-                "name": { "const": "Arb Recapture" },
+                "name": { "const": "WTH Arb Recapture" },
                 "production": { "const": false },
                 "routeSigning": { "const": false },
+                "activationStatus": { "const": "inactive" },
+                "selection": { "const": "optional" },
+                "integrationProfile": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["profileLabel", "profileLabelStatus", "serviceIdentity", "integrationIdPreimage", "integrationId", "feePolicyIdPreimage", "feePolicyId", "binding"],
+                  "properties": {
+                    "profileLabel": { "const": "WTH" },
+                    "profileLabelStatus": { "const": "source-label" },
+                    "serviceIdentity": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["status", "productionRecipient", "externalAbiAcceptance"],
+                      "properties": {
+                        "status": { "const": "unverified" },
+                        "productionRecipient": { "type": "null" },
+                        "externalAbiAcceptance": { "const": "unaccepted" }
+                      }
+                    },
+                    "integrationIdPreimage": { "const": "hookr.integration.wth-arb.v1" },
+                    "integrationId": { "const": "0x96b4bee6c464c61145bc4ddbff93ba0bc5e303003b633a6676dbe491acd3e651" },
+                    "feePolicyIdPreimage": { "const": "hookr.fee-policy.wth-arb.v1:creator=4000,trader=2000,trigger-pool-lp=2000,wth=1000,hookr=1000" },
+                    "feePolicyId": { "const": "0xe786145bacf8a9afb49db278f5c581557d335b51cebbed990a5c5e0871910499" },
+                    "binding": { "const": "release-required" }
+                  }
+                },
+                "feePolicy": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["basis", "fixed", "creatorBps", "authenticatedSwapRecipientBps", "triggerPoolLpsBps", "wthBps", "hookrBps"],
+                  "properties": {
+                    "basis": { "const": "gross-realized-quote-profit" },
+                    "fixed": { "const": true },
+                    "creatorBps": { "const": 4000 },
+                    "authenticatedSwapRecipientBps": { "const": 2000 },
+                    "triggerPoolLpsBps": { "const": 2000 },
+                    "wthBps": { "const": 1000 },
+                    "hookrBps": { "const": 1000 }
+                  }
+                },
+                "v6Sdk": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["availability", "transactionApi", "reason"],
+                  "properties": {
+                    "availability": { "const": "held" },
+                    "transactionApi": { "const": false },
+                    "reason": { "type": "string", "minLength": 20 }
+                  }
+                },
+                "existingTokenAttach": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["poolSemantics", "existingPoolsChanged", "creatorBeneficiary", "admission"],
+                  "properties": {
+                    "poolSemantics": { "const": "new-pool-key" },
+                    "existingPoolsChanged": { "const": false },
+                    "creatorBeneficiary": { "const": "authorized-attacher" },
+                    "admission": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["scope", "requiredDecimals", "initialFactoryBalanceDelta", "laterMutableTransferSemantics", "unsupportedLaterBehaviors"],
+                      "properties": {
+                        "scope": { "const": "initial-pull-only" },
+                        "requiredDecimals": { "const": 18 },
+                        "initialFactoryBalanceDelta": { "const": "exact-requested-amount" },
+                        "laterMutableTransferSemantics": { "const": "unsupported" },
+                        "unsupportedLaterBehaviors": {
+                          "type": "array",
+                          "uniqueItems": true,
+                          "minItems": 6,
+                          "items": {
+                            "enum": ["transfer-tax", "rebase", "pause-or-freeze", "blacklist", "callback-or-reentrancy", "code-loss"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "triggerPoolLpDelivery": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status", "distributed", "claimableByLps", "distributorStatus", "note"],
+                  "properties": {
+                    "status": { "const": "adapter-escrow" },
+                    "distributed": { "const": false },
+                    "claimableByLps": { "const": false },
+                    "distributorStatus": { "const": "absent" },
+                    "note": { "type": "string", "minLength": 40 }
+                  }
+                },
                 "appliesTo": { "type": "string", "minLength": 20 },
                 "behavior": { "type": "string", "minLength": 20 },
                 "compatibleHookBlocks": {
                   "type": "array",
                   "uniqueItems": true,
                   "items": { "enum": ["anti-snipe", "surge-fees", "auto-burn", "lp-rewards", "nth-buy-pot"] }
+                },
+                "conditionalHookBlocks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["block", "duringGuard", "afterGuard", "note"],
+                    "properties": {
+                      "block": { "const": "anti-snipe" },
+                      "duringGuard": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["outerBuyCorrection", "outerSellCorrection", "outerSellRequirement"],
+                        "properties": {
+                          "outerBuyCorrection": { "const": "supported" },
+                          "outerSellCorrection": { "const": "fail-open" },
+                          "outerSellRequirement": { "const": "exact-output-target-buy" }
+                        }
+                      },
+                      "afterGuard": { "const": "supported" },
+                      "note": { "type": "string", "minLength": 80 }
+                    }
+                  }
                 },
                 "incompatibleHookBlocks": {
                   "type": "array",

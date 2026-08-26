@@ -34,7 +34,8 @@ immutable wiring remain the authority; an address table alone is not release pro
 
 The hook and its configuration are fixed in a pool's `PoolKey`. An existing v4 pool cannot adopt a
 new hook. Existing-token integrations therefore create a separate reviewed pool and leave the old
-market unchanged.
+market unchanged. Candidate admission checks cover only 18 decimals and the exact initial factory
+pull delta; later mutable token behavior remains unsupported.
 
 ## Developer surface
 
@@ -47,7 +48,15 @@ market unchanged.
 - [`contracts/RELEASE_V5.md`](contracts/RELEASE_V5.md) — ordered V5 simulation, signature,
   broadcast, receipt, readback, and promotion protocol.
 - [`integrations/ARB_RECAPTURE.md`](integrations/ARB_RECAPTURE.md) — the source-review V6 Arb
-  Recapture boundary. It is not deployed protection and is not exposed by the SDK.
+  Recapture boundary. WTH is an unverified source label, its LP share is undistributed adapter
+  escrow, Anti-Snipe support is conditional during its opening guard, and the inactive profile is
+  neither deployed protection nor exposed by the SDK.
+
+The capability manifest also publishes a source-review `v6IntegrationModel`: one root profile per
+`PoolKey`, explicit native/executor/external/attach/launchpad paths, atomic binding of profile,
+config, caller, creator, beneficiary, funding, deadline, and nonce, and versioned fee-policy
+accounting. It is not a production release and does not add any V6 transaction API to the
+generation-5 SDK.
 
 `@hookr/sdk` is not yet published to npm. The package returns typed requests and verification
 results; it never stores keys, signs, broadcasts, or calls a partner's callback URL.
