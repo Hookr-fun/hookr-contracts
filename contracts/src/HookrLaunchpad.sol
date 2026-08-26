@@ -132,6 +132,7 @@ contract HookrLaunchpad is IUnlockCallback {
 
     mapping(address => Launch) internal launches;
     address[] public allTokens;
+
     /// @notice Successful intent-bound launches, namespaced by the transaction sender.
     /// @dev A nonzero token address is both the replay marker and the launch postcondition.
     mapping(address creator => mapping(bytes32 intentId => address token)) public launchedByIntent;
@@ -1058,9 +1059,6 @@ contract HookrLaunchpad is IUnlockCallback {
     }
 
     // ---------------------------------------------------------------- validation
-    // The validator bodies are linked out for EIP-170 and run by DELEGATECALL; the launchpad
-    // keeps only the call stubs. Custom-error selectors are name-derived, so reverts raised in
-    // the library carry exactly the selectors these entrypoints have always surfaced.
 
     /// @notice Blueprint resolution for every market path. Id 0 means "use the caller's custom
     ///         stack" (validated here); anything else is validated at SAVE time by the registry,

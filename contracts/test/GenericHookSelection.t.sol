@@ -8,10 +8,8 @@ import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
-import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
-import {BeforeSwapDelta} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
-import {ModifyLiquidityParams, SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
+import {BaseTestHooks} from "@uniswap/v4-core/src/test/BaseTestHooks.sol";
 
 import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrHook} from "../src/HookrHook.sol";
@@ -26,7 +24,7 @@ import {HookMiner} from "./utils/HookMiner.sol";
 /// @notice Small second hook family used to prove the generic launch boundary. It owns one
 ///         opaque setting: the pool's dynamic LP fee. It uses only beforeInitialize, which proves
 ///         that configuration happened before PoolManager initialization.
-contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
+contract AlternateLaunchHook is BaseTestHooks, IHookrLaunchHook {
     using PoolIdLibrary for PoolKey;
 
     uint160 public constant override REQUIRED_FLAGS = uint160(1 << 13);
@@ -40,7 +38,6 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
     error NotLaunchpad();
     error NotPoolManager();
     error BadConfig();
-    error UnusedCallback();
 
     constructor(IPoolManager poolManager_, address launchpad_) {
         poolManager = poolManager_;
@@ -67,76 +64,10 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
         poolManager.updateDynamicLPFee(key, feePips);
     }
 
-    function beforeInitialize(address sender, PoolKey calldata key, uint160) external view returns (bytes4) {
+    function beforeInitialize(address sender, PoolKey calldata key, uint160) external view override returns (bytes4) {
         if (msg.sender != address(poolManager)) revert NotPoolManager();
         if (sender != launchpad || feeOf[key.toId()] == 0) revert BadConfig();
         return IHooks.beforeInitialize.selector;
-    }
-
-    function afterInitialize(address, PoolKey calldata, uint160, int24) external pure returns (bytes4) {
-        revert UnusedCallback();
-    }
-
-    function beforeAddLiquidity(address, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        external
-        pure
-        returns (bytes4)
-    {
-        revert UnusedCallback();
-    }
-
-    function afterAddLiquidity(
-        address,
-        PoolKey calldata,
-        ModifyLiquidityParams calldata,
-        BalanceDelta,
-        BalanceDelta,
-        bytes calldata
-    ) external pure returns (bytes4, BalanceDelta) {
-        revert UnusedCallback();
-    }
-
-    function beforeRemoveLiquidity(address, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
-        external
-        pure
-        returns (bytes4)
-    {
-        revert UnusedCallback();
-    }
-
-    function afterRemoveLiquidity(
-        address,
-        PoolKey calldata,
-        ModifyLiquidityParams calldata,
-        BalanceDelta,
-        BalanceDelta,
-        bytes calldata
-    ) external pure returns (bytes4, BalanceDelta) {
-        revert UnusedCallback();
-    }
-
-    function beforeSwap(address, PoolKey calldata, SwapParams calldata, bytes calldata)
-        external
-        pure
-        returns (bytes4, BeforeSwapDelta, uint24)
-    {
-        revert UnusedCallback();
-    }
-
-    function afterSwap(address, PoolKey calldata, SwapParams calldata, BalanceDelta, bytes calldata)
-        external
-        pure
-        returns (bytes4, int128)
-    {
-        revert UnusedCallback();
-    }
-
-    function beforeDonate(address, PoolKey calldata, uint256, uint256, bytes calldata) external pure returns (bytes4) {
-        revert UnusedCallback();
-    }
-
-    function afterDonate(address, PoolKey calldata, uint256, uint256, bytes calldata) external pure returns (bytes4) {
-        revert UnusedCallback();
     }
 }
 
@@ -193,7 +124,7 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
             vm.prank(creator);
             registry.stageHook(alternateHookId, config, intentId);
 
-            HookrLaunchpad.LaunchArgs memory args = _instantArgs(false);
+            HookrLaunchpad.LaunchArgs memory args = _instantArgs();
             uint256 payment = pad.creationFeeWei() + args.creatorBuyWei;
             vm.prank(creator);
             address token = pad.launchInstant{value: payment}(args, 5_000, intentId);
@@ -222,7 +153,9 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
         }
 
         function test_existingLaunchCallStillUsesDefaultHookWithoutStagedSelection() public {
-            HookrLaunchpad.LaunchArgs memory args = _instantArgs(true);
+            HookrLaunchpad.LaunchArgs memory args = _instantArgs();
+            args.custom.baseFeePips = 3_000;
+            args.custom.maxFeePips = 3_000;
             uint256 payment = pad.creationFeeWei() + args.creatorBuyWei;
             vm.prank(creator);
             address token = pad.launchInstant{value: payment}(args, 5_000, bytes32(0));
@@ -266,7 +199,7 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
             vm.prank(creator);
             registry.stageHook(alternateHookId, config, intentId);
 
-            HookrLaunchpad.LaunchArgs memory args = _instantArgs(false);
+            HookrLaunchpad.LaunchArgs memory args = _instantArgs();
             uint256 payment = pad.creationFeeWei() + args.creatorBuyWei;
             vm.prank(creator);
             vm.expectRevert(HookrHookRegistry.InvalidSelection.selector);
@@ -283,7 +216,9 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
             vm.prank(creator);
             registry.stageHook(alternateHookId, abi.encode(uint24(5_000)), intentId);
 
-            HookrLaunchpad.LaunchArgs memory args = _instantArgs(true);
+            HookrLaunchpad.LaunchArgs memory args = _instantArgs();
+            args.custom.baseFeePips = 3_000;
+            args.custom.maxFeePips = 3_000;
             uint256 payment = pad.creationFeeWei() + args.creatorBuyWei;
             vm.prank(creator);
             vm.expectRevert(HookrLaunchpadLib.BadHookSelection.selector);
@@ -312,15 +247,11 @@ contract AlternateLaunchHook is IHooks, IHookrLaunchHook {
             assertEq(pad.tokensCount(), 0);
         }
 
-        function _instantArgs(bool withDefaultConfig) internal view returns (HookrLaunchpad.LaunchArgs memory args) {
+        function _instantArgs() internal view returns (HookrLaunchpad.LaunchArgs memory args) {
             args.name = "Selectable Token";
             args.symbol = "SELECT";
             args.expectedCreator = creator;
             args.creatorBuyWei = 1 ether;
-            if (withDefaultConfig) {
-                args.custom.baseFeePips = 3_000;
-                args.custom.maxFeePips = 3_000;
-            }
         }
 
         function _key(address token, IHooks selectedHook) internal pure returns (PoolKey memory) {

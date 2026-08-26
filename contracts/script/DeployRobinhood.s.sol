@@ -13,8 +13,7 @@ import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 
 /// @notice Deploys Hookr to Robinhood Chain (4663):
 ///         0. HookrLaunchpadLib — emitted by Forge itself, see the linked-library note below
-///         1. HookrLaunchpad
-///            (its constructor creates the hook registry inside the same transaction)
+///         1. HookrLaunchpad (its constructor creates HookrHookRegistry)
 ///         2. HookrHook via CREATE2 (mined address carrying the exact permission flags)
 ///         3. deploys the bounded production swap router
 ///         4. wires the hook, seeds the five house blueprints

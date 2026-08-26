@@ -940,6 +940,7 @@ library HookrLaunchpadLib {
         }
     }
 
+    /// @dev One linked call keeps both validator call stubs out of HookrLaunchpad's runtime.
     function validateDistribution(
         uint16 creatorFeeBps,
         FeeRecipient[] calldata recipients,
