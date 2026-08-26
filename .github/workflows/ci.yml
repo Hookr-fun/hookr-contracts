@@ -54,7 +54,11 @@ jobs:
         working-directory: contracts
 
       - name: Test
+        # PublicNode now rejects Foundry's pinned fork-state reads as token-gated archive
+        # requests. Hosted PR checks deliberately use Robinhood's official rolling endpoint;
+        # release rehearsals that pin an older block still require the separately configured
+        # archive provider described by the release tooling.
         env:
-          FORK_RPC_URL: https://robinhood-rpc.publicnode.com
+          FORK_RPC_URL: https://rpc.mainnet.chain.robinhood.com
         run: forge test
         working-directory: contracts
