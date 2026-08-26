@@ -1,15 +1,33 @@
 {
   "schemaVersion": "hookr.uniswap-policy.v1",
-  "verifiedAt": "2026-08-25T19:00:00.000Z",
+  "verifiedAt": "2026-08-26T16:00:00.000Z",
   "hooklist": {
     "repository": "Uniswap/hooklist",
-    "sourceCommit": "9864dd2a707f7ef3f129e9d1bad5162969fd692a",
+    "sourceCommit": "92f38fc5b2419bdd042f18eb8a8e12f0da921b0f",
     "submitIssueUrl": "https://github.com/Uniswap/hooklist/issues/new?template=submit-hook.yml",
     "apiIssueUrl": "https://api.github.com/repos/Uniswap/hooklist/issues",
     "issueCreationObservation": {
       "status": "restricted-for-public-viewer",
       "observedAt": "2026-08-25T19:45:00.000Z",
       "evidenceUrl": "https://github.com/Uniswap/hooklist/issues"
+    }
+  },
+  "deployments": {
+    "repository": "Uniswap/contracts",
+    "sourceCommit": "4cfc406c8e34da3ce04e60657a7825075b64fd22",
+    "chainFile": "deployments/json/4663.json",
+    "robinhood": {
+      "chainId": 4663,
+      "poolManager": "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+      "universalRouter": {
+        "deploymentRegistryAddress": "0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99",
+        "renderedDocsAddress": "0x8876789976decbfcbbbe364623c63652db8c0904",
+        "version": "2.1.1",
+        "permissionedPools": false,
+        "deploymentCommit": "023196a",
+        "addressStatus": "official-sources-conflict",
+        "releaseRule": "Pin the selected address, runtime code hash, constructor immutables, and fork evidence; never resolve this conflict by the label latest."
+      }
     }
   },
   "routing": {
@@ -65,7 +83,7 @@
       "afterSwapReturnsDelta",
       "afterAddLiquidityReturnsDelta",
       "afterRemoveLiquidityReturnsDelta",
-      "dynamicFee"
+      "majorTokenPair"
     ]
   },
   "chains": {

@@ -39,24 +39,33 @@ pull delta; later mutable token behavior remains unsupported.
 
 ## Developer surface
 
-- [`integrations/`](integrations/README.md) — six PR #119-aligned partner tracks, public schemas,
-  external-hook manifests, and explicit capability states.
+- [`integrations/`](integrations/README.md) — six PR #119-aligned partner tracks, strict V2
+  external-hook provenance/callback/routing schemas, manifests, and explicit capability states.
 - [`packages/sdk/`](packages/sdk/README.md) — `@hookr/sdk` release candidate with ESM, CommonJS,
   types, examples, tests, and package verification.
 - [`contracts/`](contracts/README.md) — V5 and retained Solidity source, Foundry tests, deployment
   scripts, and evidence.
 - [`contracts/RELEASE_V5.md`](contracts/RELEASE_V5.md) — ordered V5 simulation, signature,
   broadcast, receipt, readback, and promotion protocol.
-- [`integrations/ARB_RECAPTURE.md`](integrations/ARB_RECAPTURE.md) — the source-review V6 Arb
-  Recapture boundary. WTH is an unverified source label, its LP share is undistributed adapter
-  escrow, Anti-Snipe support is conditional during its opening guard, and the inactive profile is
-  neither deployed protection nor exposed by the SDK.
+- [`integrations/ARB_RECAPTURE.md`](integrations/ARB_RECAPTURE.md) — the source-review V6.1 Arb
+  Recapture boundary. WTH is an unverified source label; its fixed 10% and Hookr's fixed 10% leave
+  a pool-configurable 80% for creator, authenticated swap recipient, and trigger-pool escrow
+  (default 40%/20%/20). LP delivery and authenticated-recipient semantics remain unaccepted,
+  Anti-Snipe support is conditional during its opening guard, and the inactive profile is neither
+  deployed protection nor exposed by the SDK.
 
-The capability manifest also publishes a source-review `v6IntegrationModel`: one root profile per
+The separately versioned V6.1 source checkpoint is pinned at
+`5168888ed69cc738492368203197ee72a009a964`. That clean source identity is review evidence only:
+it is not merged into the V6 release, deployed, promoted, or exposed through a transaction API.
+
+The current V2 capability manifest also publishes a source-review `v6IntegrationModel`: one root profile per
 `PoolKey`, explicit native/executor/external/attach/launchpad paths, atomic binding of profile,
 config, caller, creator, beneficiary, funding, deadline, and nonce, and versioned fee-policy
-accounting. It is not a production release and does not add any V6 transaction API to the
-generation-5 SDK.
+accounting. Hookr-router identity is required for authenticated, gated, pot, and WTH routes;
+generic empty-data coverage is narrower, the Robinhood Universal Router identity/fork matrix is
+unverified, and scanner warnings are non-authoritative evidence. This is not a production release
+and does not add any V6 or V6.1 transaction API to the generation-5 SDK. Frozen V1 capability
+files remain historical evidence for the superseded WTH-v1 interface.
 
 `@hookr/sdk` is not yet published to npm. The package returns typed requests and verification
 results; it never stores keys, signs, broadcasts, or calls a partner's callback URL.

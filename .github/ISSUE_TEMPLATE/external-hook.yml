@@ -53,6 +53,34 @@ body:
       description: Include exact contract paths and whether each dependency is required for ordinary swaps or only an optional feature.
     validations:
       required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Factory and runtime provenance
+      description: State whether this is a per-instance hook, singleton, or typed allowlisted factory. Include factory interface, CREATE2 salt derivation, creation/runtime code hashes, constructor evidence, proxy/admin/beacon state, and mutable operator dependencies. Say unavailable where evidence does not exist.
+    validations:
+      required: true
+  - type: textarea
+    id: callback_contract
+    attributes:
+      label: Callback contract
+      description: For every enabled callback, list caller authentication, PoolId/state scope, hookData schema/version/max length and trusted fields, selector/return tuple, delta units/sign, failure mode, external calls, reentrancy boundary, and gas boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: routing_matrix
+    attributes:
+      label: Swap and quote compatibility matrix
+      description: Cover exact-input and exact-output in both directions. Separate PoolSwapTest, dedicated router, direct PoolManager, exact deployed Universal Router, multihop, and ALF Multiplexer evidence. Include hookData for each route, exact router addresses/code hashes for fork or live claims, final wallet deltas/router events, and any unsupported cases.
+    validations:
+      required: true
+  - type: textarea
+    id: security_framework
+    attributes:
+      label: Uniswap security-framework assessment
+      description: List triggered features, dependency-failure tests, accounting/stateful/math review, fork evidence, audit scope, monitoring, bounty, incident plan, and any legal review. An unscored source candidate should say unscored.
+    validations:
+      required: true
   - type: dropdown
     id: audit_status
     attributes:
@@ -68,6 +96,11 @@ body:
     attributes:
       label: Deployment evidence
       description: Optional. If deployed, include chain, hook address, transaction, block, PoolManager, runtime hash, verified source, pool ID, and liquidity evidence. Omit this section for source-only work.
+  - type: textarea
+    id: scanner_evidence
+    attributes:
+      label: Scanner and sellability evidence
+      description: Optional. Include timestamped Blockaid or other scanner request/response evidence separately from exact buy/sell receipts and wallet deltas. Scanner output is non-authoritative and must not replace route testing.
   - type: checkboxes
     id: boundaries
     attributes:

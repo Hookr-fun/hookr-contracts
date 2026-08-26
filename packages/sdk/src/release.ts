@@ -84,7 +84,7 @@ export const HOOKR_V5_RELEASE = Object.freeze({
 });
 
 export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
-  schemaVersion: "hookr.integration-capabilities.v1",
+  schemaVersion: "hookr.integration-capabilities.v2",
   updatedAt: "2026-08-26",
   release: {
     chainId: HOOKR_CHAIN_ID,
@@ -174,6 +174,11 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
       activationStatus: "inactive" as const,
       selection: "optional" as const,
       integrationProfile: {
+        candidateGeneration: "v6.1" as const,
+        sourceBoundary: "separate-versioned-release-required" as const,
+        sourceCheckpointStatus: "clean-v61-source-checkpoint" as const,
+        sourceCheckpointSha:
+          "5168888ed69cc738492368203197ee72a009a964" as const,
         profileLabel: "WTH" as const,
         profileLabelStatus: "source-label" as const,
         serviceIdentity: {
@@ -181,23 +186,50 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
           productionRecipient: null,
           externalAbiAcceptance: "unaccepted" as const,
         },
-        integrationIdPreimage: "hookr.integration.wth-arb.v1",
+        integrationIdPreimage: "hookr.integration.wth-arb.v2",
         integrationId:
-          "0x96b4bee6c464c61145bc4ddbff93ba0bc5e303003b633a6676dbe491acd3e651" as Hex,
+          "0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680" as Hex,
         feePolicyIdPreimage:
-          "hookr.fee-policy.wth-arb.v1:creator=4000,trader=2000,trigger-pool-lp=2000,wth=1000,hookr=1000",
+          "hookr.fee-policy.wth-arb.v2:hookr=1000,wth=1000,configurable-creator-trader-trigger-pool-sum=8000",
         feePolicyId:
-          "0xe786145bacf8a9afb49db278f5c581557d335b51cebbed990a5c5e0871910499" as Hex,
+          "0x656d4d246973da37dc2020b1c4494018646a8033d212c09dc3bb82a4b0898ba7" as Hex,
         binding: "release-required" as const,
       },
       feePolicy: {
         basis: "gross-realized-quote-profit" as const,
-        fixed: true,
-        creatorBps: 4_000,
-        authenticatedSwapRecipientBps: 2_000,
-        triggerPoolLpsBps: 2_000,
-        wthBps: 1_000,
-        hookrBps: 1_000,
+        generation: "v2" as const,
+        fixedProtocolShares: {
+          wthBps: 1_000,
+          hookrBps: 1_000,
+        },
+        configurablePoolShares: {
+          sumBps: 8_000,
+          abiStruct: "ProfitSplit" as const,
+          abiFields: [
+            "creator",
+            "traderBps",
+            "creatorBps",
+            "triggerPoolBps",
+          ] as const,
+          bpsFields: ["traderBps", "creatorBps", "triggerPoolBps"] as const,
+          lockedAt: "pool-configuration" as const,
+          defaults: {
+            traderBps: 2_000,
+            creatorBps: 4_000,
+            triggerPoolBps: 2_000,
+          },
+          semantics: {
+            creator: "pool-configured-creator-or-authorized-attacher" as const,
+            traderBps: "authenticated-rebate-recipient-never-tx-origin" as const,
+            triggerPoolBps: "pool-id-scoped-lp-escrow-not-position-distribution" as const,
+          },
+        },
+        recipientIdentity: {
+          hookr: "hookr.eth-resolved-address-pinned-at-release" as const,
+          wth: "whatthehook.eth-resolved-address-pinned-at-release" as const,
+        },
+        externalRoundingAcceptance: "unverified" as const,
+        externalRecipientSemanticsAcceptance: "unverified-no-tx-origin" as const,
       },
       v6Sdk: {
         availability: "held" as const,
@@ -230,10 +262,37 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
         distributorStatus: "absent" as const,
         note: "Source reserves a PoolId-scoped amount for one adapter; adapter withdrawal is not LP distribution and does not prove delivery to eligible LP positions.",
       },
+      routingAndScanner: {
+        canonicalRouter: "required-for-authenticated-gated-pot-and-wth-routes" as const,
+        genericEmptyData: {
+          ungatedExactInputBuy: "candidate-source-supported" as const,
+          exactInputExit: "candidate-source-supported" as const,
+          gatedBuy: "unsupported" as const,
+          potQualifyingBuy: "unsupported" as const,
+          exactOutputExit: "conditional-unverified" as const,
+        },
+        quoter: {
+          simulationActor: "caller-supplied" as const,
+          executableOnlyWhenBoundToActiveWallet: true,
+        },
+        robinhoodUniversalRouter: {
+          status: "unverified" as const,
+          officialSourceState: "conflicting-addresses" as const,
+          exactForkMatrix: false,
+        },
+        scannerEvidence: {
+          authoritative: false,
+          v5Token: "0x0093005884142Fb305A3991DCD24e55Bfebf1570" as Address,
+          blockaidStatus: "warning-observed" as const,
+          successfulSellTransaction:
+            "0xac74066b69caaf84df9a9f86a118bc09a977ae315e712047dcf895bb76dfcd9c" as Hex,
+          conclusion: "sellability-proved-for-one-route-not-scanner-clearance" as const,
+        },
+      },
       appliesTo:
-        "Intended for eligible new V6 Hookr pools only after service verification, profile activation, and a supported second venue",
+        "Intended for eligible new V6.1 Hookr pools only after service verification, profile activation, and a supported second venue",
       behavior:
-        "Source design for attempting one bounded, signer-approved post-swap correction and applying the fixed 40/20/20/10/10 realized-profit waterfall; no WTH service is active.",
+        "Source design for attempting one bounded, signer-approved post-swap correction. Hookr and WTH are fixed at 10% each; the pool locks creator, authenticated-swap-recipient, and trigger-pool shares that must total the remaining 80%, defaulting to 40/20/20. No WTH service is active.",
       compatibleHookBlocks: ["surge-fees", "auto-burn", "nth-buy-pot"],
       conditionalHookBlocks: [
         {
@@ -259,6 +318,8 @@ export const HOOKR_INTEGRATION_CAPABILITIES = Object.freeze({
         "Exact-output buys are blocked while Anti-Snipe is active; the guard does not block sells",
         "PoolManager emits Swap before Hookr afterSwap return deltas, so scanners and indexers must use final deltas and settlement transfers for realized amounts",
         "The public SDK remains V5-only and exposes no V6 transaction API",
+        "The frozen V6/WTH-v1 reference uses a superseded fixed-share ABI and is not the V6.1 WTH-v2 interface",
+        "WTH trader-share semantics are unaccepted: tx.origin is prohibited; the recipient must be authenticated and bound to the Hookr envelope or the share must remain disabled/escrowed",
         "Has no production deployment or route-signing manifest",
       ],
     },

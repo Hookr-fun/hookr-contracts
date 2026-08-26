@@ -18,19 +18,40 @@ published. The public V5 source is synchronized in this release candidate; merge
 authority, provenance publication, registry readback, and an exact-version consumer smoke remain
 separate gates before this candidate can become stable.
 
-Arb Recapture is described by capability metadata only. “WTH” is a source profile label, not proof
-of a verified service or partnership: service/operator identity, production recipient, external
-ABI acceptance, and an LP distributor are all absent or unverified. The profile is inactive and
-the reviewed V6 design has no production deployment or route-signing manifest, so this SDK
-intentionally exposes no Arb transaction or signature API.
+Arb Recapture is described by
+[`integration-capabilities.v2`](../../integrations/capabilities/current.v2.json) metadata only.
+“WTH” is a source profile label, not proof of a verified service or partnership:
+service/operator identity, production recipient, external ABI acceptance, rounding semantics, and
+an LP distributor are all absent or unverified. The optional profile belongs to a separately
+versioned V6.1 source candidate, is inactive, and has no production deployment or route-signing
+manifest. This SDK therefore exposes no Arb, V6, or V6.1 transaction or signature API. The frozen
+V1 capability record remains historical evidence for the superseded fixed-share V6/WTH-v1
+interface; it is not the current candidate contract.
 
-The capability record also keeps two accounting boundaries explicit. Existing-token admission
-checks only 18 decimals and the exact balance delta during the initial factory pull; later mutable
-tax, rebase, pause/freeze, blacklist, callback/reentrancy, or code behavior is unsupported. The
-proposed 20% LP amount is PoolId-scoped adapter escrow, not distributed or claimable by LPs.
-Anti-Snipe compatibility is conditional: while its opening guard is active, outer-buy Arb
-corrections can operate, but outer-sell corrections require an exact-output target buy and fail
-open until the guard ends.
+The V6.1 metadata pins clean source checkpoint
+`5168888ed69cc738492368203197ee72a009a964`, without treating it as merged, deployed, promoted, or
+available through this package.
+
+The capability record also keeps the accounting boundaries explicit. Hookr and WTH each receive a
+fixed 10% of gross realized quote profit. A pool must lock creator, authenticated swap recipient,
+and trigger-pool shares that total the remaining 80%; the source default is 40%/20%/20%. The
+authenticated recipient cannot be inferred from `tx.origin`: until WTH accepts an envelope-bound
+recipient or a disabled/escrowed alternative, that external semantic remains blocked. The default
+20% trigger-pool amount is PoolId-scoped adapter escrow, not distributed or claimable by LPs.
+
+Existing-token admission checks only 18 decimals and the exact balance delta during the initial
+factory pull; later mutable tax, rebase, pause/freeze, blacklist, callback/reentrancy, or code
+behavior is unsupported. Anti-Snipe compatibility is conditional: while its opening guard is
+active, outer-buy Arb corrections can operate, but outer-sell corrections require an exact-output
+target buy and fail open until the guard ends.
+
+Routing support is also route-specific. The Hookr router is required for authenticated, gated,
+Nth-buy Pot, and WTH paths. Candidate source supports generic empty-data ungated exact-input buys
+and exact-input exits; gated buys and pot-qualifying buys are unsupported, and exact-output exits
+remain conditional and unverified. A quote is executable evidence only when its caller-supplied
+simulation actor is bound to the active wallet. Robinhood Universal Router addresses conflict
+across official sources and no exact fork matrix is complete. A Blockaid warning and one successful
+V5 sell prove neither V6.1 sellability nor scanner clearance.
 
 Its `v6IntegrationModel` is architecture metadata, not executable SDK support. It fixes one root
 hook profile per `PoolKey`; separates reviewed native blocks, an optional exact-profile subordinate
@@ -38,7 +59,7 @@ executor, and an exclusive external root; requires existing-token integrations t
 pool; and requires launchpad adapters to atomically bind profile, config, caller, creator,
 beneficiary, funding, deadline, and nonce. Existing deployed hooks cannot be inserted as native
 blocks, and monetization requires an explicit versioned `feePolicyHash` plus recipient accounting.
-No V6 transaction entrypoint is exported.
+No V6 or V6.1 transaction entrypoint is exported.
 
 ## Install
 

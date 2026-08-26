@@ -8,10 +8,10 @@ import { keccak256, toBytes } from "viem";
 
 const root = process.cwd();
 const schema = JSON.parse(
-  await readFile(resolve(root, "integrations/capabilities/schema.v1.json"), "utf8"),
+  await readFile(resolve(root, "integrations/capabilities/schema.v2.json"), "utf8"),
 );
 const manifest = JSON.parse(
-  await readFile(resolve(root, "integrations/capabilities/current.v1.json"), "utf8"),
+  await readFile(resolve(root, "integrations/capabilities/current.v2.json"), "utf8"),
 );
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 addFormats(ajv);
@@ -93,6 +93,22 @@ const conditional = new Map(
   arb.conditionalHookBlocks.map((entry) => [entry.block, entry]),
 );
 const incompatible = new Set(arb.incompatibleHookBlocks);
+const reviewedCompatibleBlocks = new Set(["surge-fees", "auto-burn", "nth-buy-pot"]);
+const reviewedIncompatibleBlocks = new Set(["lp-rewards"]);
+if (
+  arb.compatibleHookBlocks.length !== reviewedCompatibleBlocks.size ||
+  compatible.size !== reviewedCompatibleBlocks.size ||
+  [...reviewedCompatibleBlocks].some((block) => !compatible.has(block))
+) {
+  throw new Error("Arb Recapture must retain the exact reviewed Surge Fees, Auto Burn, and Nth-buy Pot compatibility set");
+}
+if (
+  arb.incompatibleHookBlocks.length !== reviewedIncompatibleBlocks.size ||
+  incompatible.size !== reviewedIncompatibleBlocks.size ||
+  [...reviewedIncompatibleBlocks].some((block) => !incompatible.has(block))
+) {
+  throw new Error("Arb Recapture must retain exactly the reviewed LP Rewards exclusion");
+}
 for (const block of compatible) {
   if (conditional.has(block) || incompatible.has(block)) {
     throw new Error(`Arb block cannot have overlapping compatibility states: ${block}`);
@@ -103,12 +119,12 @@ for (const block of conditional.keys()) {
     throw new Error(`Arb block cannot have overlapping compatibility states: ${block}`);
   }
 }
-if (!incompatible.has("lp-rewards")) throw new Error("Arb Recapture must retain the reviewed LP Rewards exclusion");
 const antiSnipe = conditional.get("anti-snipe");
 const antiSnipeNote =
   "During the Anti-Snipe guard, outer-buy Arb corrections can operate. Outer-sell corrections require an exact-output target buy and fail open until the guard ends.";
 if (
   compatible.has("anti-snipe") ||
+  arb.conditionalHookBlocks.length !== 1 ||
   conditional.size !== 1 ||
   !antiSnipe ||
   antiSnipe.duringGuard.outerBuyCorrection !== "supported" ||
@@ -126,6 +142,10 @@ if (arb.name !== "WTH Arb Recapture" || arb.selection !== "optional") {
   throw new Error("The V6 candidate must remain an optional, explicitly named WTH profile");
 }
 if (
+  arb.integrationProfile.candidateGeneration !== "v6.1" ||
+  arb.integrationProfile.sourceBoundary !== "separate-versioned-release-required" ||
+  arb.integrationProfile.sourceCheckpointStatus !== "clean-v61-source-checkpoint" ||
+  arb.integrationProfile.sourceCheckpointSha !== "5168888ed69cc738492368203197ee72a009a964" ||
   arb.integrationProfile.profileLabel !== "WTH" ||
   arb.integrationProfile.profileLabelStatus !== "source-label" ||
   arb.integrationProfile.serviceIdentity.status !== "unverified" ||
@@ -136,9 +156,9 @@ if (
 }
 if (
   arb.integrationProfile.integrationId !==
-    "0x96b4bee6c464c61145bc4ddbff93ba0bc5e303003b633a6676dbe491acd3e651" ||
+    "0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680" ||
   arb.integrationProfile.feePolicyId !==
-    "0xe786145bacf8a9afb49db278f5c581557d335b51cebbed990a5c5e0871910499" ||
+    "0x656d4d246973da37dc2020b1c4494018646a8033d212c09dc3bb82a4b0898ba7" ||
   arb.integrationProfile.binding !== "release-required"
 ) {
   throw new Error("The WTH integration or fee-policy identity drifted from the source profile");
@@ -151,20 +171,45 @@ if (
 ) {
   throw new Error("The published WTH identity does not match its canonical preimage");
 }
-const expectedFeePolicy = {
-  creatorBps: 4_000,
-  authenticatedSwapRecipientBps: 2_000,
-  triggerPoolLpsBps: 2_000,
-  wthBps: 1_000,
-  hookrBps: 1_000,
-};
-for (const [field, expected] of Object.entries(expectedFeePolicy)) {
-  if (arb.feePolicy[field] !== expected) {
-    throw new Error(`WTH fee policy ${field} must remain ${expected} bps`);
-  }
+const fixed = arb.feePolicy.fixedProtocolShares;
+const configurable = arb.feePolicy.configurablePoolShares;
+const defaults = configurable.defaults;
+if (
+  arb.feePolicy.generation !== "v2" ||
+  fixed.wthBps !== 1_000 ||
+  fixed.hookrBps !== 1_000 ||
+  configurable.sumBps !== 8_000 ||
+  configurable.abiStruct !== "ProfitSplit" ||
+  configurable.lockedAt !== "pool-configuration" ||
+  defaults.traderBps !== 2_000 ||
+  defaults.creatorBps !== 4_000 ||
+  defaults.triggerPoolBps !== 2_000 ||
+  configurable.semantics.creator !== "pool-configured-creator-or-authorized-attacher" ||
+  configurable.semantics.traderBps !== "authenticated-rebate-recipient-never-tx-origin" ||
+  configurable.semantics.triggerPoolBps !== "pool-id-scoped-lp-escrow-not-position-distribution" ||
+  arb.feePolicy.recipientIdentity.hookr !== "hookr.eth-resolved-address-pinned-at-release" ||
+  arb.feePolicy.recipientIdentity.wth !== "whatthehook.eth-resolved-address-pinned-at-release" ||
+  arb.feePolicy.externalRoundingAcceptance !== "unverified" ||
+  arb.feePolicy.externalRecipientSemanticsAcceptance !== "unverified-no-tx-origin"
+) {
+  throw new Error("WTH v2 must keep fixed 10/10 protocol shares and the pool-locked default 40/20/20 remainder");
 }
-if (Object.values(expectedFeePolicy).reduce((sum, value) => sum + value, 0) !== 10_000) {
-  throw new Error("WTH fee policy must conserve exactly 10,000 bps");
+const abiFields = configurable.abiFields;
+const configurableFields = new Set(configurable.bpsFields);
+if (
+  abiFields.length !== 4 ||
+  abiFields[0] !== "creator" ||
+  abiFields[1] !== "traderBps" ||
+  abiFields[2] !== "creatorBps" ||
+  abiFields[3] !== "triggerPoolBps" ||
+  configurableFields.size !== 3 ||
+  !configurableFields.has("traderBps") ||
+  !configurableFields.has("creatorBps") ||
+  !configurableFields.has("triggerPoolBps") ||
+  defaults.traderBps + defaults.creatorBps + defaults.triggerPoolBps !== 8_000 ||
+  fixed.wthBps + fixed.hookrBps + configurable.sumBps !== 10_000
+) {
+  throw new Error("WTH v2 configurable shares must contain exactly three fields, sum to 8,000 bps, and conserve 10,000 bps with fixed shares");
 }
 if (
   arb.triggerPoolLpDelivery.status !== "adapter-escrow" ||
@@ -173,6 +218,20 @@ if (
   arb.triggerPoolLpDelivery.distributorStatus !== "absent"
 ) {
   throw new Error("LP accounting must remain non-distributed adapter escrow until a reviewed distributor proves delivery");
+}
+if (
+  arb.routingAndScanner.canonicalRouter !== "required-for-authenticated-gated-pot-and-wth-routes" ||
+  arb.routingAndScanner.genericEmptyData.gatedBuy !== "unsupported" ||
+  arb.routingAndScanner.genericEmptyData.potQualifyingBuy !== "unsupported" ||
+  arb.routingAndScanner.quoter.simulationActor !== "caller-supplied" ||
+  arb.routingAndScanner.quoter.executableOnlyWhenBoundToActiveWallet !== true ||
+  arb.routingAndScanner.robinhoodUniversalRouter.status !== "unverified" ||
+  arb.routingAndScanner.robinhoodUniversalRouter.officialSourceState !== "conflicting-addresses" ||
+  arb.routingAndScanner.robinhoodUniversalRouter.exactForkMatrix !== false ||
+  arb.routingAndScanner.scannerEvidence.authoritative !== false ||
+  arb.routingAndScanner.scannerEvidence.conclusion !== "sellability-proved-for-one-route-not-scanner-clearance"
+) {
+  throw new Error("V6.1 routing, quoter-actor, Universal Router, and scanner boundaries drifted");
 }
 if (
   arb.existingTokenAttach.poolSemantics !== "new-pool-key" ||

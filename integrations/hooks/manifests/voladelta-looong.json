@@ -1,6 +1,6 @@
 {
-  "$schema": "../schema.v1.json",
-  "schemaVersion": "hookr.external-hook.v1",
+  "$schema": "https://hookr.fun/schemas/external-hook.v2.json",
+  "schemaVersion": "hookr.external-hook.v2",
   "slug": "voladelta-looong",
   "name": "Looong Hook",
   "summary": "A canonical LOOONG/WETH pool where verified buys create non-transferable custodied positions, mature holders can earn WETH rewards after 30 days, and part of the sell fee can move from early profitable exits to eligible holders.",
@@ -23,6 +23,19 @@
       "src/libraries/LooongAccounting.sol"
     ]
   },
+  "provenance": {
+    "deploymentModel": "per-hook-instance",
+    "factoryContract": "src/LooongHookFactory.sol",
+    "factoryInterface": "typed",
+    "allowlistedFactoryInterface": false,
+    "creationCodeHashEvidence": "source-derived",
+    "runtimeCodeHashEvidence": "absent",
+    "constructorArgsEvidence": "source-documented",
+    "saltDerivationEvidence": "source-documented",
+    "proxyModel": "non-proxy",
+    "mutableAuthorityReview": "reviewed-none",
+    "operatorDependencyReview": "reviewed-none"
+  },
   "integration": {
     "poolScope": "canonical-pool-only",
     "supportedTracks": ["hook_publication", "hook_token_launch"],
@@ -31,6 +44,74 @@
       "requiredForAllSwaps": false,
       "contract": "src/LooongRouter.sol",
       "purpose": "Required for position-creating buys and owner-bound sells from hook custody. Ordinary swaps can use empty hookData without creating or consuming a position."
+    },
+    "routingCompatibility": {
+      "hookData": {
+        "mode": "optional-versioned",
+        "version": "64 bytes: INTENT_DOMAIN + intentId (exact-router) or WITNESS_DOMAIN + witnessGross (unrestricted)",
+        "maxBytes": 64,
+        "trustedFields": ["other"],
+        "emptyDataBehavior": "Empty hookData selects the unrestricted ordinary forwarded-sender path and does not create, sell, or mutate a verified position."
+      },
+      "swapMatrix": {
+        "exactInputZeroForOne": {
+          "status": "source-tested",
+          "routers": [{
+            "family": "dedicated-router",
+            "identity": "src/LooongRouter.sol at the pinned source commit",
+            "status": "source-tested",
+            "evidenceUrls": ["https://github.com/voladelta/looong-hook/tree/cf498807aab6fa959109b2eada6dc77a23dfa84b"]
+          }]
+        },
+        "exactInputOneForZero": {
+          "status": "source-tested",
+          "routers": [{
+            "family": "dedicated-router",
+            "identity": "src/LooongRouter.sol at the pinned source commit",
+            "status": "source-tested",
+            "evidenceUrls": ["https://github.com/voladelta/looong-hook/tree/cf498807aab6fa959109b2eada6dc77a23dfa84b"]
+          }]
+        },
+        "exactOutputZeroForOne": {
+          "status": "source-tested",
+          "routers": [{
+            "family": "dedicated-router",
+            "identity": "src/LooongRouter.sol at the pinned source commit",
+            "status": "source-tested",
+            "evidenceUrls": ["https://github.com/voladelta/looong-hook/tree/cf498807aab6fa959109b2eada6dc77a23dfa84b"]
+          }]
+        },
+        "exactOutputOneForZero": {
+          "status": "source-tested",
+          "routers": [{
+            "family": "dedicated-router",
+            "identity": "src/LooongRouter.sol at the pinned source commit",
+            "status": "source-tested",
+            "evidenceUrls": ["https://github.com/voladelta/looong-hook/tree/cf498807aab6fa959109b2eada6dc77a23dfa84b"]
+          }]
+        }
+      },
+      "officialUniversalRouter": {
+        "status": "untested",
+        "requiredAddressIdentity": true,
+        "notes": "No exact deployed Universal Router address, code hash, hookData quadrant, or final-settlement evidence has been supplied."
+      },
+      "multihop": {
+        "status": "untested",
+        "notes": "The pinned source proves a dedicated one-pool router, not current Universal Router multihop composition."
+      },
+      "quoteDiscovery": {
+        "mode": "none",
+        "alfCompatibility": "unsupported",
+        "simulationActorBinding": "not-applicable",
+        "notes": "The hook does not implement the Uniswap ALF indicative-quote interfaces."
+      },
+      "finalAmountEvidence": {
+        "poolManagerSwapBasis": "pre-after-swap-return-delta",
+        "canonicalRouterEvent": null,
+        "genericRouterFinalSettlement": "untested",
+        "notes": "PoolManager Swap deltas are not wallet-final amounts when beforeSwap or afterSwap returns deltas; generic-router settlement remains unproved."
+      }
     },
     "dependencies": [
       { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
@@ -62,9 +143,48 @@
       "dynamicFee": false,
       "upgradeable": false,
       "requiresCustomSwapData": false,
+      "customDataMode": "optional-feature",
       "vanillaSwap": true,
       "swapAccess": "none"
-    }
+    },
+    "callbackSemantics": [
+      {
+        "name": "beforeInitialize",
+        "callerAuthorization": "exact-registrar",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "none", "maxBytes": 0, "trustedFields": [] },
+        "returnShape": "selector-only",
+        "deltaUnits": "none",
+        "failureMode": "fail-closed",
+        "externalCalls": false,
+        "reentrancyBoundary": "One-shot registrar-only pool registration and initialization; no arbitrary external callback is intended.",
+        "gasBoundary": "No independent callback gas cap is evidenced; exact deploy gas remains a release gate."
+      },
+      {
+        "name": "beforeSwap",
+        "callerAuthorization": "other",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "versioned", "maxBytes": 64, "trustedFields": ["other"] },
+        "returnShape": "selector-and-delta",
+        "deltaUnits": "specified-unspecified",
+        "failureMode": "fail-closed",
+        "externalCalls": true,
+        "reentrancyBoundary": "Forwarded-sender authorization is branch-dependent: empty data and WITNESS_DOMAIN are unrestricted, while INTENT_DOMAIN requires the immutable trusted router. Specified-fee paths call PoolManager.mint; verified sells also call PoolManager.sync and settleFor plus the immutable LOOONG token.",
+        "gasBoundary": "No independent callback gas cap is evidenced; fork gas and partial-fill cases remain release gates."
+      },
+      {
+        "name": "afterSwap",
+        "callerAuthorization": "none",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "versioned", "maxBytes": 64, "trustedFields": ["other"] },
+        "returnShape": "selector-and-delta",
+        "deltaUnits": "specified-unspecified",
+        "failureMode": "fail-closed",
+        "externalCalls": true,
+        "reentrancyBoundary": "The forwarded sender and hookData are not re-read; branch state was established in beforeSwap. Some fee quadrants call PoolManager.mint, verified buys call PoolManager.take, and the callback ends with immutable token and PoolManager balance reads that enforce custody and claim conservation.",
+        "gasBoundary": "No independent callback gas cap is evidenced; stateful accounting gas must be measured on the target chain."
+      }
+    ]
   },
   "security": {
     "auditStatus": "unaudited",
@@ -79,7 +199,18 @@
       "Before- and after-swap return deltas, exact-output gross-up, partial-fill handling, and PoolManager claim conservation require independent review and target-chain fork testing.",
       "The holder-incentive outcome depends on early-profit, maturity, wallet-sybil, ordinary-swap, and MEV behavior; source tests are not a production economic review.",
       "No public deployment, initialized pool, locked-liquidity receipt, source verification, or live monitoring evidence has been supplied."
-    ]
+    ],
+    "frameworkAssessment": {
+      "frameworkUrl": "https://developers.uniswap.org/docs/protocols/v4/security",
+      "assessedAt": null,
+      "scoreStatus": "unscored",
+      "score": null,
+      "featureTriggers": ["price-impact", "custom-data", "custody", "external-liquidity"],
+      "requiredActions": ["accounting-invariants", "stateful-fuzz", "math-review", "fork-tests", "monitoring", "bug-bounty", "incident-procedure"],
+      "monitoringStatus": "not-planned",
+      "bugBountyStatus": "not-planned",
+      "incidentResponseStatus": "not-planned"
+    }
   },
   "deployments": []
 }

@@ -23,7 +23,8 @@ deployment and pool; it is not an attachment to an existing Hookr pool.
 
 1. Open the **External hook integration** GitHub issue with the repository, exact commit, contract
    paths, integration lane, and current security status. Do not post private contact details.
-2. Add one JSON manifest under `manifests/` and validate it with `npm run hooks:validate`.
+2. Add one `hookr.external-hook.v2` JSON manifest under `manifests/` and validate it with
+   `npm run hooks:validate`. The frozen v1 schema remains readable; new submissions use v2.
 3. Keep the manifest `source-only` until there is a real receipt, runtime-code hash, verified source,
    PoolManager binding, initialized pool, and liquidity evidence.
 4. After a supported mainnet deployment, add a deployment record and run the listing executor in
@@ -93,11 +94,40 @@ The secret has this shape; copy every policy value from `uniswap-policy.v1.json`
   public issue creation is restricted; without an authorized account, the executor records that
   boundary while continuing the separate routing decision.
 - **Uniswap Labs routing:** no form is needed for most hooks. Manual review is required when the
-  address starts with `0x91`, a return-delta flag is enabled, or dynamic fees are used. The form also
+  address starts with `0x91`, a return-delta flag is enabled, or the submitted pool targets a major
+  token pair such as ETH/USDC. The form also
   requires an initialized pool with liquidity, verified source, contact details, and legal consent.
+  The current published policy says upgradeable hooks and hooks requiring custom data inputs are
+  not approved, so those conditions remain hard blockers rather than review triggers.
 
 Policy inputs are pinned in `uniswap-policy.v1.json`. Refresh and review that file when Uniswap's
 Hooklist schema, supported chains, routing guidance, or HubSpot form definition changes.
+
+## V2 review contract
+
+The v2 manifest makes integration claims falsifiable before any pool is funded:
+
+- provenance separates a per-instance hook, singleton, and genuinely allowlisted typed factory;
+- callback semantics cover every enabled callback, caller authorization, PoolId/state scope,
+  hookData schema and trusted fields, selector/return-delta units, failure behavior, external calls,
+  reentrancy boundary, and gas boundary;
+- return-delta permissions are rejected unless their parent callback is enabled;
+- all four swap quadrants distinguish dedicated-router, PoolSwapTest, direct PoolManager, exact
+  deployed Universal Router, and ALF Multiplexer evidence;
+- generic Universal Router and multihop support remain `untested` until an exact address/runtime
+  fork matrix and wallet-final settlement readback exist;
+- raw PoolManager `Swap` deltas are recorded as pre-`afterSwap` pool accounting, never silently as
+  wallet-final input/output when a hook returns deltas;
+- the current Uniswap security framework records feature triggers and the still-missing invariant,
+  dependency-failure, audit, monitoring, bounty, and incident artifacts; and
+- scanner results such as Blockaid are retained as timestamped, non-authoritative evidence beside
+  actual buy/sell receipts and wallet deltas. A successful sell disproves universal sell blocking;
+  it does not by itself prove safety or force a scanner to clear a warning.
+
+The official ALF/DualPool family is a separate exclusive-root design, not a Hookr block. A hook is
+not ALF-compatible merely because it has a quoter or can accept an ordinary swap. ALF compatibility
+requires the exact interfaces, sign and unit semantics, gas cap, soft-failure behavior, and
+quote-versus-execution evidence.
 
 ## Deployment evidence
 
@@ -107,10 +137,15 @@ A production deployment record includes:
 - deployment transaction, block, runtime bytecode hash, and block-pinned observation;
 - verified explorer source explicitly tied to the pinned source commit;
 - at least one pool identifier with initialization receipt and block, later liquidity receipt and
-  block, a post-liquidity observation, and an independent evidence URL;
+  block, a post-liquidity observation, an explicit major-token-pair attestation, and an independent
+  evidence URL;
 - explicit eligibility attestations for protocol fees, ordinary-router compatibility, and known
   malicious or extractive behavior; and
+- four-quadrant route receipts, exact router identities, final wallet/router-event reconciliation,
+  and separate timestamped scanner assessments; and
 - distinct Hooklist and routing statuses with receipt URLs when they exist.
 
-The schema is intentionally stricter than the UI. Integrators can consume the read-only catalog at
-`/api/hooks/integrations` without receiving private contact or consent data.
+The schema is intentionally stricter than the UI. Integrators can consume the schema-valid V2
+manifest-plus-derived catalog at `/api/hooks/integrations/v2` without receiving private contact or
+consent data. `/api/hooks/integrations` remains the frozen legacy V1 enriched projection for old
+clients; it is not represented as a standalone V1-manifest array.

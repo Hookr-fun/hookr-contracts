@@ -13,10 +13,16 @@ const manifestsDir = resolve(root, "integrations/hooks/manifests");
 const policy = JSON.parse(
   await readFile(resolve(root, "integrations/hooks/uniswap-policy.v1.json"), "utf8"),
 );
-const schema = JSON.parse(
-  await readFile(resolve(root, "integrations/hooks/schema.v1.json"), "utf8"),
+const schemas = new Map(
+  await Promise.all(
+    ["v1", "v2"].map(async (version) => {
+      const schema = JSON.parse(
+        await readFile(resolve(root, `integrations/hooks/schema.${version}.json`), "utf8"),
+      );
+      return [`hookr.external-hook.${version}`, createExternalHookSchemaValidator(schema)];
+    }),
+  ),
 );
-const validateSchema = createExternalHookSchemaValidator(schema);
 const requested = process.argv.slice(2);
 const files = requested.length
   ? requested.map((file) => resolve(root, file))
@@ -31,6 +37,8 @@ const slugs = new Set();
 const deployedHooks = new Set();
 for (const file of files) {
   const manifest = JSON.parse(await readFile(file, "utf8"));
+  const validateSchema = schemas.get(manifest.schemaVersion);
+  if (!validateSchema) throw new Error(`Unsupported schemaVersion in ${file}: ${manifest.schemaVersion}`);
   assertExternalHookSchema(manifest, validateSchema, file);
   assertExternalHookManifest(manifest, policy);
   if (slugs.has(manifest.slug)) throw new Error(`Duplicate manifest slug: ${manifest.slug}`);

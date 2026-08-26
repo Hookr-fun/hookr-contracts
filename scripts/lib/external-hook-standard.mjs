@@ -1,7 +1,7 @@
 const ADDRESS = /^0x[a-fA-F0-9]{40}$/;
 const BYTES32 = /^0x[a-fA-F0-9]{64}$/;
 const COMMIT = /^[a-fA-F0-9]{40}$/;
-const HTTPS_URL = /^https:\/\//;
+const EXTERNAL_HOOK_V2_SCHEMA = "https://hookr.fun/schemas/external-hook.v2.json";
 
 export const HOOK_FLAG_BITS = Object.freeze({
   beforeInitialize: 13,
@@ -43,6 +43,45 @@ const NON_PRODUCTION_ADDRESSES = new Set([
   "0x000000000000000000000000000000000000dead",
 ]);
 const ZERO_BYTES32 = `0x${"0".repeat(64)}`;
+const REGULAR_CALLBACKS = Object.freeze([
+  "beforeInitialize",
+  "afterInitialize",
+  "beforeAddLiquidity",
+  "afterAddLiquidity",
+  "beforeRemoveLiquidity",
+  "afterRemoveLiquidity",
+  "beforeSwap",
+  "afterSwap",
+  "beforeDonate",
+  "afterDonate",
+]);
+const RETURN_DELTA_REQUIREMENTS = Object.freeze({
+  beforeSwapReturnsDelta: "beforeSwap",
+  afterSwapReturnsDelta: "afterSwap",
+  afterAddLiquidityReturnsDelta: "afterAddLiquidity",
+  afterRemoveLiquidityReturnsDelta: "afterRemoveLiquidity",
+});
+const ROUTE_QUADRANTS = Object.freeze([
+  "exactInputZeroForOne",
+  "exactInputOneForZero",
+  "exactOutputZeroForOne",
+  "exactOutputOneForZero",
+]);
+const ROUTE_STATUSES = new Set([
+  "untested",
+  "source-tested",
+  "fork-tested",
+  "live-verified",
+  "unsupported",
+]);
+const ROUTE_FAMILIES = new Set([
+  "dedicated-router",
+  "pool-swap-test",
+  "universal-router",
+  "direct-pool-manager",
+  "alf-multiplexer",
+  "other",
+]);
 
 function object(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -52,12 +91,24 @@ function at(value, key) {
   return object(value) ? value[key] : undefined;
 }
 
-function requireString(errors, value, path, { pattern, maxLength } = {}) {
+function isHttpsUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname.trim().length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function requireString(errors, value, path, { pattern, validate, maxLength } = {}) {
   if (typeof value !== "string" || value.length === 0) {
     errors.push(`${path} must be a non-empty string`);
     return;
   }
-  if (pattern && !pattern.test(value)) errors.push(`${path} has an invalid format`);
+  if ((pattern && !pattern.test(value)) || (validate && !validate(value))) {
+    errors.push(`${path} has an invalid format`);
+  }
   if (maxLength && value.length > maxLength) errors.push(`${path} exceeds ${maxLength} characters`);
 }
 
@@ -69,6 +120,268 @@ function requireDate(errors, value, path) {
   requireString(errors, value, path);
   if (typeof value === "string" && !Number.isFinite(Date.parse(value))) {
     errors.push(`${path} must be an ISO date-time`);
+  }
+}
+
+function validateEvidenceUrls(errors, value, path, { requireNonEmpty = false } = {}) {
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array`);
+    return;
+  }
+  if (requireNonEmpty && value.length === 0) {
+    errors.push(`${path} must contain at least one exact evidence URL`);
+  }
+  for (const [index, url] of value.entries()) {
+    requireString(errors, url, `${path}[${index}]`, { validate: isHttpsUrl });
+  }
+}
+
+function validateRouteMatrix(errors, value, path, { requireLiveEvidence = false } = {}) {
+  if (!object(value)) {
+    errors.push(`${path} must be an object`);
+    return;
+  }
+  for (const quadrant of ROUTE_QUADRANTS) {
+    const record = value[quadrant];
+    if (!object(record)) {
+      errors.push(`${path}.${quadrant} must be an object`);
+      continue;
+    }
+    if (!ROUTE_STATUSES.has(record.status)) {
+      errors.push(`${path}.${quadrant}.status is not supported`);
+    }
+    if (requireLiveEvidence && record.status !== "live-verified") {
+      errors.push(`${path}.${quadrant}.status must be live-verified for a production deployment`);
+    }
+    if (!Array.isArray(record.routers)) {
+      errors.push(`${path}.${quadrant}.routers must be an array`);
+    } else if (record.status === "unsupported" && record.routers.length !== 0) {
+      errors.push(`${path}.${quadrant}.routers must be empty when status is unsupported`);
+    } else if (!["untested", "unsupported"].includes(record.status) && record.routers.length === 0) {
+      errors.push(`${path}.${quadrant}.routers must include route evidence for ${record.status}`);
+    }
+
+    let hasExactLiveEvidence = false;
+    if (Array.isArray(record.routers)) {
+      for (const [routerIndex, route] of record.routers.entries()) {
+        const routePath = `${path}.${quadrant}.routers[${routerIndex}]`;
+        if (!object(route)) {
+          errors.push(`${routePath} must be an object`);
+          continue;
+        }
+        if (!ROUTE_FAMILIES.has(route.family)) {
+          errors.push(`${routePath}.family is not supported`);
+        }
+        requireString(errors, route.identity, `${routePath}.identity`, { maxLength: 240 });
+        if (!ROUTE_STATUSES.has(route.status)) {
+          errors.push(`${routePath}.status is not supported`);
+        }
+        validateEvidenceUrls(errors, route.evidenceUrls, `${routePath}.evidenceUrls`, {
+          requireNonEmpty: true,
+        });
+        if (
+          route.status === "live-verified" &&
+          typeof route.identity === "string" &&
+          route.identity.trim().length > 0 &&
+          Array.isArray(route.evidenceUrls) &&
+          route.evidenceUrls.some(isHttpsUrl)
+        ) {
+          hasExactLiveEvidence = true;
+        }
+      }
+    }
+    if ((requireLiveEvidence || record.status === "live-verified") && !hasExactLiveEvidence) {
+      errors.push(
+        `${path}.${quadrant}.routers must include live-verified route evidence with a non-empty identity and evidenceUrls`,
+      );
+    }
+  }
+}
+
+function validateFinalSettlement(errors, value, path, { requireLiveEvidence = false } = {}) {
+  if (!object(value)) {
+    errors.push(`${path} must be an object`);
+    return;
+  }
+  if (!ROUTE_STATUSES.has(value.status)) {
+    errors.push(`${path}.status is not supported`);
+  }
+  if (requireLiveEvidence && value.status !== "live-verified") {
+    errors.push(`${path}.status must be live-verified for a production deployment`);
+  }
+  validateEvidenceUrls(errors, value.walletDeltaEvidenceUrls, `${path}.walletDeltaEvidenceUrls`, {
+    requireNonEmpty: requireLiveEvidence,
+  });
+  validateEvidenceUrls(errors, value.routerEventEvidenceUrls, `${path}.routerEventEvidenceUrls`, {
+    requireNonEmpty: requireLiveEvidence,
+  });
+}
+
+function validateDeploymentRouteEvidence(errors, deployment, path, { requireLiveEvidence = false } = {}) {
+  const routeEvidence = deployment?.routeEvidence;
+  if (!object(routeEvidence)) {
+    errors.push(`${path}.routeEvidence must be an object for v2 deployments`);
+    return;
+  }
+  validateRouteMatrix(errors, routeEvidence.swapMatrix, `${path}.routeEvidence.swapMatrix`, {
+    requireLiveEvidence,
+  });
+  validateFinalSettlement(errors, routeEvidence.finalSettlement, `${path}.routeEvidence.finalSettlement`, {
+    requireLiveEvidence,
+  });
+
+  const scannerAssessments = routeEvidence.scannerAssessments;
+  if (!Array.isArray(scannerAssessments)) {
+    errors.push(`${path}.routeEvidence.scannerAssessments must be an array`);
+  } else {
+    for (const [scannerIndex, assessment] of scannerAssessments.entries()) {
+      const scannerPath = `${path}.routeEvidence.scannerAssessments[${scannerIndex}]`;
+      requireString(errors, assessment?.provider, `${scannerPath}.provider`, { maxLength: 120 });
+      requireDate(errors, assessment?.observedAt, `${scannerPath}.observedAt`);
+      if (assessment?.nonAuthoritative !== true) {
+        errors.push(`${scannerPath}.nonAuthoritative must be true`);
+      }
+    }
+  }
+}
+
+export function validateProductionDeploymentEvidence(deployment, path = "deployment") {
+  const errors = [];
+  validateDeploymentRouteEvidence(errors, deployment, path, { requireLiveEvidence: true });
+  return errors;
+}
+
+function validateV2Manifest(errors, manifest, flags) {
+  const provenance = manifest.provenance;
+  const hookProperties = at(manifest.uniswapClassification, "properties");
+  if (!object(provenance)) {
+    errors.push("provenance must be an object for v2 manifests");
+  } else {
+    requireBoolean(errors, provenance.allowlistedFactoryInterface, "provenance.allowlistedFactoryInterface");
+    if (provenance.allowlistedFactoryInterface === true && provenance.factoryInterface === "none") {
+      errors.push("provenance.factoryInterface cannot be none when an allowlisted interface is claimed");
+    }
+    if (provenance.deploymentModel === "allowlisted-factory") {
+      if (typeof provenance.factoryContract !== "string" || provenance.factoryContract.trim().length === 0) {
+        errors.push("allowlisted-factory provenance requires a non-blank factoryContract");
+      }
+      if (!new Set(["typed", "versioned"]).has(provenance.factoryInterface)) {
+        errors.push("allowlisted-factory provenance requires a typed or versioned factoryInterface");
+      }
+      if (provenance.allowlistedFactoryInterface !== true) {
+        errors.push("allowlisted-factory provenance requires an allowlisted factory interface");
+      }
+    }
+  }
+  if (
+    (provenance?.proxyModel === "upgradeable-proxy") !==
+    (hookProperties?.upgradeable === true)
+  ) {
+    errors.push(
+      "provenance.proxyModel must be upgradeable-proxy if and only if uniswapClassification.properties.upgradeable is true",
+    );
+  }
+
+  const routing = at(manifest.integration, "routingCompatibility");
+  if (!object(routing)) {
+    errors.push("integration.routingCompatibility must be an object for v2 manifests");
+  } else {
+    validateRouteMatrix(errors, routing.swapMatrix, "integration.routingCompatibility.swapMatrix");
+    const universalRouter = routing.officialUniversalRouter;
+    if (!object(universalRouter)) {
+      errors.push("integration.routingCompatibility.officialUniversalRouter must be an object");
+    } else {
+      requireBoolean(
+        errors,
+        universalRouter.requiredAddressIdentity,
+        "integration.routingCompatibility.officialUniversalRouter.requiredAddressIdentity",
+      );
+      if (universalRouter.status === "live-verified" && universalRouter.requiredAddressIdentity !== true) {
+        errors.push("live-verified Universal Router evidence must bind an exact deployed address identity");
+      }
+    }
+    if (routing.finalAmountEvidence?.poolManagerSwapBasis !== "pre-after-swap-return-delta") {
+      errors.push(
+        "integration.routingCompatibility.finalAmountEvidence.poolManagerSwapBasis must be pre-after-swap-return-delta",
+      );
+    }
+    if (
+      routing.hookData?.mode === "required-versioned" &&
+      (hookProperties?.requiresCustomSwapData !== true ||
+        hookProperties?.customDataMode !== "ordinary-swap-required")
+    ) {
+      errors.push(
+        "required-versioned hookData requires requiresCustomSwapData=true and customDataMode ordinary-swap-required",
+      );
+    }
+  }
+
+  for (const [deltaFlag, callback] of Object.entries(RETURN_DELTA_REQUIREMENTS)) {
+    if (flags?.[deltaFlag] === true && flags?.[callback] !== true) {
+      errors.push(`uniswapClassification.flags.${deltaFlag} requires ${callback}`);
+    }
+  }
+  const callbackSemantics = at(manifest.uniswapClassification, "callbackSemantics");
+  if (!Array.isArray(callbackSemantics)) {
+    errors.push("uniswapClassification.callbackSemantics must be an array for v2 manifests");
+  } else {
+    const names = callbackSemantics.map((entry) => entry?.name);
+    if (new Set(names).size !== names.length) {
+      errors.push("uniswapClassification.callbackSemantics cannot contain duplicate callback names");
+    }
+    const enabled = REGULAR_CALLBACKS.filter((name) => flags?.[name] === true).sort();
+    const declared = names.filter((name) => REGULAR_CALLBACKS.includes(name)).sort();
+    if (JSON.stringify(enabled) !== JSON.stringify(declared)) {
+      errors.push("uniswapClassification.callbackSemantics must describe every and only enabled callback");
+    }
+    for (const [index, callback] of callbackSemantics.entries()) {
+      requireBoolean(
+        errors,
+        callback?.externalCalls,
+        `uniswapClassification.callbackSemantics[${index}].externalCalls`,
+      );
+      requireString(
+        errors,
+        callback?.reentrancyBoundary,
+        `uniswapClassification.callbackSemantics[${index}].reentrancyBoundary`,
+        { maxLength: 500 },
+      );
+      requireString(
+        errors,
+        callback?.gasBoundary,
+        `uniswapClassification.callbackSemantics[${index}].gasBoundary`,
+        { maxLength: 500 },
+      );
+    }
+  }
+
+  const auditUrls = at(manifest.security, "auditUrls");
+  if (manifest.security?.auditStatus === "audited" && (!Array.isArray(auditUrls) || auditUrls.length === 0)) {
+    errors.push("security.auditUrls must contain at least one URL when auditStatus is audited");
+  }
+
+  const framework = at(manifest.security, "frameworkAssessment");
+  if (!object(framework)) {
+    errors.push("security.frameworkAssessment must be an object for v2 manifests");
+  } else {
+    if (framework.frameworkUrl !== "https://developers.uniswap.org/docs/protocols/v4/security") {
+      errors.push("security.frameworkAssessment.frameworkUrl must pin the official Uniswap v4 security framework");
+    }
+    if (framework.scoreStatus === "unscored" && framework.score !== null) {
+      errors.push("security.frameworkAssessment.score must be null while unscored");
+    }
+    if (framework.scoreStatus === "scored" && !Number.isInteger(framework.score)) {
+      errors.push("security.frameworkAssessment.score must be an integer when scored");
+    }
+    if (framework.scoreStatus === "scored") {
+      requireDate(errors, framework.assessedAt, "security.frameworkAssessment.assessedAt");
+    }
+    if (!Array.isArray(framework.featureTriggers) || framework.featureTriggers.length === 0) {
+      errors.push("security.frameworkAssessment.featureTriggers must be non-empty");
+    }
+    if (!Array.isArray(framework.requiredActions) || framework.requiredActions.length === 0) {
+      errors.push("security.frameworkAssessment.requiredActions must be non-empty");
+    }
   }
 }
 
@@ -90,8 +403,11 @@ export function validateExternalHookManifest(manifest, policy) {
   if (!object(manifest)) return ["manifest must be an object"];
   if (!object(policy) || !object(policy.chains)) return ["Uniswap policy is missing chain data"];
 
-  if (manifest.schemaVersion !== "hookr.external-hook.v1") {
-    errors.push("schemaVersion must be hookr.external-hook.v1");
+  if (!new Set(["hookr.external-hook.v1", "hookr.external-hook.v2"]).has(manifest.schemaVersion)) {
+    errors.push("schemaVersion must be hookr.external-hook.v1 or hookr.external-hook.v2");
+  }
+  if (manifest.schemaVersion === "hookr.external-hook.v2" && manifest.$schema !== EXTERNAL_HOOK_V2_SCHEMA) {
+    errors.push(`$schema must be ${EXTERNAL_HOOK_V2_SCHEMA} for v2 manifests`);
   }
   requireString(errors, manifest.slug, "slug", {
     pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
@@ -100,6 +416,9 @@ export function validateExternalHookManifest(manifest, policy) {
   requireString(errors, manifest.name, "name", { maxLength: 100 });
   requireString(errors, manifest.summary, "summary", { maxLength: 500 });
   if (!EXTERNAL_HOOK_STATUSES.includes(manifest.status)) errors.push("status is not supported");
+  if (PRODUCTION_STATUSES.has(manifest.status) && manifest.schemaVersion !== "hookr.external-hook.v2") {
+    errors.push(`${manifest.status} manifests must use hookr.external-hook.v2 production evidence`);
+  }
   if (!new Set(["composable-blueprint", "standalone-hook-product"]).has(manifest.integrationMode)) {
     errors.push("integrationMode is not supported");
   }
@@ -108,7 +427,7 @@ export function validateExternalHookManifest(manifest, policy) {
     pattern: /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/,
   });
   requireString(errors, at(manifest.source, "repository"), "source.repository", {
-    pattern: HTTPS_URL,
+    validate: isHttpsUrl,
   });
   requireString(errors, at(manifest.source, "pinnedCommit"), "source.pinnedCommit", {
     pattern: COMMIT,
@@ -140,8 +459,31 @@ export function validateExternalHookManifest(manifest, policy) {
   for (const property of ["dynamicFee", "upgradeable", "requiresCustomSwapData", "vanillaSwap"]) {
     requireBoolean(errors, at(properties, property), `uniswapClassification.properties.${property}`);
   }
+  if (
+    manifest.schemaVersion === "hookr.external-hook.v2" &&
+    !new Set(["none", "optional-feature", "ordinary-swap-required"]).has(at(properties, "customDataMode"))
+  ) {
+    errors.push("uniswapClassification.properties.customDataMode is not supported");
+  }
+  if (
+    manifest.schemaVersion === "hookr.external-hook.v2" &&
+    properties?.requiresCustomSwapData === true &&
+    properties?.customDataMode !== "ordinary-swap-required"
+  ) {
+    errors.push("requiresCustomSwapData=true requires customDataMode ordinary-swap-required");
+  }
+  if (
+    manifest.schemaVersion === "hookr.external-hook.v2" &&
+    properties?.customDataMode === "ordinary-swap-required" &&
+    properties?.requiresCustomSwapData !== true
+  ) {
+    errors.push("customDataMode ordinary-swap-required requires requiresCustomSwapData=true");
+  }
   if (!SWAP_ACCESS.has(at(properties, "swapAccess"))) {
     errors.push("uniswapClassification.properties.swapAccess is not supported");
+  }
+  if (manifest.schemaVersion === "hookr.external-hook.v2") {
+    validateV2Manifest(errors, manifest, flags);
   }
 
   const deployments = manifest.deployments;
@@ -178,6 +520,9 @@ export function validateExternalHookManifest(manifest, policy) {
     if (!new Set(["testnet", "mainnet"]).has(deployment.environment)) {
       errors.push(`${path}.environment must be testnet or mainnet`);
     }
+    if (PRODUCTION_STATUSES.has(manifest.status) && deployment.environment !== "mainnet") {
+      errors.push(`${path}.environment must be mainnet for ${manifest.status}`);
+    }
     if (manifest.status === "testnet-verified" && deployment.environment !== "testnet") {
       errors.push(`${path} must be a testnet deployment for status testnet-verified`);
     }
@@ -207,7 +552,7 @@ export function validateExternalHookManifest(manifest, policy) {
     }
     requireBoolean(errors, deployment.sourceVerified, `${path}.sourceVerified`);
     requireString(errors, deployment.sourceVerificationUrl, `${path}.sourceVerificationUrl`, {
-      pattern: HTTPS_URL,
+      validate: isHttpsUrl,
     });
     if (deployment.verifiedSourceCommit !== manifest.source.pinnedCommit) {
       errors.push(`${path}.verifiedSourceCommit must equal source.pinnedCommit`);
@@ -251,9 +596,12 @@ export function validateExternalHookManifest(manifest, policy) {
           errors.push(`${poolPath}.liquidityBlockNumber must be a positive integer`);
         }
         requireString(errors, pool.liquidityEvidenceUrl, `${poolPath}.liquidityEvidenceUrl`, {
-          pattern: HTTPS_URL,
+          validate: isHttpsUrl,
         });
         requireDate(errors, pool.observedAt, `${poolPath}.observedAt`);
+        if (manifest.schemaVersion === "hookr.external-hook.v2" || pool.majorTokenPair !== undefined) {
+          requireBoolean(errors, pool.majorTokenPair, `${poolPath}.majorTokenPair`);
+        }
         if (pool.poolId?.toLowerCase() === ZERO_BYTES32) errors.push(`${poolPath}.poolId cannot be zero`);
         if (pool.initializationTransactionHash?.toLowerCase() === ZERO_BYTES32) {
           errors.push(`${poolPath}.initializationTransactionHash cannot be zero`);
@@ -273,6 +621,12 @@ export function validateExternalHookManifest(manifest, policy) {
       }
     }
 
+    if (manifest.schemaVersion === "hookr.external-hook.v2") {
+      validateDeploymentRouteEvidence(errors, deployment, path, {
+        requireLiveEvidence: PRODUCTION_STATUSES.has(manifest.status),
+      });
+    }
+
     const eligibility = deployment.uniswapEligibility;
     for (const field of [
       "modifiesOrBypassesProtocolFee",
@@ -284,13 +638,36 @@ export function validateExternalHookManifest(manifest, policy) {
     requireDate(errors, at(eligibility, "attestedAt"), `${path}.uniswapEligibility.attestedAt`);
     requireString(errors, at(eligibility, "attestedBy"), `${path}.uniswapEligibility.attestedBy`);
 
-    const hooklistStatus = at(at(deployment, "uniswap"), "hooklist")?.status;
-    const routingStatus = at(at(deployment, "uniswap"), "routing")?.status;
+    const hooklist = at(at(deployment, "uniswap"), "hooklist");
+    const routing = at(at(deployment, "uniswap"), "routing");
+    const hooklistStatus = hooklist?.status;
+    const routingStatus = routing?.status;
     if (!new Set(["not-submitted", "pending", "listed", "rejected"]).has(hooklistStatus)) {
       errors.push(`${path}.uniswap.hooklist.status is not supported`);
     }
+    if (hooklistStatus === "pending") {
+      requireString(errors, hooklist?.issueUrl, `${path}.uniswap.hooklist.issueUrl`, {
+        validate: isHttpsUrl,
+      });
+    }
+    if (hooklistStatus === "listed") {
+      requireString(errors, hooklist?.listingUrl, `${path}.uniswap.hooklist.listingUrl`, {
+        validate: isHttpsUrl,
+      });
+    }
+    if (manifest.status === "listing-submitted" && hooklistStatus !== "pending") {
+      errors.push(`${path}.uniswap.hooklist.status must be pending for listing-submitted`);
+    }
+    if (manifest.status === "listed" && hooklistStatus !== "listed") {
+      errors.push(`${path}.uniswap.hooklist.status must be listed for listed`);
+    }
     if (!new Set(["not-evaluated", "automatic", "review-required", "submitted", "allowlisted", "rejected"]).has(routingStatus)) {
       errors.push(`${path}.uniswap.routing.status is not supported`);
+    }
+    if (new Set(["submitted", "allowlisted"]).has(routingStatus)) {
+      requireString(errors, routing?.receiptUrl, `${path}.uniswap.routing.receiptUrl`, {
+        validate: isHttpsUrl,
+      });
     }
   }
 
