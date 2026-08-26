@@ -13,14 +13,16 @@ import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.so
 import {HookrToken} from "./HookrToken.sol";
 import {HookrBlueprints} from "./HookrBlueprints.sol";
 import {HookrHook} from "./HookrHook.sol";
+import {HookrHookRegistry} from "./HookrHookRegistry.sol";
+import {IHookrLaunchHook} from "./interfaces/IHookrLaunchHook.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 import {V4PoolMath} from "./libraries/V4PoolMath.sol";
-import {HookrLaunchpadLib} from "./libraries/HookrLaunchpadLib.sol";
+import {HookrLaunchpadLib, IHookrBlueprintFees} from "./libraries/HookrLaunchpadLib.sol";
 
 /// @title HookrLaunchpad
 /// @notice The Hookr.fun launchpad on Robinhood Chain: launch a fixed-supply token onto a stepped
 ///         bonding curve; when the curve sells out, the raise + reserved supply graduate atomically
-///         into a native-ETH Uniswap v4 pool wearing the creator's configured HookrHook behavior.
+///         into a native-ETH Uniswap v4 pool wearing the creator's selected hook behavior.
 ///
 ///         Curve: 10 geometric price tranches (each step = +70%), 80% of supply on the curve,
 ///         buys and sells allowed pre-graduation with a 1% curve fee split creator/protocol.
@@ -102,6 +104,7 @@ contract HookrLaunchpad is IUnlockCallback {
 
     IPoolManager public immutable poolManager;
     HookrBlueprints public immutable blueprints;
+    HookrHookRegistry public immutable hookRegistry;
     address public owner;
     address public pendingOwner; // two-step handover; see proposeOwner/acceptOwnership
     HookrHook public hook; // set once by owner after CREATE2 mining
@@ -129,7 +132,6 @@ contract HookrLaunchpad is IUnlockCallback {
 
     mapping(address => Launch) internal launches;
     address[] public allTokens;
-
     /// @notice Successful intent-bound launches, namespaced by the transaction sender.
     /// @dev A nonzero token address is both the replay marker and the launch postcondition.
     mapping(address creator => mapping(bytes32 intentId => address token)) public launchedByIntent;
@@ -152,10 +154,6 @@ contract HookrLaunchpad is IUnlockCallback {
     mapping(address => uint256) public guardFeesWithheldWei;
 
     bool internal locked;
-    uint8 internal constant CB_GRADUATE = 1;
-    uint8 internal constant CB_COLLECT = 2;
-    uint8 internal constant CB_TRANCHE = 3;
-
     // ---------------------------------------------------------------- events
 
     /// @notice Display metadata (tagline/logoURI) is deliberately NOT in this event: it is
@@ -285,6 +283,7 @@ contract HookrLaunchpad is IUnlockCallback {
         // append-only and carries no authority over the launchpad; the launchpad only reads
         // resolved params + royalty routing from it at launch time.
         blueprints = blueprintRegistry_;
+        hookRegistry = new HookrHookRegistry(address(this));
         owner = msg.sender;
     }
 
@@ -379,8 +378,7 @@ contract HookrLaunchpad is IUnlockCallback {
     /// @dev The mapping stores the resulting token rather than a boolean so agents can reconcile
     ///      a mined receipt against an onchain postcondition. Every revert rolls the marker back.
     function launch(LaunchArgs calldata args, bytes32 intentId) external payable nonReentrant returns (address token) {
-        if (intentId != 0) _checkIntent(intentId);
-        token = _launch(args);
+        token = _launch(args, _hookForLaunch(intentId));
         if (intentId != 0) _recordIntent(intentId, token);
     }
 
@@ -405,8 +403,7 @@ contract HookrLaunchpad is IUnlockCallback {
         nonReentrant
         returns (address token)
     {
-        if (intentId != 0) _checkIntent(intentId);
-        token = _launchInstant(args, poolSupplyBps);
+        token = _launchInstant(args, poolSupplyBps, _hookForLaunch(intentId));
         if (intentId != 0) _recordIntent(intentId, token);
     }
 
@@ -482,7 +479,7 @@ contract HookrLaunchpad is IUnlockCallback {
         uint256 expectedNativePayment =
             uint256(creationFeeWei) + (args.quoteToken == address(0) ? args.quoteSeedRaw : 0);
         if (msg.value != expectedNativePayment) revert InsufficientPayment();
-        _validateFeeSplit(args.creatorFeeBps, args.feeRecipients);
+        HookrLaunchpadLib.validateFeeSplit(args.creatorFeeBps, args.feeRecipients);
 
         HookrLaunchpadLib.HookParams memory params = _resolveParams(args.blueprintId, args.custom);
 
@@ -545,9 +542,9 @@ contract HookrLaunchpad is IUnlockCallback {
         });
         (uint256 quoteUsed, uint256 tokensUsed, PoolId poolId) = HookrLaunchpadLib.openPoolSimple(
             poolManager,
-            hook,
+            IHookrLaunchHook(address(hook)),
             key,
-            _poolConfigWithGuardCap(params, args.blueprintId, uint96(maxBuyWeiCap)),
+            abi.encode(_poolConfigWithGuardCap(params, args.blueprintId, uint96(maxBuyWeiCap))),
             sqrtPriceX96,
             token,
             args.quoteSeedRaw,
@@ -581,26 +578,34 @@ contract HookrLaunchpad is IUnlockCallback {
         }
     }
 
+    function _hookForLaunch(bytes32 intentId) internal view returns (uint32 hookId) {
+        if (intentId != 0) _checkIntent(intentId);
+        return hookRegistry.validateStagedHook(msg.sender, intentId);
+    }
+
     function _recordIntent(bytes32 intentId, address token) internal {
         launchedByIntent[msg.sender][intentId] = token;
         emit LaunchIntentConsumed(msg.sender, intentId, token);
     }
 
-    function _launch(LaunchArgs calldata args) internal returns (address token) {
+    function _launch(LaunchArgs calldata args, uint32 hookId) internal returns (address token) {
         if (args.targetRaiseWei < MIN_TARGET || args.targetRaiseWei > MAX_TARGET) revert TargetOutOfRange();
         // p0 from the requested raise: target = 80e6 * sum_{k=0}^{9} p0 * 1.7^k
         (uint96 p0, uint96 exactTarget) = HookrLaunchpadLib.curveParams(args.targetRaiseWei);
         if (p0 == 0) revert TargetOutOfRange();
 
         Launch storage l;
-        (token, l) = _create(args, p0, exactTarget);
+        (token, l) = _create(args, p0, exactTarget, hookId);
 
         if (args.creatorBuyWei > 0) {
             _executeBuy(token, l, args.creatorBuyWei, args.minTokensOut);
         }
     }
 
-    function _launchInstant(LaunchArgs calldata args, uint16 poolSupplyBps) internal returns (address token) {
+    function _launchInstant(LaunchArgs calldata args, uint16 poolSupplyBps, uint32 hookId)
+        internal
+        returns (address token)
+    {
         // Nothing about a curve applies here, so refuse to accept curve arguments rather than
         // ignore them: a creator who passes a raise target has misunderstood which path they are on.
         if (args.targetRaiseWei != 0 || args.minTokensOut != 0) revert BadLaunchArgs();
@@ -621,7 +626,7 @@ contract HookrLaunchpad is IUnlockCallback {
         // casting to 'uint96' is safe: a plan with `err == PLAN_OK` has already bounded `quoteIn`
         // to MAX_TARGET, which is itself a uint96.
         // forge-lint: disable-next-line(unsafe-typecast)
-        (token, l) = _create(args, openPriceWei, uint96(quoteIn));
+        (token, l) = _create(args, openPriceWei, uint96(quoteIn), hookId);
 
         if (l.quoteToken != address(0) && quoteIn > 0) {
             _safeTransferFrom(l.quoteToken, msg.sender, address(this), quoteIn);
@@ -652,14 +657,13 @@ contract HookrLaunchpad is IUnlockCallback {
     /// @dev Everything both launch paths do before their prices diverge: validate, mint the fixed
     ///      supply, and record the launch. Returns the storage pointer so the caller can drive the
     ///      curve or open the pool without a second lookup.
-    function _create(LaunchArgs calldata args, uint96 basePriceWei, uint96 targetWei)
+    function _create(LaunchArgs calldata args, uint96 basePriceWei, uint96 targetWei, uint32 hookId)
         internal
         returns (address token, Launch storage l)
     {
         if (args.expectedCreator == address(0) || msg.sender != args.expectedCreator) {
             revert UnexpectedCreator(args.expectedCreator, msg.sender);
         }
-        if (address(hook) == address(0)) revert HookNotSet();
         if (bytes(args.name).length == 0 || bytes(args.name).length > 48) revert BadLaunchArgs();
         if (bytes(args.symbol).length == 0 || bytes(args.symbol).length > 12) revert BadLaunchArgs();
         if (bytes(args.tagline).length > 160) revert BadLaunchArgs();
@@ -667,9 +671,13 @@ contract HookrLaunchpad is IUnlockCallback {
         uint256 expectedNativePayment =
             uint256(creationFeeWei) + (args.quoteToken == address(0) ? args.creatorBuyWei : 0);
         if (msg.value != expectedNativePayment) revert InsufficientPayment();
-        _validateDistribution(args);
+        HookrLaunchpadLib.validateDistribution(args.creatorFeeBps, args.feeRecipients, args.lpTranches);
 
-        HookrLaunchpadLib.HookParams memory params = _resolveParams(args.blueprintId, args.custom);
+        HookrLaunchpadLib.HookParams memory params;
+        if (hookId == 0) {
+            if (address(hook) == address(0)) revert HookNotSet();
+            params = _resolveParams(args.blueprintId, args.custom);
+        }
 
         token = HookrLaunchpadLib.deployToken(args.name, args.symbol, args.tagline, args.logoURI, msg.sender, SUPPLY);
         if (args.quoteToken != address(0)) {
@@ -687,6 +695,7 @@ contract HookrLaunchpad is IUnlockCallback {
         l.basePriceWei = basePriceWei;
         l.targetWei = targetWei;
         l.hookParams = params;
+        HookrLaunchpadLib.selectRegisteredHook(hookRegistry, msg.sender, token, hookId, args.blueprintId, args.custom);
         // Persisted before any buy can graduate the curve — or before the instant path opens its
         // pool — in this same transaction.
         if (args.creatorFeeBps != 0) creatorFeeBpsOf[token] = args.creatorFeeBps;
@@ -876,7 +885,17 @@ contract HookrLaunchpad is IUnlockCallback {
         HookrLaunchpadLib.LpTranche[] memory bands = lpTranchesOf[token];
         PoolId poolId;
         (quoteUsed, tokensUsed, poolId) = HookrLaunchpadLib.openPool(
-            poolManager, hook, key, cfg, sqrtPriceX96, token, quoteForPool, tokensForPool, tokensAvailable, bands
+            poolManager,
+            IHookrLaunchHook(address(hook)),
+            hookRegistry,
+            key,
+            cfg,
+            sqrtPriceX96,
+            token,
+            quoteForPool,
+            tokensForPool,
+            tokensAvailable,
+            bands
         );
 
         l.graduated = true;
@@ -895,14 +914,9 @@ contract HookrLaunchpad is IUnlockCallback {
         uint256 pFinal,
         uint256 capTokens
     ) internal view returns (HookrHook.PoolConfig memory cfg) {
-        uint256 maxBuyWei = 0;
-        if (p.maxBuyBps != 0) {
-            maxBuyWei = (((capTokens * p.maxBuyBps) / BPS) * pFinal) / 1e18;
-            if (maxBuyWei > type(uint96).max) maxBuyWei = type(uint96).max;
-        }
-        // casting to 'uint96' is safe: clamped on the line above.
-        // forge-lint: disable-next-line(unsafe-typecast)
-        return _poolConfigWithGuardCap(p, blueprintId, uint96(maxBuyWei));
+        return HookrLaunchpadLib.poolConfigForLaunch(
+            p, IHookrBlueprintFees(address(blueprints)), blueprintId, pFinal, capTokens
+        );
     }
 
     /// @dev Everything `_buildPoolConfig` does except derive `maxBuyWei`, which arrives already
@@ -913,12 +927,8 @@ contract HookrLaunchpad is IUnlockCallback {
         view
         returns (HookrHook.PoolConfig memory cfg)
     {
-        uint16 royaltyBps;
-        address royaltyTo;
-        if (blueprintId != 0) {
-            (royaltyBps, royaltyTo) = blueprints.feeSplitOf(blueprintId);
-        }
-        return HookrLaunchpadLib.poolConfigWithGuardCap(p, royaltyBps, royaltyTo, maxBuyWei);
+        return
+            HookrLaunchpadLib.poolConfigForGuardCap(p, IHookrBlueprintFees(address(blueprints)), blueprintId, maxBuyWei);
     }
 
     // ---------------------------------------------------------------- locked-POL fee collection
@@ -928,13 +938,15 @@ contract HookrLaunchpad is IUnlockCallback {
     function collectPoolFees(address token) external nonReentrant {
         Launch storage l = _launchOf(token);
         if (!l.graduated) revert NotGraduated();
+        (uint32 selectedHookId, IHookrLaunchHook selectedHook) =
+            hookRegistry.hookForToken(token, IHookrLaunchHook(address(hook)));
 
         PoolKey memory key = PoolKey({
             currency0: Currency.wrap(l.quoteToken),
             currency1: Currency.wrap(token),
             fee: DYNAMIC_FEE_FLAG,
             tickSpacing: TICK_SPACING,
-            hooks: IHooks(address(hook))
+            hooks: IHooks(address(selectedHook))
         });
         // Full-range position plus every seeded band, poked range by range. Linked out for
         // EIP-170; see HookrLaunchpadLib.collectAllBands for the skip rules.
@@ -950,8 +962,9 @@ contract HookrLaunchpad is IUnlockCallback {
             // Without this withholding the tax flows back to the creator at `creatorFeeBps` — and
             // the creator is a party who can pay it, in the launch transaction on the instant path.
             // `guardFeesWithheldWei` is the high-water mark so the same wei is never withheld twice.
+            uint256 guardEarned = selectedHookId == 0 ? hook.guardLpEarnedWei(l.poolId) : 0;
             (uint256 withheld, uint256 creatorSide) = HookrLaunchpadLib.splitCollectionFees(
-                quoteAmount, hook.guardLpEarnedWei(l.poolId), guardFeesWithheldWei[token], _creatorFeeBps(token)
+                quoteAmount, guardEarned, guardFeesWithheldWei[token], _creatorFeeBps(token)
             );
             if (withheld > 0) guardFeesWithheldWei[token] += withheld;
             protocolFeesByQuote[quoteToken] += quoteAmount - creatorSide;
@@ -1041,59 +1054,13 @@ contract HookrLaunchpad is IUnlockCallback {
 
     function unlockCallback(bytes calldata data) external returns (bytes memory) {
         if (msg.sender != address(poolManager)) revert NotPoolManager();
-        // Each action carries its own payload shape; decode the selector first so a range-bearing
-        // action cannot be misread as the full-range one.
-        uint8 action = abi.decode(data[:32], (uint8));
-
-        if (action == CB_TRANCHE) {
-            (, PoolKey memory tKey, int24 tLower, int24 tUpper, uint256 tAmount) =
-                abi.decode(data, (uint8, PoolKey, int24, int24, uint256));
-            // Entirely above spot, so the band is funded with token1 alone. Minting and settling
-            // are linked out for EIP-170 and run by DELEGATECALL, so the position is still the
-            // launchpad's and the tokens still come from the launchpad's own balance.
-            (uint256 oweT, uint256 oweE) = HookrLaunchpadLib.mintBand(poolManager, tKey, tLower, tUpper, tAmount);
-            // A band above spot must never draw ETH; if it somehow would, that is a bug and the
-            // graduation should revert rather than spend the raise. The check stays HERE so
-            // `BadLpPlan` keeps being raised by this contract.
-            if (oweE > 0) revert BadLpPlan();
-            return abi.encode(oweT);
-        }
-
-        (, PoolKey memory key, uint160 sqrtPriceX96, uint256 amount0, uint256 amount1) =
-            abi.decode(data, (uint8, PoolKey, uint160, uint256, uint256));
-
-        // The mechanics of both remaining actions are linked out for EIP-170 and run by
-        // DELEGATECALL; the launchpad stays the unlock callback target and the position owner.
-        if (action == CB_GRADUATE) {
-            (uint256 oweCurrency0, uint256 oweCurrency1) =
-                HookrLaunchpadLib.graduateFullRange(poolManager, key, sqrtPriceX96, amount0, amount1);
-            return abi.encode(oweCurrency0, oweCurrency1);
-        }
-        if (action == CB_COLLECT) {
-            (uint256 token0Owed, uint256 token1Owed) =
-                HookrLaunchpadLib.collectPosition(poolManager, key, amount0, amount1);
-            return abi.encode(token0Owed, token1Owed);
-        }
-
-        revert BadCallback();
+        return HookrLaunchpadLib.handleUnlock(poolManager, data);
     }
 
     // ---------------------------------------------------------------- validation
     // The validator bodies are linked out for EIP-170 and run by DELEGATECALL; the launchpad
     // keeps only the call stubs. Custom-error selectors are name-derived, so reverts raised in
     // the library carry exactly the selectors these entrypoints have always surfaced.
-
-    function _validateDistribution(LaunchArgs calldata args) internal pure {
-        HookrLaunchpadLib.validateFeeSplit(args.creatorFeeBps, args.feeRecipients);
-        HookrLaunchpadLib.validateLpPlan(args.lpTranches);
-    }
-
-    function _validateFeeSplit(uint16 creatorFeeBps, HookrLaunchpadLib.FeeRecipient[] calldata recipients)
-        internal
-        pure
-    {
-        HookrLaunchpadLib.validateFeeSplit(creatorFeeBps, recipients);
-    }
 
     /// @notice Blueprint resolution for every market path. Id 0 means "use the caller's custom
     ///         stack" (validated here); anything else is validated at SAVE time by the registry,

@@ -50,6 +50,8 @@ docs/                utility terms and chain-extension notes
 
 - `HookrLaunchpad.sol` — fixed-supply token launch through either the ten-tranche curve or an immediate pool, sender-bound launch calldata, immutable per-pool configuration, locked full-range POL, fee accounting, and blueprints.
 - `HookrHook.sol` — shared v4 hook implementing all five blocks.
+- `HookrHookRegistry.sol` — append-only hook/router registry and intent-bound hook selection for
+  curve and instant launches.
 - `HookrSwapRouter.sol` — live-pool router with bound recipient/hook data, deadline, execution-time min/max, measured settlement, native refund, and callback/reentrancy guards.
 - `HookrToken.sol` — fixed 1 billion supply ERC-20 without owner mint, pause, blacklist, or transfer tax.
 - `Leverage*.sol` — leveraged-hooks research lane: deployed for verification, writes closed. See [`LEVERAGED_HOOKS_ARCHITECTURE.md`](contracts/LEVERAGED_HOOKS_ARCHITECTURE.md) and [`AUDIT.md`](contracts/AUDIT.md).

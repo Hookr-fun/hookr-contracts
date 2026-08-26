@@ -16,6 +16,8 @@ import {
 import {SwapParams, ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
+import {IHookrLaunchHook} from "./interfaces/IHookrLaunchHook.sol";
+
 /// @title HookrHook
 /// @notice One shared Uniswap v4 hook serving every pool graduated through the Hookr launchpad.
 ///         Per-pool behavior is configured once by the launchpad at graduation and is immutable
@@ -59,7 +61,7 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 ///         - `burnBps` is an output-token burn. The legacy `burnTriggerWei` config field and
 ///           `buybackAndBurn` entrypoint remain ABI-readable for migration tooling, but a new
 ///           config must set the field to zero so no caller can mistake it for an active trigger.
-contract HookrHook is IHooks, IUnlockCallback {
+contract HookrHook is IHooks, IUnlockCallback, IHookrLaunchHook {
     using StateLibrary for IPoolManager;
     using BeforeSwapDeltaLibrary for BeforeSwapDelta;
 
@@ -67,7 +69,8 @@ contract HookrHook is IHooks, IUnlockCallback {
 
     // beforeInitialize | beforeAddLiquidity | beforeSwap | afterSwap |
     // beforeSwapReturnsDelta | afterSwapReturnsDelta
-    uint160 public constant REQUIRED_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
+    uint160 public constant override REQUIRED_FLAGS =
+        uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
     uint24 internal constant DYNAMIC_FEE_FLAG = 0x800000;
     uint24 internal constant OVERRIDE_FEE_FLAG = 0x400000;
     /// @notice Tick spacing every graduated pool is created with. `_poolKeyFor` relies on this.
@@ -88,8 +91,8 @@ contract HookrHook is IHooks, IUnlockCallback {
     uint16 public constant MAX_BUYBACK_SLIP_BPS = 500;
     address internal constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
-    IPoolManager public immutable poolManager;
-    address public immutable launchpad;
+    IPoolManager public immutable override poolManager;
+    address public immutable override launchpad;
 
     // ---------------------------------------------------------------- per-pool config
 
@@ -250,9 +253,32 @@ contract HookrHook is IHooks, IUnlockCallback {
 
     /// @notice Called by the launchpad immediately before pool initialization. One-shot.
     function configurePool(PoolKey calldata key, PoolConfig memory cfg) external {
+        _configurePool(key, cfg);
+    }
+
+    /// @inheritdoc IHookrLaunchHook
+    function configurePool(PoolKey calldata key, bytes calldata rawConfig) external override {
+        _configurePool(key, abi.decode(rawConfig, (PoolConfig)));
+    }
+
+    /// @inheritdoc IHookrLaunchHook
+    function validateHookConfig(bytes calldata rawConfig) external pure override {
+        _validateConfig(abi.decode(rawConfig, (PoolConfig)));
+    }
+
+    function _configurePool(PoolKey calldata key, PoolConfig memory cfg) internal {
         if (msg.sender != launchpad) revert NotLaunchpad();
         PoolId id = key.toId();
         if (poolConfig[id].initialized) revert AlreadyConfigured();
+        _validateConfig(cfg);
+        cfg.initialized = true;
+        cfg.token = Currency.unwrap(key.currency1);
+        poolQuoteToken[id] = Currency.unwrap(key.currency0);
+        poolConfig[id] = cfg;
+        emit PoolConfigured(id, cfg.token, cfg);
+    }
+
+    function _validateConfig(PoolConfig memory cfg) internal pure {
         if (cfg.baseFeePips > MAX_TOTAL_FEE_PIPS || cfg.maxFeePips > MAX_TOTAL_FEE_PIPS) revert BadConfig();
         if (cfg.maxFeePips < cfg.baseFeePips) revert BadConfig();
         if (uint256(cfg.baseFeePips) + cfg.snipeTaxPips > MAX_TOTAL_FEE_PIPS) revert BadConfig();
@@ -277,17 +303,12 @@ contract HookrHook is IHooks, IUnlockCallback {
             if (cfg.potMinBuyWei < MIN_POT_BUY_WEI) revert BadConfig();
         }
         if (cfg.surgeSens > 10) revert BadConfig();
-        cfg.initialized = true;
-        cfg.token = Currency.unwrap(key.currency1);
-        poolQuoteToken[id] = Currency.unwrap(key.currency0);
-        poolConfig[id] = cfg;
-        emit PoolConfigured(id, cfg.token, cfg);
     }
 
     /// @notice Push the configured base fee into the pool's cached dynamic LP fee.
     ///         Called by the launchpad right after initialization; also callable by anyone later
     ///         (it only re-syncs to the same configured base fee).
-    function syncBaseFee(PoolKey calldata key) external {
+    function syncBaseFee(PoolKey calldata key) external override {
         PoolConfig storage cfg = poolConfig[key.toId()];
         if (!cfg.initialized) revert NotConfigured();
         poolManager.updateDynamicLPFee(key, cfg.baseFeePips);

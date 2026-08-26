@@ -6,6 +6,7 @@ import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 
 import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
+import {HookrHookRegistry} from "../src/HookrHookRegistry.sol";
 import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
@@ -13,6 +14,7 @@ import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 /// @notice Deploys Hookr to Robinhood Chain (4663):
 ///         0. HookrLaunchpadLib — emitted by Forge itself, see the linked-library note below
 ///         1. HookrLaunchpad
+///            (its constructor creates the hook registry inside the same transaction)
 ///         2. HookrHook via CREATE2 (mined address carrying the exact permission flags)
 ///         3. deploys the bounded production swap router
 ///         4. wires the hook, seeds the five house blueprints
@@ -68,6 +70,7 @@ contract DeployRobinhood is Script {
         // append-only; the house gate below seeds ids 1..5 from the same reviewed sender.
         HookrBlueprints blueprints = new HookrBlueprints(EXPECTED_DEPLOYER);
         HookrLaunchpad pad = new HookrLaunchpad(PM, blueprints);
+        HookrHookRegistry hookRegistry = pad.hookRegistry();
 
         // 2. mine + deploy the hook
         bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad)));
@@ -93,6 +96,8 @@ contract DeployRobinhood is Script {
         require(keccak256(bytes(router.contractName())) == keccak256(bytes("HookrSwapRouter")), "router identity wrong");
         require(keccak256(bytes(router.contractVersion())) == keccak256(bytes("1.0.0")), "router version wrong");
         require(address(pad.hook()) == address(hook), "hook not wired");
+        require(hookRegistry.launchpad() == address(pad), "hook registry launchpad wrong");
+        require(hookRegistry.hooksCount() == 0, "hook registry not empty");
         require(uint160(address(hook)) & 0x3FFF == HOOK_FLAGS, "hook flags wrong");
         require(hook.launchpad() == address(pad), "hook launchpad wrong");
         require(address(hook.poolManager()) == address(PM), "hook PM wrong");
@@ -107,16 +112,18 @@ contract DeployRobinhood is Script {
         // That is exactly how an oversized launchpad reached a funded release wallet once already.
         // Assert it against the actually-deployed runtime, so a regression stops the simulation.
         require(address(pad).code.length <= MAX_RUNTIME_SIZE, "launchpad exceeds EIP-170");
+        require(address(hookRegistry).code.length <= MAX_RUNTIME_SIZE, "hook registry exceeds EIP-170");
         require(address(hook).code.length <= MAX_RUNTIME_SIZE, "hook exceeds EIP-170");
         require(address(router).code.length <= MAX_RUNTIME_SIZE, "router exceeds EIP-170");
         console2.log("HookrLaunchpad runtime size", address(pad).code.length);
 
         bytes32 padRuntimeCodehash = address(pad).codehash;
+        bytes32 hookRegistryRuntimeCodehash = address(hookRegistry).codehash;
         bytes32 hookRuntimeCodehash = address(hook).codehash;
         bytes32 routerRuntimeCodehash = address(router).codehash;
         require(
-            padRuntimeCodehash != bytes32(0) && hookRuntimeCodehash != bytes32(0)
-                && routerRuntimeCodehash != bytes32(0),
+            padRuntimeCodehash != bytes32(0) && hookRegistryRuntimeCodehash != bytes32(0)
+                && hookRuntimeCodehash != bytes32(0) && routerRuntimeCodehash != bytes32(0),
             "runtime codehash missing"
         );
 
@@ -142,10 +149,13 @@ contract DeployRobinhood is Script {
         require(padRuntimeCodehash == REVIEWED_PAD_RUNTIME_HASH, "launchpad is not the reviewed build");
 
         console2.log("HookrLaunchpad", address(pad));
+        console2.log("HookrHookRegistry", address(hookRegistry));
         console2.log("HookrHook     ", address(hook));
         console2.log("HookrSwapRouter", address(router));
         console2.log("HookrLaunchpad runtime codehash");
         console2.logBytes32(padRuntimeCodehash);
+        console2.log("HookrHookRegistry runtime codehash");
+        console2.logBytes32(hookRegistryRuntimeCodehash);
         console2.log("HookrHook runtime codehash");
         console2.logBytes32(hookRuntimeCodehash);
         console2.log("HookrSwapRouter runtime codehash");

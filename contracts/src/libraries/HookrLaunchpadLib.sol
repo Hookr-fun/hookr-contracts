@@ -7,11 +7,18 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
+import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 
 import {V4PoolMath} from "./V4PoolMath.sol";
 import {HookrToken} from "../HookrToken.sol";
 import {HookrHook} from "../HookrHook.sol";
+import {IHookrLaunchHook} from "../interfaces/IHookrLaunchHook.sol";
+import {HookrHookRegistry} from "../HookrHookRegistry.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
+
+interface IHookrBlueprintFees {
+    function feeSplitOf(uint32 blueprintId) external view returns (uint16 royaltyBps, address royaltyTo);
+}
 
 /// @title HookrLaunchpadLib
 /// @notice The code HookrLaunchpad deploys separately and links by DELEGATECALL: the token
@@ -43,9 +50,10 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 ///      uint160) now happen at the launchpad call site, so those custom errors stay owned by the
 ///      contract that defines them and no error selector moves.
 ///
-///      DELEGATECALL means these run in the launchpad's context. Every function except
-///      `deployToken` is `pure`; `deployToken` only ever CREATEs. Nothing here reads or writes
-///      launchpad storage, so the delegate frame carries no authority over it.
+///      DELEGATECALL means these run in the launchpad's context. Stateful orchestration is limited
+///      to token creation, the authenticated PoolManager unlock path, and calls to the immutable
+///      blueprint registry, hook registry, and selected hook. The library does not address or
+///      mutate launchpad storage directly.
 library HookrLaunchpadLib {
     /// @notice Creator-facing hook configuration — mirrors the builder blocks.
     struct HookParams {
@@ -129,6 +137,8 @@ library HookrLaunchpadLib {
     error BadHookParams();
     error BadFeeSplit();
     error BadLpPlan();
+    error BadHookSelection();
+    error BadCallback();
 
     /// @notice Rejection reasons for `instantPlan`, in the order the launchpad checks them.
     uint8 internal constant PLAN_OK = 0;
@@ -150,6 +160,32 @@ library HookrLaunchpadLib {
     uint8 internal constant CB_COLLECT = 2;
     uint8 internal constant CB_TRANCHE = 3;
 
+    /// @notice Execute the launchpad's complete PoolManager unlock callback.
+    /// @dev Runs by DELEGATECALL. The launchpad remains the callback target, settlement payer,
+    ///      and position owner. The launchpad checks PoolManager identity before this call.
+    function handleUnlock(IPoolManager pm, bytes calldata data) public returns (bytes memory) {
+        uint8 action = abi.decode(data[:32], (uint8));
+        if (action == CB_TRANCHE) {
+            (, PoolKey memory trancheKey, int24 lower, int24 upper, uint256 amount) =
+                abi.decode(data, (uint8, PoolKey, int24, int24, uint256));
+            (uint256 tokenOwed, uint256 quoteOwed) = mintBand(pm, trancheKey, lower, upper, amount);
+            if (quoteOwed > 0) revert BadLpPlan();
+            return abi.encode(tokenOwed);
+        }
+
+        (, PoolKey memory key, uint160 sqrtPriceX96, uint256 amount0, uint256 amount1) =
+            abi.decode(data, (uint8, PoolKey, uint160, uint256, uint256));
+        if (action == CB_GRADUATE) {
+            (uint256 owed0, uint256 owed1) = graduateFullRange(pm, key, sqrtPriceX96, amount0, amount1);
+            return abi.encode(owed0, owed1);
+        }
+        if (action == CB_COLLECT) {
+            (uint256 owed0, uint256 owed1) = collectPosition(pm, key, amount0, amount1);
+            return abi.encode(owed0, owed1);
+        }
+        revert BadCallback();
+    }
+
     // ------------------------------------------------------------------ pool opening
 
     event LpTrancheSeeded(
@@ -169,15 +205,15 @@ library HookrLaunchpadLib {
     ///         nothing burns and no band loop is encoded at the call site.
     function openPoolSimple(
         IPoolManager pm,
-        HookrHook hookContract,
+        IHookrLaunchHook hookContract,
         PoolKey memory key,
-        HookrHook.PoolConfig memory cfg,
+        bytes memory hookConfig,
         uint160 sqrtPriceX96,
         address token,
         uint256 quoteForPool,
         uint256 tokensForPool
     ) public returns (uint256 quoteUsed, uint256 tokensUsed, PoolId poolId) {
-        hookContract.configurePool(key, cfg);
+        hookContract.configurePool(key, hookConfig);
         pm.initialize(key, sqrtPriceX96);
         hookContract.syncBaseFee(key);
         bytes memory result = pm.unlock(abi.encode(CB_GRADUATE, key, sqrtPriceX96, quoteForPool, tokensForPool));
@@ -226,9 +262,10 @@ library HookrLaunchpadLib {
 
     function openPool(
         IPoolManager pm,
-        HookrHook hookContract,
+        IHookrLaunchHook defaultHook,
+        HookrHookRegistry hookRegistry,
         PoolKey memory key,
-        HookrHook.PoolConfig memory cfg,
+        HookrHook.PoolConfig memory defaultConfig,
         uint160 sqrtPriceX96,
         address token,
         uint256 quoteForPool,
@@ -236,8 +273,16 @@ library HookrLaunchpadLib {
         uint256 tokensAvailable,
         LpTranche[] memory bands
     ) public returns (uint256 quoteUsed, uint256 tokensUsed, PoolId poolId) {
+        IHookrLaunchHook hookContract = defaultHook;
+        (uint32 hookId, IHookrLaunchHook selectedHook, bytes memory hookConfig) = hookRegistry.consumeForPool(token);
+        if (hookId == 0) {
+            hookConfig = abi.encode(defaultConfig);
+        } else {
+            hookContract = selectedHook;
+            key.hooks = IHooks(address(hookContract));
+        }
         // Configure behavior, then create the pool (beforeInitialize enforces this ordering).
-        hookContract.configurePool(key, cfg);
+        hookContract.configurePool(key, hookConfig);
         pm.initialize(key, sqrtPriceX96);
         hookContract.syncBaseFee(key);
         bytes memory result = pm.unlock(abi.encode(CB_GRADUATE, key, sqrtPriceX96, quoteForPool, tokensForPool));
@@ -816,6 +861,29 @@ library HookrLaunchpadLib {
         return p.maxFeePips == 0 ? p.baseFeePips : p.maxFeePips;
     }
 
+    /// @notice Record a registered hook selection after the launchpad creates the token.
+    /// @dev The selected hook owns `config`. Built-in block settings and blueprints are refused
+    ///      because they would otherwise appear in launch calldata but have no effect.
+    function selectRegisteredHook(
+        HookrHookRegistry registry,
+        address creator,
+        address token,
+        uint32 hookId,
+        uint32 blueprintId,
+        HookParams calldata p
+    ) public {
+        if (hookId == 0) return;
+        if (blueprintId != 0 || _hasHookParams(p)) revert BadHookSelection();
+        registry.bindStagedHook(creator, token, hookId);
+    }
+
+    function _hasHookParams(HookParams calldata p) private pure returns (bool) {
+        return p.guardBlocks != 0 || p.maxBuyBps != 0 || p.snipeTaxPips != 0 || p.baseFeePips != 0 || p.maxFeePips != 0
+            || p.surgeSens != 0 || p.burnBps != 0 || p.burnTriggerWei != 0 || p.lpBps != 0 || p.potBps != 0
+            || p.potEveryNBuys != 0 || p.potMinBuyWei != 0 || p.buybackBps != 0 || p.buybackDrawdownBps != 0
+            || p.buybackCooldownBlocks != 0 || p.buybackMinSpendWei != 0 || p.buybackMaxSpendWei != 0;
+    }
+
     /// @notice The exact checks `HookrHook.configurePool` will apply, run at launch time so a
     ///         rejected stack reverts the launch instead of bricking graduation. Returns the
     ///         NORMALIZED max fee the config builder must use.
@@ -872,6 +940,15 @@ library HookrLaunchpadLib {
         }
     }
 
+    function validateDistribution(
+        uint16 creatorFeeBps,
+        FeeRecipient[] calldata recipients,
+        LpTranche[] calldata tranches
+    ) public pure {
+        validateFeeSplit(creatorFeeBps, recipients);
+        validateLpPlan(tranches);
+    }
+
     /// @notice Rejects an LP-band plan the collection path could not honour exactly.
     function validateLpPlan(LpTranche[] calldata tranches) public pure {
         uint256 t = tranches.length;
@@ -914,13 +991,42 @@ library HookrLaunchpadLib {
         view
         returns (HookrHook.PoolConfig memory cfg)
     {
+        return poolConfig(p, 0, address(0), pFinal, capTokens);
+    }
+
+    function poolConfig(HookParams memory p, uint16 royaltyBps, address royaltyTo, uint256 pFinal, uint256 capTokens)
+        public
+        view
+        returns (HookrHook.PoolConfig memory cfg)
+    {
         // The 1e18 division is the 18-decimal token assumption the two native launch paths make.
         uint256 maxBuyWei = 0;
         if (p.maxBuyBps != 0) {
             maxBuyWei = (((capTokens * p.maxBuyBps) / BPS) * pFinal) / 1e18;
             if (maxBuyWei > type(uint96).max) maxBuyWei = type(uint96).max;
         }
-        return poolConfigWithGuardCap(p, 0, address(0), uint96(maxBuyWei));
+        return poolConfigWithGuardCap(p, royaltyBps, royaltyTo, uint96(maxBuyWei));
+    }
+
+    function poolConfigForLaunch(
+        HookParams memory p,
+        IHookrBlueprintFees blueprints,
+        uint32 blueprintId,
+        uint256 pFinal,
+        uint256 capTokens
+    ) public view returns (HookrHook.PoolConfig memory cfg) {
+        (uint16 royaltyBps, address royaltyTo) = _royalty(blueprints, blueprintId);
+        return poolConfig(p, royaltyBps, royaltyTo, pFinal, capTokens);
+    }
+
+    function poolConfigForGuardCap(
+        HookParams memory p,
+        IHookrBlueprintFees blueprints,
+        uint32 blueprintId,
+        uint96 maxBuyWei
+    ) public view returns (HookrHook.PoolConfig memory cfg) {
+        (uint16 royaltyBps, address royaltyTo) = _royalty(blueprints, blueprintId);
+        return poolConfigWithGuardCap(p, royaltyBps, royaltyTo, maxBuyWei);
     }
 
     function poolConfigWithGuardCap(HookParams memory p, uint16 royaltyBps, address royaltyTo, uint96 maxBuyWei)
@@ -968,6 +1074,14 @@ library HookrLaunchpadLib {
         }
         uint256 p0 = (uint256(targetWei) * 1e9) / ((TRANCHE_TOKENS / 1e18) * n);
         return p0 > type(uint96).max ? 0 : uint96(p0);
+    }
+
+    function _royalty(IHookrBlueprintFees blueprints, uint32 blueprintId)
+        private
+        view
+        returns (uint16 royaltyBps, address royaltyTo)
+    {
+        if (blueprintId != 0) return blueprints.feeSplitOf(blueprintId);
     }
 
     function _exactTarget(uint96 p0) private pure returns (uint96) {

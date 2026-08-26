@@ -11,6 +11,8 @@ generation 4 is source-ready and fork-rehearsed, not deployed.
   POL, fee accounting, and blueprints.
 - `HookrHook.sol` — shared v4 hook implementing Anti-Snipe, Surge Fees, Auto Burn, LP Rewards, and
   the deterministic Nth-buy Pot.
+- `HookrHookRegistry.sol` — append-only registry for reviewed hook/router pairs and intent-bound
+  hook selection for new launches.
 - `HookrSwapRouter.sol` — live-pool router with bound recipient/hook data, deadline,
   execution-time min/max, measured settlement, native refund, and callback/reentrancy guards.
 - `HookrToken.sol` — fixed 1 billion supply ERC-20 without owner mint, pause, blacklist, or token
@@ -37,12 +39,33 @@ Names, symbols, taglines, and image URIs are intentionally not globally unique: 
 submit independently approved calldata with duplicate metadata, so interfaces must identify tokens
 by chain and contract address rather than metadata alone.
 
-Agent approval packets must use `launchWithIntent(args, intentId)` for the curve path or
-`launchInstantWithIntent(args, poolSupplyBps, intentId)` for the instant path. Both share one
-nonzero, `msg.sender`-scoped intent namespace; after success,
+Agent approval packets pass a nonzero intent to `launch(args, intentId)` for the curve path or
+`launchInstant(args, poolSupplyBps, intentId)` for the instant path. Both share one
+`msg.sender`-scoped intent namespace; after success,
 `launchedByIntent(creator, intentId)` returns the deployed token. Reusing that exact creator/intent
 pair on either path reverts, while a failed launch rolls back the marker and can be retried. The
 ordinary non-intent entrypoints remain repeatable by design.
+
+## Registered hook selection
+
+Launches use `HookrHook` when the creator has no staged selection. A creator selects another
+registered hook in two intent-bound steps:
+
+1. Call `HookrHookRegistry.stageHook(hookId, hookConfig, intentId)` with a nonzero intent.
+2. Call the unchanged `launch` or `launchInstant` entrypoint with the same intent.
+
+The registry refuses a different or zero intent while that creator has a staged hook. A failed
+launch restores the staged selection. The creator can also call `cancelStagedHook`. Smart-account
+clients can submit the stage and launch calls as one ordered batch.
+
+Registration is owner-gated and append-only. It checks the hook permission bits, launchpad,
+PoolManager, matching production router, and the runtime code hashes. Every registered hook uses
+Hookr's dynamic-fee, tick-spacing-60 pool shape and implements `IHookrLaunchHook`. The selected hook
+owns decoding and validation of its bounded opaque config before PoolManager initialization.
+Built-in `HookParams` and blueprints must be empty for a registered hook, so launch calldata cannot
+claim settings that the hook ignores. After the pool opens, the registry deletes the raw config and
+keeps its hook ID and config hash. Runtime code-hash checks do not detect a proxy implementation
+change, so governance must register non-upgradeable hook and router deployments only.
 
 ## Verification
 
@@ -67,6 +90,8 @@ Important suites:
 - `HookrSwapRouter.t.sol` — exact-input/output buy/sell settlement and failure boundaries;
 - `InstantLaunch.t.sol` and `InstantLaunchDefects.t.sol` — preview/launch identity, locked instant
   liquidity, replay safety, price/float bounds, guard accounting, and adversarial regressions;
+- `GenericHookSelection.t.sol` — registered selection, alternate-hook configuration ordering, real
+  PoolManager initialization, and a swap through the matching production router;
 - `Fork.t.sol` — candidate integration against the canonical Robinhood Chain PoolManager.
 
 The release matrix must prove all 32 masks of the five behavior bits can launch, configure, and
