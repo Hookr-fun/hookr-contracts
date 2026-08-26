@@ -156,6 +156,9 @@
         "WTH is a source profile label; service identity and external ABI acceptance are unverified",
         "LP source allocation remains adapter escrow, is not distributed, and is not claimable by LPs",
         "Existing-token checks cover only 18 decimals and the exact initial factory balance delta; later mutable token behavior is unsupported",
+        "A qualifying Nth-buy Pot buy requires the exact registry-bound Hookr router or simulation quoter plus an authenticated recipient; the official Universal Router is unsupported for that buy path",
+        "Exact-output buys are blocked while Anti-Snipe is active; the guard does not block sells",
+        "PoolManager emits Swap before Hookr afterSwap return deltas, so scanners and indexers must use final deltas and settlement transfers for realized amounts",
         "The public SDK remains V5-only and exposes no V6 transaction API",
         "Has no production deployment or route-signing manifest"
       ]
