@@ -1,0 +1,25 @@
+{
+  "name": "hookr-public-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "integrations:validate": "node scripts/validate-external-hook-manifests.mjs && node scripts/validate-partner-integration-briefs.mjs && node scripts/validate-integration-capabilities.mjs",
+    "sdk:build": "npm run build --workspace=@hookr/sdk",
+    "sdk:test": "npm run test --workspace=@hookr/sdk",
+    "sdk:pack": "npm pack --workspace=@hookr/sdk --dry-run",
+    "contracts:source-sync": "node scripts/validate-contract-source-sync.mjs",
+    "contracts:release-tooling": "node --test contracts/test/CanaryRobinhoodV5Source.test.mjs scripts/build-v5-phase-a-index.test.mjs scripts/build-v5-phase-b-evidence.test.mjs scripts/collect-v5-phase-b-evidence.test.mjs scripts/promote-release-manifest.test.mjs scripts/redact-rpc-stream.test.mjs scripts/run-canary-v5-wrapper.test.mjs scripts/v5-canary-evidence.test.mjs",
+    "test": "npm run contracts:source-sync && npm run integrations:validate && npm run sdk:test && npm run contracts:release-tooling"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "viem": "2.55.10"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

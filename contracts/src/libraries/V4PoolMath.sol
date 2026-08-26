@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 /// @title V4PoolMath
 /// @notice The minimum Uniswap math a full-range v4 LP position needs: 512-bit mulDiv, the sqrt

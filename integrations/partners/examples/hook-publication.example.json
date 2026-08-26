@@ -1,0 +1,20 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-publish-hook",
+  "track": "hook_publication",
+  "project": {
+    "name": "Example standalone hook",
+    "website": "https://example.com/hooks"
+  },
+  "source": {
+    "repository": "https://github.com/example/hooks",
+    "pinnedCommit": "1111111111111111111111111111111111111111",
+    "contracts": ["src/ExampleHook.sol"],
+    "compiler": "Solidity 0.8.28",
+    "dependencyLock": "foundry.lock"
+  },
+  "requirements": [
+    "Publish a source-only manifest without claiming audit or deployment evidence."
+  ]
+}

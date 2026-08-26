@@ -1,0 +1,78 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.external-hook.v1",
+  "slug": "voladelta-luck",
+  "name": "Lucky Hook",
+  "summary": "An ownerless canonical ETH/LUCK pool that takes hook-level swap fees, funds Chainlink VRF, and distributes periodic rewards to eligible mature buyers.",
+  "status": "source-only",
+  "integrationMode": "standalone-hook-product",
+  "author": {
+    "github": "voladelta"
+  },
+  "source": {
+    "repository": "https://github.com/voladelta/luck-hook",
+    "pinnedCommit": "19e2c9582959ae2454454d619d7064f101dd017b",
+    "license": "MIT",
+    "hookContract": "src/RandomHolderRewardsHook.sol",
+    "contracts": [
+      "src/RandomHolderRewardsHook.sol",
+      "src/RewardToken.sol",
+      "src/LuckyLaunchFactory.sol",
+      "src/LuckySwapRouter.sol"
+    ]
+  },
+  "integration": {
+    "poolScope": "canonical-pool-only",
+    "supportedTracks": ["hook_publication", "hook_token_launch"],
+    "standardSwapBehavior": "Empty hookData is accepted and non-empty hookData reverts. Delta-return fee accounting changes swap settlement, so the pool is not vanilla even though ordinary swaps do not require custom hook data.",
+    "dedicatedRouter": {
+      "requiredForAllSwaps": false,
+      "contract": "src/LuckySwapRouter.sol",
+      "purpose": "The repository's authenticated payer and recipient settlement surface for the canonical product flow."
+    },
+    "dependencies": [
+      { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
+      { "name": "Chainlink VRF v2.5 wrapper", "kind": "oracle", "required": true },
+      { "name": "RewardToken", "kind": "token", "required": true },
+      { "name": "LuckyLaunchFactory", "kind": "factory", "required": true },
+      { "name": "LuckySwapRouter", "kind": "router", "required": false }
+    ]
+  },
+  "uniswapClassification": {
+    "flags": {
+      "beforeInitialize": true,
+      "afterInitialize": false,
+      "beforeAddLiquidity": false,
+      "afterAddLiquidity": false,
+      "beforeRemoveLiquidity": false,
+      "afterRemoveLiquidity": false,
+      "beforeSwap": true,
+      "afterSwap": true,
+      "beforeDonate": false,
+      "afterDonate": false,
+      "beforeSwapReturnsDelta": true,
+      "afterSwapReturnsDelta": true,
+      "afterAddLiquidityReturnsDelta": false,
+      "afterRemoveLiquidityReturnsDelta": false
+    },
+    "properties": {
+      "dynamicFee": false,
+      "upgradeable": false,
+      "requiresCustomSwapData": false,
+      "vanillaSwap": false,
+      "swapAccess": "none"
+    }
+  },
+  "security": {
+    "auditStatus": "unaudited",
+    "auditUrls": [],
+    "authorityModel": "The source describes an ownerless hook with immutable token, PoolManager, VRF wrapper, registrar, and reward parameters.",
+    "immutableDependencies": true,
+    "knownRisks": [
+      "The repository states that it has not been audited.",
+      "Reward liveness depends on Chainlink VRF funding, fulfillment, and timeout recovery.",
+      "Fee, liability, buyer-index, and random-selection invariants require independent production review."
+    ]
+  },
+  "deployments": []
+}

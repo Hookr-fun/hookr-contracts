@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -21,7 +21,7 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 ///         Per-pool behavior is configured once by the launchpad at graduation and is immutable
 ///         afterwards. Blocks compose per launch:
 ///
-///         - ANTI-SNIPE : guard window measured in blocks; a CUMULATIVE per-pool-per-block buy
+///         - ANTI-SNIPE : guard window measured in blocks; a CUMULATIVE per-pool-per-block ETH
 ///                        buy cap; extra LP fee ("snipe tax") charged on BUYS ONLY while the guard
 ///                        is active. Exact-output buys are blocked during the guard so the cap
 ///                        cannot be bypassed, and the cap accumulates across every buy in a block
@@ -35,13 +35,12 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 ///         - SURGE FEES : LP fee scales with trade size relative to in-range pool depth
 ///                        (oracle-free volatility proxy), from baseFee up to maxFee.
 ///         - AUTO BURN   : a cut of the actual token output of every exact-input buy is sent
-///                        directly to 0xdEaD in `afterSwap`. No quote-asset vault or market buy exists,
+///                        directly to 0xdEaD in `afterSwap`. No ETH vault or market buy exists,
 ///                        so there is no permissionless order for searchers to sandwich.
 ///         - LP REWARDS : a cut of every exact-input buy is donated to in-range LPs inside the
 ///                        very swap that accrues it. No LP vault is ever held.
 ///         - JACKPOT    : a cut of every exact-input buy fills a deterministic pot; every Nth
-///                        qualifying buy wins it (pull-payment backed by ERC-6909 claim units
-///                        in the pool quote currency).
+///                        qualifying buy wins it (pull-payment backed by native ERC-6909 claims).
 ///                        A pool can advance its
 ///                        counter at most once per block, so a caller cannot atomically manufacture
 ///                        every remaining slot. There is no permissionless pot-flush path: a funded
@@ -70,22 +69,14 @@ contract HookrHook is IHooks, IUnlockCallback {
     uint160 public constant REQUIRED_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
     uint24 internal constant DYNAMIC_FEE_FLAG = 0x800000;
     uint24 internal constant OVERRIDE_FEE_FLAG = 0x400000;
-    /// @notice Tick spacing every graduated pool is created with. `_poolKeyFor` relies on this.
-    int24 internal constant TICK_SPACING = 60;
     uint24 internal constant MAX_TOTAL_FEE_PIPS = 500_000; // 50% hard ceiling on LP fee incl. snipe tax
+    uint24 internal constant MAX_FLYWHEEL_FEE_PIPS = 30_000; // 3% sanity ceiling on the protocol fee
     uint160 public constant MIN_SQRT_PRICE_LIMIT = 4295128740;
     uint256 internal constant BPS = 10_000;
     uint256 internal constant PIPS = 1e6; // fee denominator, 1e6 = 100%
     /// @notice Smallest buy that may advance a deterministic pot counter. This is enforced by both
     ///         the launchpad and the hook so a blueprint cannot create one-wei schedule slots.
     uint96 public constant MIN_POT_BUY_WEI = 0.001 ether;
-    /// @notice Smallest quote-asset amount a buyback execution may spend. Below this the burn is
-    ///         not worth the swap it costs anyone.
-    uint96 public constant MIN_BUYBACK_SPEND_WEI = 0.001 ether;
-    /// @notice Execution-time slippage bound for the nested buyback swap, in bps below the price
-    ///         observed when execution starts. Bounds what a competing transaction can extract by
-    ///     moving the pool between trigger and fill.
-    uint16 public constant MAX_BUYBACK_SLIP_BPS = 500;
     address internal constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
     IPoolManager public immutable poolManager;
@@ -103,28 +94,25 @@ contract HookrHook is IHooks, IUnlockCallback {
         uint16 burnBps; // cut of exact-input buy token output -> 0xdEaD
         uint16 lpBps; // cut -> donated to in-range LPs in the same swap
         uint16 potBps; // cut -> jackpot pot
-        uint16 royaltyBps; // share of LP/pot cuts routed to the blueprint author
+        uint16 royaltyBps; // share of native LP/pot cuts routed to the blueprint author
         uint32 potEveryNBuys; // every Nth qualifying buy wins the pot (deterministic, not random)
-        uint96 maxBuyWei; // cumulative quote-asset cap per pool per block during guard (0 = uncapped)
+        uint96 maxBuyWei; // cumulative ETH cap per pool per block during guard (0 = uncapped)
         uint96 potMinBuyWei; // buys below this do not count toward the pot
         uint96 burnTriggerWei; // deprecated v2 field; new configs MUST set this to zero
-        // ARB BUYBACK: quote-asset cut accrues claims; anyone may execute once the live price sits
-        // `buybackDrawdownBps` below the pool's running cheapest-anchor, subject to caps/cooldown.
-        uint16 buybackBps;
-        uint16 buybackDrawdownBps;
-        uint32 buybackCooldownBlocks;
-        uint96 buybackMinSpendWei;
-        uint96 buybackMaxSpendWei;
         address royaltyTo;
         address token; // currency1 of the pool
+        // The HOOKR-flywheel protocol fee in pips, set by the LAUNCHPAD from the pool's quote
+        // currency (3000 = 0.3% on ETH-quoted pools; 0 on HOOKR-quoted pools). Never a creator
+        // parameter. Accrued to `flywheelRecipient` as native ERC-6909-backed claims.
+        uint24 flywheelFeePips;
     }
 
     mapping(PoolId => PoolConfig) public poolConfig;
 
-    // Live ledgers. There is deliberately NO physical LP, pot, royal or burn vault: LP cuts
-    // are donated inside the swap; pot/royalty obligations are backed 1:1 by PoolManager claim units
-    // in the pool quote currency; auto-burn takes token output directly.
-    // `burnVaultWei` remains as an always-zero compatibility getter for indexers that know the v2 ABI.
+    // Live ledgers. There is deliberately NO physical-ETH LP, pot, royalty, or burn vault: LP cuts
+    // are donated inside the swap; pot/royalty obligations are backed 1:1 by PoolManager native
+    // ERC-6909 claims; auto-burn takes token output directly. `burnVaultWei` remains as an
+    // always-zero compatibility getter for indexers that know the v2 ABI.
     mapping(PoolId => uint256) public potWei;
     mapping(PoolId => uint256) public burnVaultWei;
 
@@ -135,33 +123,21 @@ contract HookrHook is IHooks, IUnlockCallback {
     ///         qualifying slot may be consumed per pool per block.
     mapping(PoolId => uint40) public potLastQualifyingBlock;
 
-    /// @notice Quote-asset accrued for the buyback reserve, 1:1 backed by PoolManager ERC-6909
-    ///         claims minted from the same cut as pot/royalty obligations. Only ever spent into
-    ///         this pool's own swap, with the output taken straight to 0xdEaD.
-    mapping(PoolId => uint256) public buybackAccruedWei;
-    /// @notice Running cheapest observed price, stored as sqrtPriceX96 (higher sqrt = cheaper
-    ///         token, since price is tokens-per-quote). Ratchets up on completed swaps; a buyback
-    ///     may only execute when the live sqrt is `drawdownBps` ABOVE this anchor. Reset to the
-    ///     post-execution price so one drawdown cannot trigger repeatedly.
-    mapping(PoolId => uint160) public buybackAnchorSqrtX96;
-    /// @notice Last block in which this pool executed a buyback. Cooldown is measured from it.
-    mapping(PoolId => uint40) public buybackLastExecBlock;
-
-    /// @notice Last block in which this pool admitted a guarded buy, and the quote-asset admitted in it.
+    /// @notice Last block in which this pool admitted a guarded buy, and the ETH admitted in it.
     ///         Together they make `maxBuyWei` a per-BLOCK budget rather than a per-swap one, so a
     ///         caller cannot loop capped buys inside one transaction. Public so the UI can show how
     ///         much of the current block's budget is left instead of guessing.
     mapping(PoolId => uint40) public guardBuyBlock;
     mapping(PoolId => uint96) public guardBuyWei;
 
-    /// @notice Conservatively accounted quote-asset the launchpad-owned LPs earned while the anti-snipe
+    /// @notice Conservatively accounted ETH the launchpad-owned LPs earned while the anti-snipe
     ///         guard was active: the LP fee charged on guarded buys plus the in-swap LP donation.
     ///         Exact for one-step swaps; a multi-tick swap may omit rounding dust, never overstate.
     ///         Cumulative and never decremented.
     /// @dev Read by `HookrLaunchpad.collectPoolFees`, which withholds this much of the collected
-    ///      quote-asset from the creator's share. Without it the snipe tax flows back to whoever paid it
+    ///      ETH from the creator's share. Without it the snipe tax flows back to whoever paid it
     ///      whenever that party is also the creator. This is an accrual figure computed from the
-    ///      swap inputs the hook sees, not a balance the hook holds — the quote-asset itself is fee growth
+    ///      swap inputs the hook sees, not a balance the hook holds — the ETH itself is fee growth
     ///      inside the PoolManager, on the launchpad's own position.
     mapping(PoolId => uint256) public guardLpEarnedWei;
 
@@ -173,11 +149,12 @@ contract HookrHook is IHooks, IUnlockCallback {
 
     // pull payments: jackpot wins + blueprint royalties
     mapping(address => uint256) public claimableWei;
-    mapping(address => mapping(address => uint256)) public claimableByQuoteWei;
-    mapping(PoolId => address) public poolQuoteToken;
+
+    /// @notice Lifetime flywheel protocol fees accrued per pool (token-page stats).
+    mapping(PoolId => uint256) public totalFlywheelWei;
 
     /// @dev Effective fee carried across the PoolManager's paired beforeSwap/afterSwap callbacks
-    ///      only for guarded buys with no quote-side hook cut. Those are the one guarded shape allowed
+    ///      only for guarded buys with no native hook cut. Those are the one guarded shape allowed
     ///      to partially fill, so afterSwap must price the guard accrual from the actual pool input
     ///      rather than the larger amount the caller requested. PoolManager does not pass the fee
     ///      override back to afterSwap; this internal scratch slot preserves it for that callback.
@@ -199,10 +176,9 @@ contract HookrHook is IHooks, IUnlockCallback {
     );
     event JackpotHit(PoolId indexed poolId, address indexed winner, uint256 amountWei, uint256 buyCount);
     event BuybackBurn(PoolId indexed poolId, uint256 ethIn, uint256 tokensBurned);
-    event BuybackAccrued(PoolId indexed poolId, uint256 weiAdded);
-    event BuybackAnchorUpdated(PoolId indexed poolId, uint160 anchorSqrtX96);
     event AutoBurn(PoolId indexed poolId, uint256 tokensBurned);
     event LpRewardsDonated(PoolId indexed poolId, uint256 amountWei);
+    event FlywheelFeeAccrued(PoolId indexed poolId, uint256 amountWei);
     event Claimed(address indexed account, uint256 amountWei);
 
     // ---------------------------------------------------------------- errors
@@ -217,9 +193,6 @@ contract HookrHook is IHooks, IUnlockCallback {
     error PartialFillUnsupportedWithInputCuts();
     error ExternalLiquidityBlockedDuringGuard();
     error BuybackDisabled();
-    error BuybackCooldown();
-    error BuybackNotArmed(uint256 anchorSqrtX96, uint256 currentSqrtX96, uint256 drawdownBps);
-    error BuybackNoOutput();
     error InvalidPotRecipient();
     error NothingToClaim();
     error ZeroAddress();
@@ -231,9 +204,16 @@ contract HookrHook is IHooks, IUnlockCallback {
         _;
     }
 
-    constructor(IPoolManager poolManager_, address launchpad_) {
+    /// @notice Where the flywheel protocol fee accrues (the HookrFlywheelBurner). address(0)
+    ///         disables the flywheel entirely: `configurePool` then refuses any nonzero
+    ///         `flywheelFeePips`, which is exactly the pre-flywheel hook behavior — prior
+    ///         generations' tests construct the hook that way and stay byte-for-byte semantics.
+    address public immutable flywheelRecipient;
+
+    constructor(IPoolManager poolManager_, address launchpad_, address flywheelRecipient_) {
         poolManager = poolManager_;
         launchpad = launchpad_;
+        flywheelRecipient = flywheelRecipient_;
     }
 
     /// @notice Stable deployment identity for post-deploy readbacks and agent health checks.
@@ -256,20 +236,8 @@ contract HookrHook is IHooks, IUnlockCallback {
         if (cfg.baseFeePips > MAX_TOTAL_FEE_PIPS || cfg.maxFeePips > MAX_TOTAL_FEE_PIPS) revert BadConfig();
         if (cfg.maxFeePips < cfg.baseFeePips) revert BadConfig();
         if (uint256(cfg.baseFeePips) + cfg.snipeTaxPips > MAX_TOTAL_FEE_PIPS) revert BadConfig();
-        if (uint256(cfg.burnBps) + cfg.lpBps + cfg.potBps + cfg.buybackBps > 1000) revert BadConfig(); // <=10% of buy size
+        if (uint256(cfg.burnBps) + cfg.lpBps + cfg.potBps > 1000) revert BadConfig(); // <=10% of buy size
         if (cfg.burnTriggerWei != 0) revert BadConfig(); // compatibility-only field, never silently ignored
-        if (cfg.buybackBps == 0) {
-            // Fail closed: a disabled block must not carry live-looking parameters.
-            if (
-                cfg.buybackMinSpendWei != 0 || cfg.buybackMaxSpendWei != 0 || cfg.buybackDrawdownBps != 0
-                    || cfg.buybackCooldownBlocks != 0
-            ) revert BadConfig();
-        } else {
-            if (cfg.buybackMinSpendWei < MIN_BUYBACK_SPEND_WEI) revert BadConfig();
-            if (cfg.buybackMaxSpendWei < cfg.buybackMinSpendWei) revert BadConfig();
-            if (cfg.buybackDrawdownBps < 10 || cfg.buybackDrawdownBps > 9900) revert BadConfig();
-            if (cfg.buybackCooldownBlocks < 1 || cfg.buybackCooldownBlocks > 100_000) revert BadConfig();
-        }
         if (cfg.royaltyBps > 1000) revert BadConfig(); // <=10% of the cuts
         if (cfg.royaltyBps > 0 && uint256(cfg.lpBps) + cfg.potBps == 0) revert BadConfig();
         if (cfg.potBps > 0) {
@@ -277,9 +245,19 @@ contract HookrHook is IHooks, IUnlockCallback {
             if (cfg.potMinBuyWei < MIN_POT_BUY_WEI) revert BadConfig();
         }
         if (cfg.surgeSens > 10) revert BadConfig();
+        bool nativeQuote = Currency.unwrap(key.currency0) == address(0);
+        // The flywheel fee exists only where its recipient does, only on native-quoted pools,
+        // and only under the sanity ceiling. Non-native (HOOKR-quoted) pools additionally refuse
+        // every native-cut block — pot, auto-burn, and LP donation are ETH machinery end to end,
+        // and the launchpad already refuses them upstream; this is the hook's own lock on it.
+        if (cfg.flywheelFeePips != 0) {
+            if (flywheelRecipient == address(0)) revert BadConfig();
+            if (!nativeQuote) revert BadConfig();
+            if (cfg.flywheelFeePips > MAX_FLYWHEEL_FEE_PIPS) revert BadConfig();
+        }
+        if (!nativeQuote && uint256(cfg.burnBps) + cfg.lpBps + cfg.potBps != 0) revert BadConfig();
         cfg.initialized = true;
         cfg.token = Currency.unwrap(key.currency1);
-        poolQuoteToken[id] = Currency.unwrap(key.currency0);
         poolConfig[id] = cfg;
         emit PoolConfigured(id, cfg.token, cfg);
     }
@@ -319,14 +297,13 @@ contract HookrHook is IHooks, IUnlockCallback {
         if (!cfg.initialized) revert NotConfigured();
 
         bool exactIn = params.amountSpecified < 0;
-        bool isBuy = params.zeroForOne; // quote (currency0) -> token (currency1)
+        bool isBuy = params.zeroForOne; // native ETH (currency0) -> token (currency1)
         bool guardActive = cfg.guardEndBlock != 0 && block.number < cfg.guardEndBlock;
-        Currency quoteCurrency = key.currency0;
 
         // ---- anti-snipe guard
         if (guardActive && isBuy) {
             if (!exactIn) revert ExactOutputBlockedDuringGuard();
-            uint256 inputIn = uint256(-params.amountSpecified);
+            uint256 ethIn = uint256(-params.amountSpecified);
             if (cfg.maxBuyWei != 0) {
                 // The cap is CUMULATIVE per pool per block, not per swap. A per-swap cap bounds one
                 // call and nothing else: a contract can loop capped buys inside a single
@@ -338,7 +315,7 @@ contract HookrHook is IHooks, IUnlockCallback {
                 // "different callers" is a real distinction rather than one caller with more
                 // addresses.
                 uint256 spent = guardBuyBlock[id] == block.number ? guardBuyWei[id] : 0;
-                uint256 total = spent + inputIn;
+                uint256 total = spent + ethIn;
                 // Reports the CUMULATIVE figure, so the revert says what was actually refused.
                 if (total > cfg.maxBuyWei) revert MaxBuyExceeded(total, cfg.maxBuyWei);
                 guardBuyBlock[id] = uint40(block.number);
@@ -364,42 +341,58 @@ contract HookrHook is IHooks, IUnlockCallback {
         // ---- hook fee cuts on exact-input buys
         uint256 hookFeeWei;
         uint256 lpDonatedWei;
+        uint256 flywheelWei;
         if (isBuy && exactIn) {
-            // Auto-burn is taken from actual token output in afterSwap. Only the input-currency LP and
-            // deterministic-pot cuts are returned as a beforeSwap specified delta.
+            // Auto-burn is taken from actual token output in afterSwap. Only the ETH-denominated
+            // LP and deterministic-pot cuts — and the flywheel protocol fee, whose ETH-in side is
+            // the specified currency here — are returned as a beforeSwap specified delta.
             uint256 totalCutBps = uint256(cfg.lpBps) + cfg.potBps;
-            if (totalCutBps > 0) {
-                // The specified-currency cut is computed before v4 knows the fill. Require the
+            if (totalCutBps > 0 || cfg.flywheelFeePips > 0) {
+                // Specified-currency fees are computed before v4 knows the fill. Require the
                 // canonical buy limit here, then reconcile the raw pool input in afterSwap. The
                 // afterSwap check also covers exhaustion at the usable full-range POL tick, which
                 // sits above v4's absolute minimum price.
                 if (params.sqrtPriceLimitX96 != MIN_SQRT_PRICE_LIMIT) {
                     revert PartialFillUnsupportedWithInputCuts();
                 }
-                uint256 inputIn = uint256(-params.amountSpecified);
-                hookFeeWei = (inputIn * totalCutBps) / BPS;
+            }
+            if (cfg.flywheelFeePips > 0) {
+                uint256 ethInForFlywheel = uint256(-params.amountSpecified);
+                flywheelWei = (ethInForFlywheel * cfg.flywheelFeePips) / PIPS;
+                if (flywheelWei > 0) {
+                    // Same 1:1 native-claim backing as pot and royalty obligations; covered by
+                    // the positive specified delta returned below.
+                    poolManager.mint(address(this), Currency.wrap(address(0)).toId(), flywheelWei);
+                    claimableWei[flywheelRecipient] += flywheelWei;
+                    totalFlywheelWei[id] += flywheelWei;
+                    emit FlywheelFeeAccrued(id, flywheelWei);
+                }
+            }
+            if (totalCutBps > 0) {
+                uint256 ethIn = uint256(-params.amountSpecified);
+                hookFeeWei = (ethIn * totalCutBps) / BPS;
                 if (hookFeeWei > 0) {
                     // Split the cut. The LP share is donated to in-range LPs right here, inside
                     // the PoolManager unlock we are already holding: it stays in the pool and
                     // never becomes a balance anyone could flush to themselves. Pot and royalty
-                    // obligations remain 1:1 backed by quote-asset PoolManager ERC-6909 claims.
+                    // obligations remain 1:1 backed by native PoolManager ERC-6909 claims.
                     lpDonatedWei = _accrue(id, cfg, key, hookFeeWei, totalCutBps);
                     uint256 takeWei = hookFeeWei - lpDonatedWei;
                     if (takeWei > 0) {
-                        // Mint a quote-asset ERC-6909 claim instead of physically pulling quote
+                        // Mint a native ERC-6909 claim instead of physically pulling ETH before
                         // the swapper settles. This nets against the hook's positive specified
                         // delta at unlock end and removes dependence on PoolManager's pre-existing
-                        // global quote balance.
-                        poolManager.mint(address(this), quoteCurrency.toId(), takeWei);
+                        // global native balance.
+                        poolManager.mint(address(this), Currency.wrap(address(0)).toId(), takeWei);
                     }
                     // Both the donate debit and minted-claim credit are covered by the
                     // +hookFeeWei specified delta returned below, so the hook nets to zero.
                 }
                 // Jackpot: count the qualifying buy, and pay out if it is the Nth one.
-                if (cfg.potBps > 0 && inputIn >= cfg.potMinBuyWei) {
+                if (cfg.potBps > 0 && ethIn >= cfg.potMinBuyWei) {
                     (address recipient, bool valid) = _decodeRecipient(hookData);
                     if (!valid || recipient == address(0)) revert InvalidPotRecipient();
-                    _tickJackpot(id, cfg, recipient, Currency.unwrap(quoteCurrency));
+                    _tickJackpot(id, cfg, recipient);
                 }
             }
         }
@@ -412,28 +405,31 @@ contract HookrHook is IHooks, IUnlockCallback {
         // back. Measured: a creator's net cost of a guarded buy was 20% of the tax against 100%
         // for a third party, claimable in the same block. That is not a tax, it is a rebate.
         //
-        // So conservatively account launchpad-owned quote-asset fees earned while the guard is
+        // So conservatively account ETH these launchpad-owned positions earn while the guard is
         // live, and let `HookrLaunchpad.collectPoolFees` withhold no more than that from the creator
         // side. The figure uses v4's protocol-net LP fee arithmetic on the input that reaches the
         // swap — the specified amount less the hook's own cut — plus the in-swap LP donation. It is
         // cumulative and never decremented; the launchpad tracks how much it already withheld.
         if (guardActive && isBuy) {
-            if (uint256(cfg.lpBps) + cfg.potBps == 0) {
+            if (uint256(cfg.lpBps) + cfg.potBps == 0 && cfg.flywheelFeePips == 0) {
                 // A no-cut exact-input swap may stop at its caller-selected price limit. Carry the
                 // effective override into afterSwap, where v4 exposes the amount it truly used.
                 // Booking the request here lets a nearly-full refund create phantom guarded fees.
                 guardFeePipsInFlight[id] = uint24(feePips);
             } else {
-                // Quote-side input cuts already require a complete fill in afterSwap, so the pool input
+                // Native input cuts already require a complete fill in afterSwap, so the pool input
                 // is known here. Book its protocol-net LP fee plus the in-swap LP donation.
-                uint256 swapIn = uint256(-params.amountSpecified) - hookFeeWei;
+                uint256 swapIn = uint256(-params.amountSpecified) - hookFeeWei - flywheelWei;
                 guardLpEarnedWei[id] += _guardLpFeeWei(id, swapIn, feePips) + lpDonatedWei;
             }
         }
 
+        uint256 specifiedTakeWei = hookFeeWei + flywheelWei;
         return (
             IHooks.beforeSwap.selector,
-            hookFeeWei == 0 ? BeforeSwapDeltaLibrary.ZERO_DELTA : toBeforeSwapDelta(int128(uint128(hookFeeWei)), 0),
+            specifiedTakeWei == 0
+                ? BeforeSwapDeltaLibrary.ZERO_DELTA
+                : toBeforeSwapDelta(int128(uint128(specifiedTakeWei)), 0),
             uint24(feePips) | OVERRIDE_FEE_FLAG
         );
     }
@@ -453,8 +449,8 @@ contract HookrHook is IHooks, IUnlockCallback {
         uint256 amountIn = uint256(-params.amountSpecified);
         // Virtual reserve of the input currency at the current price (xy=k view of in-range depth).
         uint256 reserveIn = params.zeroForOne
-            ? (uint256(liquidity) << 96) / sqrtPriceX96  // quote side
-            : (uint256(liquidity) * sqrtPriceX96) >> 96; // output token side
+            ? (uint256(liquidity) << 96) / sqrtPriceX96  // ETH side
+            : (uint256(liquidity) * sqrtPriceX96) >> 96; // token side
         if (reserveIn == 0) return 0;
 
         uint256 ratio1e6 = (amountIn * uint256(cfg.surgeSens) * 1e6) / reserveIn;
@@ -462,7 +458,7 @@ contract HookrHook is IHooks, IUnlockCallback {
         extraPips = (uint256(cfg.maxFeePips - cfg.baseFeePips) * ratio1e6) / 1e6;
     }
 
-    /// @dev LP fee earned from `grossInputWei`, net of PoolManager protocol fee.
+    /// @dev Native LP fee earned from `grossInputWei`, net of PoolManager's 0->1 protocol fee.
     ///      v4 takes the protocol fee first, then the configured LP fee from the remainder; treating
     ///      the LP override as a fee on the whole input can overstate the launchpad's earnings and
     ///      create phantom guard debt as soon as the external protocol-fee controller enables a
@@ -477,7 +473,7 @@ contract HookrHook is IHooks, IUnlockCallback {
         // Without this branch, ceil(gross * pips) - floor(gross * pips) can invent one LP wei.
         if (lpFeePips == 0 || grossInputWei == 0) return 0;
         (,, uint24 packedProtocolFee,) = poolManager.getSlot0(id);
-        uint256 protocolFeePips = uint256(packedProtocolFee & 0x0FFF);
+        uint256 protocolFeePips = uint256(packedProtocolFee & 0x0FFF); // zeroForOne / native -> token
         uint256 swapFeePips = protocolFeePips + lpFeePips - ((protocolFeePips * lpFeePips) / PIPS);
         uint256 totalSwapFeeWei = (grossInputWei * swapFeePips + PIPS - 1) / PIPS;
         uint256 protocolFeeWei = (grossInputWei * protocolFeePips) / PIPS;
@@ -491,32 +487,19 @@ contract HookrHook is IHooks, IUnlockCallback {
         internal
         returns (uint256 lpDonated)
     {
-        address quoteToken = Currency.unwrap(key.currency0);
         uint256 royaltyWei;
         if (cfg.royaltyBps > 0 && cfg.royaltyTo != address(0)) {
             royaltyWei = (hookFeeWei * cfg.royaltyBps) / BPS;
-            _creditClaim(cfg.royaltyTo, quoteToken, royaltyWei);
+            claimableWei[cfg.royaltyTo] += royaltyWei;
         }
         uint256 remaining = hookFeeWei - royaltyWei;
-        // Split the remainder pro-rata across the enabled cuts. The buyback reserve absorbs
-        // rounding dust when enabled (it is a claim-backed ledger, not a per-recipient credit);
-        // otherwise the legacy dust rules apply.
+        // Split the remainder pro-rata across the enabled cuts.
         uint256 lpAdd = (remaining * cfg.lpBps) / totalCutBps;
-        uint256 potAdd = (remaining * cfg.potBps) / totalCutBps;
-        uint256 buybackAdd;
-        if (cfg.buybackBps > 0) {
-            buybackAdd = remaining - lpAdd - potAdd; // buyback absorbs rounding dust
-        } else {
-            potAdd = remaining - lpAdd; // pot absorbs rounding dust
-            if (cfg.potBps == 0) {
-                // No pot: all rounding dust belongs to the LP donation.
-                lpAdd += potAdd;
-                potAdd = 0;
-            }
-        }
-        if (buybackAdd > 0) {
-            buybackAccruedWei[id] += buybackAdd;
-            emit BuybackAccrued(id, buybackAdd);
+        uint256 potAdd = remaining - lpAdd; // pot absorbs rounding dust
+        if (cfg.potBps == 0) {
+            // No pot: all rounding dust belongs to the LP donation.
+            lpAdd += potAdd;
+            potAdd = 0;
         }
         if (lpAdd > 0) {
             // `donate` credits in-range liquidity directly. Safe to call from inside beforeSwap:
@@ -544,7 +527,7 @@ contract HookrHook is IHooks, IUnlockCallback {
     ///      counter and the buy that lands on a multiple of `potEveryNBuys` takes the pot.
     ///      No randomness is generated or claimed. Choosing a different `recipient` cannot move
     ///      the schedule, and at most one qualifying slot may be consumed per pool per block.
-    function _tickJackpot(PoolId id, PoolConfig storage cfg, address recipient, address quoteToken) internal {
+    function _tickJackpot(PoolId id, PoolConfig storage cfg, address recipient) internal {
         if (potLastQualifyingBlock[id] == block.number) return;
         potLastQualifyingBlock[id] = uint40(block.number);
         uint256 count = potBuyCount[id] + 1;
@@ -554,17 +537,8 @@ contract HookrHook is IHooks, IUnlockCallback {
         if (pot == 0) return;
         potWei[id] = 0;
         totalPotPaidWei[id] += pot;
-        _creditClaim(recipient, quoteToken, pot);
+        claimableWei[recipient] += pot;
         emit JackpotHit(id, recipient, pot, count);
-    }
-
-    function _creditClaim(address recipient, address quoteToken, uint256 amount) internal {
-        if (recipient == address(0) || amount == 0) return;
-        if (quoteToken == address(0)) {
-            claimableWei[recipient] += amount;
-        } else {
-            claimableByQuoteWei[recipient][quoteToken] += amount;
-        }
     }
 
     /// @dev Decode canonical `abi.encode(address)`. The caller fails closed on a qualifying pot
@@ -579,115 +553,36 @@ contract HookrHook is IHooks, IUnlockCallback {
         return (address(uint160(raw)), true);
     }
 
-    /// @dev Rebuild a pool's key from the per-pool ledgers. Every graduated pool shares the same
-    ///      static fee flag, tick spacing, and this hook, so the id round-trips by construction.
-    function _poolKeyFor(PoolId id, PoolConfig storage cfg) internal view returns (PoolKey memory) {
-        return PoolKey({
-            currency0: Currency.wrap(poolQuoteToken[id]),
-            currency1: Currency.wrap(cfg.token),
-            fee: DYNAMIC_FEE_FLAG,
-            tickSpacing: TICK_SPACING,
-            hooks: IHooks(address(this))
-        });
-    }
-
     // ---------------------------------------------------------------- public triggers
 
     /// @notice Legacy v2 entrypoint. V3 candidates burn token output directly in `afterSwap`, so
-    ///         there is no dedicated vault and no permissionless market order to execute.
+    ///         there is no ETH vault and no permissionless market order to execute.
     function buybackAndBurn(PoolKey calldata, uint256) external pure {
         revert BuybackDisabled();
     }
 
-    // ---------------------------------------------------------------- arb buyback block
-
-    /// @notice Live readiness of a pool's buyback: armed when the reserve can fund `minSpend`,
-    ///         the cooldown has elapsed, and the live price sits at least `drawdownBps` below the
-    ///         running anchor (sqrt above it — higher sqrt is a cheaper token).
-    function buybackStatus(PoolId id)
-        public
-        view
-        returns (bool ready, uint256 spendWei, uint256 currentSqrtX96, uint160 anchorSqrtX96)
-    {
-        PoolConfig storage cfg = poolConfig[id];
-        if (!cfg.initialized || cfg.buybackBps == 0) return (false, 0, 0, 0);
-        (currentSqrtX96,,,) = poolManager.getSlot0(id);
-        anchorSqrtX96 = buybackAnchorSqrtX96[id];
-        if (currentSqrtX96 == 0 || anchorSqrtX96 == 0) return (false, 0, currentSqrtX96, anchorSqrtX96);
-        if (
-            buybackLastExecBlock[id] != 0
-                && block.number < uint256(buybackLastExecBlock[id]) + cfg.buybackCooldownBlocks
-        ) return (false, 0, currentSqrtX96, anchorSqrtX96);
-        uint256 accrued = buybackAccruedWei[id];
-        if (accrued < cfg.buybackMinSpendWei) return (false, 0, currentSqrtX96, anchorSqrtX96);
-        // Drawdown check in sqrt space: trigger when live sqrt is drawdownBps above the anchor.
-        // Computed with a 1e18-scaled ratio so small bps values do not floor to zero.
-        uint256 ratio1e18 = (uint256(currentSqrtX96) * 1e18) / uint256(anchorSqrtX96);
-        uint256 threshold1e18 = 1e18 + (uint256(cfg.buybackDrawdownBps) * 1e18) / BPS;
-        if (ratio1e18 < threshold1e18) return (false, 0, currentSqrtX96, anchorSqrtX96);
-        spendWei = accrued > cfg.buybackMaxSpendWei ? cfg.buybackMaxSpendWei : accrued;
-        return (true, spendWei, currentSqrtX96, anchorSqrtX96);
-    }
-
-    /// @notice Execute one capped buyback against THIS pool using only accrued quote-asset fees.
-    ///         Permissionless and deterministic: anyone may pull the trigger, the conditions are
-    ///         re-checked atomically inside the fresh unlock, the spend is bounded per execution,
-    ///         and every token purchased goes straight to 0xdEaD. There is no keeper and no
-    ///         standing order to sandwich — between trigger and fill the price may move at most
-    ///         MAX_BUYBACK_SLIP_BPS before execution stops filling.
-    /// @dev Must never be called from inside another PoolManager unlock (e.g. a swap callback):
-    ///      PoolManager reverts on nested unlocks, which is exactly the guard we want.
-    function executeBuyback(PoolKey calldata key) external {
-        PoolConfig storage cfg = poolConfig[key.toId()];
-        if (!cfg.initialized) revert NotConfigured();
-        if (cfg.buybackBps == 0) revert BuybackDisabled();
-        poolManager.unlock(abi.encode(uint8(2), key.toId()));
-    }
-
-    /// @notice Native quote-pool claim units backing every pot and royalty obligation.
+    /// @notice Native PoolManager claim units backing every pot and royalty obligation.
     function nativeClaimBalance() public view returns (uint256) {
         return poolManager.balanceOf(address(this), Currency.wrap(address(0)).toId());
     }
 
-    /// @notice Quote-currency-specific claim units backing every pot and royalty obligation.
-    function claimBalance(address quoteToken) public view returns (uint256) {
-        return poolManager.balanceOf(address(this), Currency.wrap(quoteToken).toId());
-    }
-
     /// @notice Withdraw jackpot winnings / blueprint royalties.
     function claim() external {
-        _claimTo(msg.sender, payable(msg.sender), address(0));
+        _claimTo(msg.sender, payable(msg.sender));
     }
 
     /// @notice Withdraw the caller's jackpot winnings / blueprint royalties to another address.
     ///         This lets smart-contract recipients without a payable fallback recover their claim.
     function claimTo(address payable to) external {
         if (to == address(0)) revert ZeroAddress();
-        _claimTo(msg.sender, to, address(0));
+        _claimTo(msg.sender, to);
     }
 
-    /// @notice Withdraw winnings / royalties in a specific quote currency.
-    function claimFor(address quoteToken) external {
-        _claimTo(msg.sender, payable(msg.sender), quoteToken);
-    }
-
-    /// @notice Withdraw winnings / royalties in a specific quote currency to another address.
-    function claimFor(address quoteToken, address payable to) external {
-        if (to == address(0)) revert ZeroAddress();
-        _claimTo(msg.sender, to, quoteToken);
-    }
-
-    function _claimTo(address account, address payable to, address quoteToken) internal {
-        uint256 amount;
-        if (quoteToken == address(0)) {
-            amount = claimableWei[account];
-            claimableWei[account] = 0;
-        } else {
-            amount = claimableByQuoteWei[account][quoteToken];
-            claimableByQuoteWei[account][quoteToken] = 0;
-        }
+    function _claimTo(address account, address payable to) internal {
+        uint256 amount = claimableWei[account];
         if (amount == 0) revert NothingToClaim();
-        bytes memory result = poolManager.unlock(abi.encode(uint8(1), to, quoteToken, amount));
+        claimableWei[account] = 0;
+        bytes memory result = poolManager.unlock(abi.encode(uint8(1), to, amount));
         uint256 paid = abi.decode(result, (uint256));
         if (paid != amount) revert BadConfig();
         emit Claimed(account, amount);
@@ -697,75 +592,15 @@ contract HookrHook is IHooks, IUnlockCallback {
 
     function unlockCallback(bytes calldata data) external onlyPoolManager returns (bytes memory) {
         uint8 action = abi.decode(data, (uint8));
+        Currency native = Currency.wrap(address(0));
         if (action == 1) {
-            (, address payable to, address quoteToken, uint256 amountWei) =
-                abi.decode(data, (uint8, address, address, uint256));
-            Currency quoteCurrency = Currency.wrap(quoteToken);
-            poolManager.burn(address(this), quoteCurrency.toId(), amountWei);
-            try poolManager.take(quoteCurrency, to, amountWei) {}
+            (, address payable to, uint256 amountWei) = abi.decode(data, (uint8, address, uint256));
+            poolManager.burn(address(this), native.toId(), amountWei);
+            try poolManager.take(native, to, amountWei) {}
             catch {
                 revert EthTransferFailed();
             }
             return abi.encode(amountWei);
-        }
-        if (action == 2) {
-            (, PoolId id) = abi.decode(data, (uint8, PoolId));
-            PoolConfig storage cfg = poolConfig[id];
-            // Re-check everything against fresh state: the external pre-check is advisory only.
-            if (!cfg.initialized || cfg.buybackBps == 0) revert BuybackDisabled();
-            if (
-                buybackLastExecBlock[id] != 0
-                    && block.number < uint256(buybackLastExecBlock[id]) + cfg.buybackCooldownBlocks
-            ) revert BuybackCooldown();
-
-            (uint160 sqrtStart,,,) = poolManager.getSlot0(id);
-            uint160 anchor = buybackAnchorSqrtX96[id];
-            if (sqrtStart == 0 || anchor == 0) revert BuybackNotArmed(anchor, sqrtStart, cfg.buybackDrawdownBps);
-            uint256 ratio1e18 = (uint256(sqrtStart) * 1e18) / uint256(anchor);
-            uint256 threshold1e18 = 1e18 + (uint256(cfg.buybackDrawdownBps) * 1e18) / BPS;
-            if (ratio1e18 < threshold1e18) revert BuybackNotArmed(anchor, sqrtStart, cfg.buybackDrawdownBps);
-
-            uint256 accrued = buybackAccruedWei[id];
-            if (accrued < cfg.buybackMinSpendWei) revert BuybackDisabled();
-            uint256 spend = accrued > cfg.buybackMaxSpendWei ? cfg.buybackMaxSpendWei : accrued;
-
-            // Slippage-bounded exact-input buy on this pool. The limit stops the fill once the
-            // price has moved MAX_BUYBACK_SLIP_BPS against the trigger observation; a competing
-            // transaction can therefore never make this purchase chase more than that bound.
-            uint160 limit = uint160((uint256(sqrtStart) * (BPS - MAX_BUYBACK_SLIP_BPS)) / BPS);
-            if (limit < MIN_SQRT_PRICE_LIMIT) limit = MIN_SQRT_PRICE_LIMIT;
-            BalanceDelta delta = poolManager.swap(
-                _poolKeyFor(id, cfg),
-                SwapParams({
-                    zeroForOne: true, // quote in -> token out
-                    amountSpecified: -int256(spend),
-                    sqrtPriceLimitX96: limit
-                }),
-                ""
-            );
-
-            int128 quoteLeg = delta.amount0();
-            int128 tokenLeg = delta.amount1();
-            uint256 consumed = quoteLeg < 0 ? uint256(-int256(quoteLeg)) : 0;
-            uint256 bought = tokenLeg > 0 ? uint256(uint128(tokenLeg)) : 0;
-            if (consumed == 0 || bought == 0) revert BuybackNoOutput();
-
-            // Settle the consumed quote from the claim-backed reserve and burn what it bought.
-            poolManager.burn(address(this), Currency.wrap(poolQuoteToken[id]).toId(), consumed);
-            poolManager.take(Currency.wrap(cfg.token), DEAD, bought);
-
-            buybackAccruedWei[id] = accrued - consumed;
-            buybackLastExecBlock[id] = uint40(block.number);
-            // Reset the anchor to where execution actually landed so the next drawdown must be a
-            // NEW discount relative to post-buyback reality.
-            (uint160 sqrtEnd,,,) = poolManager.getSlot0(id);
-            if (sqrtEnd != 0) {
-                buybackAnchorSqrtX96[id] = sqrtEnd;
-                emit BuybackAnchorUpdated(id, sqrtEnd);
-            }
-            totalBurnedTokens[id] += bought;
-            emit BuybackBurn(id, consumed, bought);
-            return abi.encode(consumed, bought);
         }
         revert HookNotCalled();
     }
@@ -833,37 +668,42 @@ contract HookrHook is IHooks, IUnlockCallback {
         onlyPoolManager
         returns (bytes4, int128)
     {
-        // Exact-input quote -> token only. Sells and exact-output buys preserve the v2 boundary
-        // and do not pay an auto-burn cut.
-        if (params.amountSpecified >= 0 || !params.zeroForOne) return (IHooks.afterSwap.selector, 0);
         PoolId id = key.toId();
         PoolConfig storage cfg = poolConfig[id];
-        if (!cfg.initialized) revert NotConfigured();
-
-        // ---- buyback anchor: ratchet the running cheapest-price mark.
-        // Read from storage here, which is one swap stale while the outer swap holds its state in
-        // memory — a deliberate coarseness for a trigger that only ever gates a capped, burn-only
-        // purchase funded by fees. Higher sqrt = cheaper token (price is tokens-per-quote). Sells
-        // are exactly the moves this block exists to lean against, so the anchor tracks them too.
-        {
-            (uint160 sqrtNow,,,) = poolManager.getSlot0(id);
-            uint160 anchor = buybackAnchorSqrtX96[id];
-            if (sqrtNow != 0 && sqrtNow > anchor) {
-                buybackAnchorSqrtX96[id] = sqrtNow;
-                emit BuybackAnchorUpdated(id, sqrtNow);
+        bool exactIn = params.amountSpecified < 0;
+        bool isBuy = params.zeroForOne;
+        if (!(isBuy && exactIn)) {
+            // FLYWHEEL on the two quadrants where the pool's quote is the UNSPECIFIED currency:
+            // exact-output buys (quote in) and exact-input sells (quote out). Exact-output sells
+            // are exempt by design — the quote side is the exact output, and shaving it would
+            // break the caller's requested amount. Auto-burn never applies here (v2 boundary).
+            if (cfg.flywheelFeePips > 0 && isBuy != exactIn) {
+                int128 quoteDelta = delta.amount0();
+                uint256 quoteAbs = quoteDelta < 0 ? uint256(uint128(-quoteDelta)) : uint256(uint128(quoteDelta));
+                uint256 fee = (quoteAbs * cfg.flywheelFeePips) / PIPS;
+                if (fee > 0) {
+                    poolManager.mint(address(this), Currency.wrap(address(0)).toId(), fee);
+                    claimableWei[flywheelRecipient] += fee;
+                    totalFlywheelWei[id] += fee;
+                    emit FlywheelFeeAccrued(id, fee);
+                    return (IHooks.afterSwap.selector, int128(uint128(fee)));
+                }
             }
+            return (IHooks.afterSwap.selector, 0);
         }
+        if (!cfg.initialized) revert NotConfigured();
 
         // beforeSwap can only price LP/pot cuts from the requested input. Verify that the pool
         // actually consumed every wei left after that cut. If liquidity ends at the usable lower
         // tick (or any future boundary causes a partial fill), reverting here atomically unwinds
-        // the donation, minted quote claims, pot counter, and swap instead of overcharging.
+        // the donation, minted native claims, pot counter, and swap instead of overcharging.
         uint256 requested = uint256(-params.amountSpecified);
         int128 rawPoolInput = delta.amount0();
         uint256 actualPoolIn = rawPoolInput < 0 ? uint256(-int256(rawPoolInput)) : 0;
-        uint256 quoteCutBps = uint256(cfg.lpBps) + cfg.potBps;
-        if (quoteCutBps > 0) {
-            uint256 expectedPoolIn = requested - ((requested * quoteCutBps) / BPS);
+        uint256 nativeCutBps = uint256(cfg.lpBps) + cfg.potBps;
+        uint256 flywheelTakeWei = (requested * cfg.flywheelFeePips) / PIPS;
+        if (nativeCutBps > 0 || flywheelTakeWei > 0) {
+            uint256 expectedPoolIn = requested - ((requested * nativeCutBps) / BPS) - flywheelTakeWei;
             if (actualPoolIn != expectedPoolIn) revert PartialFillUnsupportedWithInputCuts();
         }
 
@@ -872,13 +712,13 @@ contract HookrHook is IHooks, IUnlockCallback {
             // beforeSwap reserves the request against the per-block cap because actual input is not
             // known yet. Release the refunded portion now. Cut-bearing swaps are required to fill
             // completely above; adding their deterministic cut reconstructs total buyer input.
-            uint256 actualBuyIn = actualPoolIn + ((requested * quoteCutBps) / BPS);
+            uint256 actualBuyIn = actualPoolIn + ((requested * nativeCutBps) / BPS) + flywheelTakeWei;
             if (cfg.maxBuyWei != 0 && actualBuyIn < requested) {
                 uint256 released = requested - actualBuyIn;
                 guardBuyWei[id] = uint96(uint256(guardBuyWei[id]) - released);
             }
 
-            if (quoteCutBps == 0) {
+            if (nativeCutBps == 0) {
                 uint256 effectiveFeePips = guardFeePipsInFlight[id];
                 delete guardFeePipsInFlight[id];
                 // Actual pool input includes both the LP fee and any PoolManager protocol fee.

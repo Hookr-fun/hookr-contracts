@@ -1,0 +1,24 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-existing-token-market",
+  "track": "existing_token_pool",
+  "project": {
+    "name": "Example existing-token market",
+    "website": "https://example.com/token"
+  },
+  "target": {
+    "chainId": 4663,
+    "tokenAddress": "0x1111111111111111111111111111111111111111",
+    "quoteAssetAddress": "0x2222222222222222222222222222222222222222",
+    "poolTopology": "single_pool",
+    "currentPoolIds": [
+      "0x1111111111111111111111111111111111111111111111111111111111111111"
+    ],
+    "liquidityPlan": "Initialize a separate v4 PoolKey with the reviewed hook, seed new liquidity, and keep the existing pool untouched."
+  },
+  "requirements": [
+    "Model routing and price discovery across the old and new pools.",
+    "Read back initialization and liquidity receipts before publishing the market."
+  ]
+}

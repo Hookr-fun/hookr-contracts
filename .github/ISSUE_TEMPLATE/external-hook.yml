@@ -1,0 +1,79 @@
+name: External hook integration
+description: Propose a third-party Uniswap v4 hook for Hookr's portable integration registry
+title: "hook integration: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit the exact source identity and product behavior first. Deployment, security review, Hooklist registration, and Uniswap routing remain separate evidence gates. Do not post email addresses, Telegram handles, secrets, or legal-consent records here.
+  - type: input
+    id: repository
+    attributes:
+      label: Source repository
+      description: Public HTTPS repository containing the hook system
+      placeholder: "https://github.com/owner/repository"
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Pinned commit
+      description: Exact 40-character commit reviewed for this integration
+      placeholder: "0123456789abcdef0123456789abcdef01234567"
+    validations:
+      required: true
+  - type: input
+    id: hook_contract
+    attributes:
+      label: Hook contract path
+      placeholder: "src/MyHook.sol"
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Integration lane
+      options:
+        - Standalone hook product
+        - Composable Hookr blueprint
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Enforced behavior
+      description: Describe what the contracts enforce, ordinary swap behavior, enabled hook flags, and any custom hook data.
+      placeholder: "Empty hookData does... The hook enables..."
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Factories, routers, tokens, and external dependencies
+      description: Include exact contract paths and whether each dependency is required for ordinary swaps or only an optional feature.
+    validations:
+      required: true
+  - type: dropdown
+    id: audit_status
+    attributes:
+      label: Current security status
+      options:
+        - Unaudited
+        - Independently reviewed
+        - Audited
+    validations:
+      required: true
+  - type: textarea
+    id: deployment_evidence
+    attributes:
+      label: Deployment evidence
+      description: Optional. If deployed, include chain, hook address, transaction, block, PoolManager, runtime hash, verified source, pool ID, and liquidity evidence. Omit this section for source-only work.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Evidence boundaries
+      options:
+        - label: I understand that source submission does not prove deployment, audit, Hooklist inclusion, routing approval, or Hookr endorsement.
+          required: true
+        - label: I confirm that this issue contains no private contact, wallet secret, or legal-consent data.
+          required: true

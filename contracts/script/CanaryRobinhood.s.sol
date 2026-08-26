@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -10,7 +10,6 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -114,7 +113,7 @@ contract CanaryRobinhood is Script {
         a.expectedCreator = me;
         a.targetRaiseWei = 0;
         a.blueprintId = 0;
-        a.custom = HookrLaunchpadLib.HookParams({
+        a.custom = HookrLaunchpad.HookParams({
             // Recovery budget for the separately-mined canary buy. Promotion still proves from
             // that buy's own PoolManager Swap log that it landed while the guard/surge fee was on.
             guardBlocks: 200,
@@ -131,19 +130,15 @@ contract CanaryRobinhood is Script {
             lpBps: 25,
             potBps: 50,
             potEveryNBuys: 10,
-            potMinBuyWei: 0.001 ether, // protocol floor: MIN_POT_BUY_WEI
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0.001 ether // protocol floor: MIN_POT_BUY_WEI
         });
         a.creatorBuyWei = CANARY_DEPOSIT_WEI;
         a.minTokensOut = 0;
         // Intent consumption + token creation + pool initialization + locked liquidity are one
         // transaction. If any step fails, the intent marker, token, and payment revert together.
-        address token =
-            pad.launchInstant{value: creationFee + CANARY_DEPOSIT_WEI}(a, CANARY_POOL_SUPPLY_BPS, CANARY_INTENT_ID);
+        address token = pad.launchInstantWithIntent{value: creationFee + CANARY_DEPOSIT_WEI}(
+            a, CANARY_POOL_SUPPLY_BPS, CANARY_INTENT_ID
+        );
 
         // 2. Buy through the bounded production router during the guard window.
         PoolKey memory key = PoolKey({
@@ -189,7 +184,7 @@ contract CanaryRobinhood is Script {
         // load-bearing: the live canary artifact must contain exactly launch/buy/approve/sell, and
         // an intentionally reverting replay must never be signed or submitted.
         bytes memory replayCall =
-            abi.encodeCall(HookrLaunchpad.launchInstant, (a, CANARY_POOL_SUPPLY_BPS, CANARY_INTENT_ID));
+            abi.encodeCall(HookrLaunchpad.launchInstantWithIntent, (a, CANARY_POOL_SUPPLY_BPS, CANARY_INTENT_ID));
         vm.prank(me);
         (bool replayOk, bytes memory replayResult) =
             address(pad).call{value: creationFee + CANARY_DEPOSIT_WEI}(replayCall);
@@ -255,7 +250,7 @@ contract CanaryRobinhood is Script {
             uint16 potBps,,,
             uint96 maxBuyWei,
             uint96 potMinBuyWei,
-            uint96 burnTrigger,,,,,,, // buyback block + royaltyTo + token
+            uint96 burnTrigger,,,
         ) = hook.poolConfig(id);
         require(guardEnd > l.graduatedAtBlock, "guard inactive");
         require(maxBuyWei >= CANARY_BUY_WEI, "guard cap did not admit canary buy");

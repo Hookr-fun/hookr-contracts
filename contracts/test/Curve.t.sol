@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrToken} from "../src/HookrToken.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {BlueprintSeeds} from "./utils/BlueprintSeeds.sol";
@@ -15,8 +13,6 @@ import {BlueprintSeeds} from "./utils/BlueprintSeeds.sol";
 ///         dead address stands in for it; graduation paths are covered by the fork suite.
 contract CurveTest is Test {
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     address constant PM = address(0xDEAD001);
     address creator = address(0xC0FFEE);
     address alice = address(0xA11CE);
@@ -26,9 +22,8 @@ contract CurveTest is Test {
     uint96 constant TARGET = 1 ether;
 
     function setUp() public {
-        pad = new HookrLaunchpad(IPoolManager(PM), new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        BlueprintSeeds.seed(pad.blueprints());
+        pad = new HookrLaunchpad(IPoolManager(PM));
+        BlueprintSeeds.seed(pad);
         // wire a fake hook? setHook validates flags — skip: launches only need hook != 0.
         // We cheat by writing storage: hook slot must be nonzero for launch().
         // Simpler: deploy real hook is fork-only; here we etch a stub with matching flags.
@@ -63,7 +58,7 @@ contract CurveTest is Test {
         a.expectedCreator = creator;
         a.targetRaiseWei = TARGET;
         a.blueprintId = 0;
-        a.custom = HookrLaunchpadLib.HookParams({
+        a.custom = HookrLaunchpad.HookParams({
             guardBlocks: 20,
             maxBuyBps: 50, // 0.5% supply
             snipeTaxPips: 400_000,
@@ -75,12 +70,7 @@ contract CurveTest is Test {
             lpBps: 25,
             potBps: 50,
             potEveryNBuys: 500,
-            potMinBuyWei: 0.001 ether,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0.001 ether
         });
         a.creatorBuyWei = 0;
         a.minTokensOut = 0;
@@ -89,12 +79,12 @@ contract CurveTest is Test {
     function _launch() internal returns (address token) {
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(_launchArgs(), bytes32(0));
+        token = pad.launch{value: fee}(_launchArgs());
     }
 
     function _launchWithIntent(HookrLaunchpad.LaunchArgs memory a, bytes32 intentId) internal returns (address token) {
         vm.prank(a.expectedCreator);
-        token = pad.launch{value: launchFee + a.creatorBuyWei}(a, intentId);
+        token = pad.launchWithIntent{value: launchFee + a.creatorBuyWei}(a, intentId);
     }
 
     function _assertLaunchIntentEvent(address expectedCreator, bytes32 expectedIntentId, address expectedToken)
@@ -128,14 +118,14 @@ contract CurveTest is Test {
         assertApproxEqRel(uint256(l.targetWei), uint256(TARGET), 1e15); // 0.1%
         assertEq(HookrToken(token).balanceOf(address(pad)), pad.SUPPLY());
         assertEq(HookrToken(token).creator(), creator);
-        assertEq(pad.protocolFeesByQuote(address(0)), pad.creationFeeWei());
+        assertEq(pad.protocolFeesWei(), pad.creationFeeWei());
     }
 
     function test_launch_revertsOnWrongPayment() public {
         HookrLaunchpad.LaunchArgs memory a = _launchArgs();
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.InsufficientPayment.selector);
-        pad.launch{value: 1}(a, bytes32(0));
+        pad.launch{value: 1}(a);
     }
 
     function test_launch_withCreatorBuy() public {
@@ -143,7 +133,7 @@ contract CurveTest is Test {
         a.creatorBuyWei = 0.02 ether; // 2% of 1 ETH target
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launch{value: fee + 0.02 ether}(a, bytes32(0));
+        address token = pad.launch{value: fee + 0.02 ether}(a);
         assertGt(HookrToken(token).balanceOf(creator), 0);
         HookrLaunchpad.Launch memory l = pad.getLaunch(token);
         assertGt(l.soldTokens, 0);
@@ -158,17 +148,17 @@ contract CurveTest is Test {
             abi.encodeWithSelector(HookrLaunchpad.UnexpectedCreator.selector, approved.expectedCreator, bob)
         );
         vm.prank(bob);
-        pad.launch{value: fee}(approved, bytes32(0));
+        pad.launch{value: fee}(approved);
 
         HookrLaunchpad.LaunchArgs memory missingCreator = approved;
         missingCreator.expectedCreator = address(0);
         vm.expectRevert(abi.encodeWithSelector(HookrLaunchpad.UnexpectedCreator.selector, address(0), creator));
         vm.prank(creator);
-        pad.launch{value: fee}(approved, bytes32(0));
+        pad.launch{value: fee}(missingCreator);
         approved.expectedCreator = creator;
 
         vm.prank(creator);
-        address creatorToken = pad.launch{value: fee}(approved, bytes32(0));
+        address creatorToken = pad.launch{value: fee}(approved);
         assertEq(pad.getLaunch(creatorToken).creator, creator);
 
         // Metadata is intentionally permissionless, not a uniqueness or identity primitive. Bob
@@ -176,7 +166,7 @@ contract CurveTest is Test {
         HookrLaunchpad.LaunchArgs memory bobIntent = approved;
         bobIntent.expectedCreator = bob;
         vm.prank(bob);
-        address bobToken = pad.launch{value: fee}(approved, bytes32(0));
+        address bobToken = pad.launch{value: fee}(bobIntent);
         assertTrue(bobToken != creatorToken);
         assertEq(pad.getLaunch(bobToken).creator, bob);
     }
@@ -191,7 +181,7 @@ contract CurveTest is Test {
 
         assertEq(pad.launchedByIntent(creator, intentId), token, "intent postcondition missing token");
         uint256 tokenCount = pad.tokensCount();
-        uint256 protocolFees = pad.protocolFeesByQuote(address(0));
+        uint256 protocolFees = pad.protocolFeesWei();
 
         vm.expectRevert(
             abi.encodeWithSelector(HookrLaunchpad.LaunchIntentAlreadyUsed.selector, creator, intentId, token)
@@ -199,25 +189,18 @@ contract CurveTest is Test {
         _launchWithIntent(a, intentId);
 
         assertEq(pad.tokensCount(), tokenCount, "replay deployed another token");
-        assertEq(pad.protocolFeesByQuote(address(0)), protocolFees, "replay accrued another creation fee");
+        assertEq(pad.protocolFeesWei(), protocolFees, "replay accrued another creation fee");
         assertEq(pad.launchedByIntent(creator, intentId), token, "replay changed intent postcondition");
     }
 
-    function test_launch_zeroIntentIsTheRepeatableManualDoor() public {
-        // `bytes32(0)` means "ordinary repeatable launch": identical calls stay repeatable by
-        // design, nothing is recorded in `launchedByIntent`, and the strict exactly-once door
-        // remains available to any nonzero identifier.
+    function test_launchWithIntent_rejectsZeroIntent() public {
         HookrLaunchpad.LaunchArgs memory a = _launchArgs();
         uint256 tokenCount = pad.tokensCount();
 
-        vm.prank(creator);
-        address first = pad.launch{value: launchFee}(a, bytes32(0));
-        vm.prank(creator);
-        address second = pad.launch{value: launchFee}(a, bytes32(0));
+        vm.expectRevert(HookrLaunchpad.ZeroLaunchIntent.selector);
+        _launchWithIntent(a, bytes32(0));
 
-        assertTrue(first != second, "repeatable door must not be blocked");
-        assertEq(pad.tokensCount(), tokenCount + 2);
-        assertEq(pad.launchedByIntent(creator, bytes32(0)), address(0), "zero intent must never record");
+        assertEq(pad.tokensCount(), tokenCount);
     }
 
     function test_launchWithIntent_failedCreatorBuyDoesNotConsume_andSameIntentRetries() public {
@@ -226,14 +209,14 @@ contract CurveTest is Test {
         a.creatorBuyWei = 0.02 ether;
         a.minTokensOut = pad.CURVE_SUPPLY() + 1;
         uint256 tokenCount = pad.tokensCount();
-        uint256 protocolFees = pad.protocolFeesByQuote(address(0));
+        uint256 protocolFees = pad.protocolFeesWei();
 
         vm.expectRevert(HookrLaunchpad.SlippageExceeded.selector);
         _launchWithIntent(a, intentId);
 
         assertEq(pad.launchedByIntent(creator, intentId), address(0), "failed launch consumed intent");
         assertEq(pad.tokensCount(), tokenCount, "failed launch retained token state");
-        assertEq(pad.protocolFeesByQuote(address(0)), protocolFees, "failed launch retained creation fee");
+        assertEq(pad.protocolFeesWei(), protocolFees, "failed launch retained creation fee");
 
         a.minTokensOut = 0;
         address token = _launchWithIntent(a, intentId);
@@ -277,7 +260,7 @@ contract CurveTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(HookrLaunchpad.UnexpectedCreator.selector, creator, bob));
         vm.prank(bob);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launchWithIntent{value: fee}(a, intentId);
         assertEq(pad.launchedByIntent(bob, intentId), address(0));
         assertEq(pad.launchedByIntent(creator, intentId), address(0));
 
@@ -291,9 +274,9 @@ contract CurveTest is Test {
         bytes32 unusedIntent = keccak256("ordinary-launch-does-not-consume");
 
         vm.prank(creator);
-        address firstToken = pad.launch{value: fee}(a, bytes32(0));
+        address firstToken = pad.launch{value: fee}(a);
         vm.prank(creator);
-        address secondToken = pad.launch{value: fee}(a, bytes32(0));
+        address secondToken = pad.launch{value: fee}(a);
 
         assertTrue(firstToken != secondToken);
         assertEq(pad.launchedByIntent(creator, unusedIntent), address(0));
@@ -306,7 +289,7 @@ contract CurveTest is Test {
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadHookParams.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
     }
 
     // ------------------------------------------------------------ buys
@@ -354,13 +337,13 @@ contract CurveTest is Test {
 
     function test_buy_feeSplitsCreatorProtocol() public {
         address token = _launch();
-        uint256 protoBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protoBefore = pad.protocolFeesWei();
         vm.prank(alice);
         pad.buy{value: 0.1 ether}(token, 0);
         assertGt(pad.creatorFeesWei(token), 0);
-        assertGt(pad.protocolFeesByQuote(address(0)), protoBefore);
+        assertGt(pad.protocolFeesWei(), protoBefore);
         // roughly equal split of ~1% of used ETH
-        assertApproxEqAbs(pad.creatorFeesWei(token), pad.protocolFeesByQuote(address(0)) - protoBefore, 2);
+        assertApproxEqAbs(pad.creatorFeesWei(token), pad.protocolFeesWei() - protoBefore, 2);
     }
 
     // ------------------------------------------------------------ sells
@@ -441,7 +424,7 @@ contract CurveTest is Test {
         HookrLaunchpad.Launch memory l = pad.getLaunch(token);
         if (!l.graduated) {
             // pad's ETH = reserve + accrued fees (creation + curve fees), minus nothing else
-            uint256 accounted = uint256(l.reserveWei) + pad.protocolFeesByQuote(address(0)) + pad.creatorFeesWei(token);
+            uint256 accounted = uint256(l.reserveWei) + pad.protocolFeesWei() + pad.creatorFeesWei(token);
             assertEq(address(pad).balance, accounted, "every wei accounted");
         }
     }
@@ -449,45 +432,41 @@ contract CurveTest is Test {
     // ------------------------------------------------------------ blueprints
 
     function test_blueprint_houseIdsAreOwnerReserved_untilAllFiveAreSeeded() public {
-        HookrBlueprints freshRegistry = new HookrBlueprints(address(this));
-        HookrLaunchpad freshPad = new HookrLaunchpad(IPoolManager(PM), freshRegistry);
-        HookrLaunchpadLib.HookParams memory p = _launchArgs().custom;
+        HookrLaunchpad freshPad = new HookrLaunchpad(IPoolManager(PM));
+        HookrLaunchpad.HookParams memory p = _launchArgs().custom;
 
         vm.prank(bob);
-        vm.expectRevert(HookrBlueprints.HouseBlueprintsPending.selector);
-        freshRegistry.saveBlueprint("front-run", p, 0);
+        vm.expectRevert(HookrLaunchpad.HouseBlueprintsPending.selector);
+        freshPad.saveBlueprint("front-run", p, 0);
 
-        vm.prank(address(this));
-        BlueprintSeeds.seed(freshRegistry);
+        BlueprintSeeds.seed(freshPad);
         vm.prank(bob);
-        uint32 id = freshRegistry.saveBlueprint("public", p, 0);
+        uint32 id = freshPad.saveBlueprint("public", p, 0);
         assertEq(id, 6);
-        assertEq(freshRegistry.getBlueprint(id).author, bob);
+        assertEq(freshPad.getBlueprint(id).author, bob);
     }
 
     function test_blueprint_saveAndLaunch() public {
-        HookrLaunchpadLib.HookParams memory p = _launchArgs().custom;
-        HookrBlueprints reg = pad.blueprints();
+        HookrLaunchpad.HookParams memory p = _launchArgs().custom;
         vm.prank(bob);
-        uint32 id = reg.saveBlueprint("Sniper Slayer", p, 500);
+        uint32 id = pad.saveBlueprint("Sniper Slayer", p, 500);
         assertEq(id, 6);
 
         HookrLaunchpad.LaunchArgs memory a = _launchArgs();
         a.blueprintId = id;
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launch{value: fee}(a, bytes32(0));
+        address token = pad.launch{value: fee}(a);
         assertEq(pad.getLaunch(token).blueprintId, id);
-        assertEq(bpReg.getBlueprint(id).uses, 1);
-        assertEq(bpReg.getBlueprint(id).author, bob);
+        assertEq(pad.getBlueprint(id).uses, 1);
+        assertEq(pad.getBlueprint(id).author, bob);
     }
 
     function test_blueprint_royaltyCap() public {
-        HookrLaunchpadLib.HookParams memory p = _launchArgs().custom;
-        HookrBlueprints reg = pad.blueprints();
+        HookrLaunchpad.HookParams memory p = _launchArgs().custom;
         vm.prank(bob);
-        vm.expectRevert(HookrBlueprints.RoyaltyTooHigh.selector);
-        reg.saveBlueprint("Greedy", p, 1001);
+        vm.expectRevert(HookrLaunchpad.RoyaltyTooHigh.selector);
+        pad.saveBlueprint("Greedy", p, 1001);
     }
 
     // ------------------------------------------------------------ admin
@@ -501,11 +480,11 @@ contract CurveTest is Test {
 
     function test_admin_withdrawProtocolFees() public {
         _launch();
-        uint256 amount = pad.protocolFeesByQuote(address(0));
+        uint256 amount = pad.protocolFeesWei();
         address to = address(0xFEE);
-        pad.withdrawProtocolFees(to, address(0));
+        pad.withdrawProtocolFees(to);
         assertEq(to.balance, amount);
-        assertEq(pad.protocolFeesByQuote(address(0)), 0);
+        assertEq(pad.protocolFeesWei(), 0);
     }
 
     function test_views_tokensPage() public {
@@ -514,7 +493,7 @@ contract CurveTest is Test {
         a.symbol = "TWO";
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address t2 = pad.launch{value: fee}(a, bytes32(0));
+        address t2 = pad.launch{value: fee}(a);
         address[] memory page = pad.tokensPage(0, 10);
         assertEq(page.length, 2);
         assertEq(page[0], t2); // newest first

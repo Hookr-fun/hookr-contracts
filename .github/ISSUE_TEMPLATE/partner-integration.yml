@@ -1,0 +1,74 @@
+name: Partner technical integration
+description: Choose one public, contact-free technical track for Hookr integration work.
+title: "[Partner integration]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not include names, email addresses, private chat excerpts, credentials, signatures, unpublished addresses, or confidential launch material. Use the private form at https://hookr.fun/integrate/hooks#private-brief when contact or private context is required.
+  - type: dropdown
+    id: track
+    attributes:
+      label: Technical track
+      description: Pick the outcome this work must produce.
+      options:
+        - Publish a hook
+        - Launch a hook + token
+        - Add an existing token
+        - Integrate a launchpad
+        - Connect a hook generator
+        - Attach an executor
+    validations:
+      required: true
+  - type: input
+    id: project
+    attributes:
+      label: Project
+      placeholder: Public project or integration name
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Public repository
+      description: Required for hook publication, hook + token, and generator tracks; otherwise add it when public source exists.
+      placeholder: https://github.com/owner/repository
+  - type: input
+    id: commit
+    attributes:
+      label: Pinned commit
+      description: Use a full immutable commit SHA when source already exists.
+      placeholder: 40-character Git commit
+  - type: textarea
+    id: current_system
+    attributes:
+      label: Current system
+      description: State the chain, contracts or token, current pools or launch lifecycle, and what is already deployed.
+    validations:
+      required: true
+  - type: textarea
+    id: requested_outcome
+    attributes:
+      label: Requested outcome
+      description: Describe the artifact Hookr should return and its acceptance criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: topology
+    attributes:
+      label: Pool, liquidity, authority, and value flow
+      description: Include relevant PoolKeys, seed or migration liquidity, executor interface, auth/rotation owner, profit recipients, and failure recovery. Write not applicable where appropriate.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Existing evidence
+      description: Link tests, audits, receipts, explorer verification, interfaces, or reproducible generator outputs. Keep source, deployment, receipt, and readback evidence distinct.
+  - type: checkboxes
+    id: public_safe
+    attributes:
+      label: Public-data confirmation
+      options:
+        - label: I confirm this issue contains no contact data, private chat content, credentials, signatures, or confidential launch information.
+          required: true

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {console2} from "forge-std/Script.sol";
 import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";

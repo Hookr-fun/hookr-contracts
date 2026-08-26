@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 /// @notice The project $HOOKR surface used by the utility contracts.
 /// @dev This is deliberately separate from HookrToken, which is the token implementation minted

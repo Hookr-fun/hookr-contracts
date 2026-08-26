@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -255,19 +255,54 @@ contract LeverageHookTest is Test {
     }
 
     function test_ringRateLimitsWithinASingleBlock() public {
-        // Many swaps in one timestamp must not be able to flush real history out of the ring.
-        for (uint256 i = 0; i < 10; i++) {
-            vm.prank(trader);
-            swapRouter.swap{value: 0.01 ether}(
-                key,
-                SwapParams({zeroForOne: true, amountSpecified: -0.01 ether, sqrtPriceLimitX96: MIN_LIMIT}),
-                PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
-                ""
-            );
-            vm.deal(trader, 100 ether);
+        // First build REAL, covered history — the thing a single-block burst would try to
+        // flush. The previous version skipped this and asserted `stale` on a ring that was
+        // ALREADY stale before its loop ran, so it proved nothing about the rate limiter: it
+        // would have passed just as well with the limiter deleted. Recorded as one of the three
+        // still-weak tests in contracts/AUDIT.md.
+        uint256 t = block.timestamp;
+        for (uint256 i = 0; i < LeverageOracleLib.MAX_WALK * 2; i++) {
+            t += LeverageOracleLib.MIN_SPACING_SEC + 1;
+            vm.warp(t);
+            _tinyBuy();
         }
-        // Still only the seed observation, so still stale rather than falsely confident.
-        assertTrue(hook.priceView(id).stale, "one block must not fill the ring");
+        ILeverage.PriceView memory pre = hook.priceView(id);
+        assertFalse(pre.stale, "precondition: the window is covered before the burst");
+
+        // Now fire many swaps in ONE timestamp. Each moves spot, but `write` samples a ring
+        // SLOT at most once per MIN_SPACING_SEC, so a burst cannot fill the ring. Fire MORE
+        // than MAX_WALK of them: if the slot rate-limit were removed, that many same-block
+        // writes would stamp every observation the walk can reach with the current timestamp,
+        // the walk would exhaust its steps without ever finding older history, and the average
+        // would collapse to spot while reporting itself stale.
+        for (uint256 i = 0; i < LeverageOracleLib.MAX_WALK + 10; i++) {
+            _tinyBuy(); // no warp: same block
+        }
+        ILeverage.PriceView memory post = hook.priceView(id);
+
+        // The burst really did move the pool — otherwise the test proves nothing about a flush.
+        assertTrue(post.spotWad != pre.spotWad, "the burst must actually move spot");
+        // History survived: the ring is still covered, not falsely stale.
+        assertFalse(post.stale, "one block of swaps must not flush the ring");
+        // And no time passed during the burst, so with the slot rate-limited the average is
+        // computed from the same stored history as before and does not move at all. Ablate the
+        // `MIN_SPACING_SEC` guard in LeverageOracleLib.write and this equality breaks: the TWAP
+        // jumps to spot.
+        assertEq(post.twapWad, pre.twapWad, "a same-block burst must not drag the average");
+    }
+
+    /// A single tiny buy from the funded trader. Kept small so the burst moves spot only a
+    /// little — the rate-limit property holds regardless of push size, and a small push keeps
+    /// the pool well inside its range.
+    function _tinyBuy() internal {
+        vm.deal(trader, 100 ether);
+        vm.prank(trader);
+        swapRouter.swap{value: 0.01 ether}(
+            key,
+            SwapParams({zeroForOne: true, amountSpecified: -0.01 ether, sqrtPriceLimitX96: MIN_LIMIT}),
+            PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
+            ""
+        );
     }
 
     // ------------------------------------------------------------------ registration

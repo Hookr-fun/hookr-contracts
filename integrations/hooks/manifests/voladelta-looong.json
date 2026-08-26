@@ -1,0 +1,85 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.external-hook.v1",
+  "slug": "voladelta-looong",
+  "name": "Looong Hook",
+  "summary": "A canonical LOOONG/WETH pool where verified buys create non-transferable custodied positions, mature holders can earn WETH rewards after 30 days, and part of the sell fee can move from early profitable exits to eligible holders.",
+  "status": "source-only",
+  "integrationMode": "standalone-hook-product",
+  "author": {
+    "github": "voladelta"
+  },
+  "source": {
+    "repository": "https://github.com/voladelta/looong-hook",
+    "pinnedCommit": "cf498807aab6fa959109b2eada6dc77a23dfa84b",
+    "license": "MIT",
+    "hookContract": "src/LooongHook.sol",
+    "contracts": [
+      "src/LooongHook.sol",
+      "src/LooongHookFactory.sol",
+      "src/LooongLaunchV1.sol",
+      "src/LooongRouter.sol",
+      "src/interfaces/ILooongHook.sol",
+      "src/libraries/LooongAccounting.sol"
+    ]
+  },
+  "integration": {
+    "poolScope": "canonical-pool-only",
+    "supportedTracks": ["hook_publication", "hook_token_launch"],
+    "standardSwapBehavior": "Source tests cover ordinary exact-input and exact-output swaps in both directions with empty hookData through LooongRouter. Verified position buys and sells use one-shot authenticated intents through that router; an optional exact-output witness uses a separate versioned domain. Compatibility with Hookr's production router path is not yet proven.",
+    "dedicatedRouter": {
+      "requiredForAllSwaps": false,
+      "contract": "src/LooongRouter.sol",
+      "purpose": "Required for position-creating buys and owner-bound sells from hook custody. Ordinary swaps can use empty hookData without creating or consuming a position."
+    },
+    "dependencies": [
+      { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
+      { "name": "Wrapped Ether", "kind": "token", "required": true },
+      { "name": "LOOONG ERC-20", "kind": "token", "required": true },
+      { "name": "LooongRouter", "kind": "router", "required": true },
+      { "name": "LooongHookFactory", "kind": "factory", "required": true },
+      { "name": "LooongLaunchV1", "kind": "factory", "required": true }
+    ]
+  },
+  "uniswapClassification": {
+    "flags": {
+      "beforeInitialize": true,
+      "afterInitialize": false,
+      "beforeAddLiquidity": false,
+      "afterAddLiquidity": false,
+      "beforeRemoveLiquidity": false,
+      "afterRemoveLiquidity": false,
+      "beforeSwap": true,
+      "afterSwap": true,
+      "beforeDonate": false,
+      "afterDonate": false,
+      "beforeSwapReturnsDelta": true,
+      "afterSwapReturnsDelta": true,
+      "afterAddLiquidityReturnsDelta": false,
+      "afterRemoveLiquidityReturnsDelta": false
+    },
+    "properties": {
+      "dynamicFee": false,
+      "upgradeable": false,
+      "requiresCustomSwapData": false,
+      "vanillaSwap": true,
+      "swapAccess": "none"
+    }
+  },
+  "security": {
+    "auditStatus": "unaudited",
+    "auditUrls": [],
+    "authorityModel": "PoolManager, registrar, trusted router, tokens, fee beneficiary, fee rates, and maturity are immutable. The one-shot launcher exposes no ownership, upgrade, liquidity-removal, fee-collection, rescue, or arbitrary-call path; the immutable fee beneficiary can claim the base-fee liability.",
+    "immutableDependencies": true,
+    "knownRisks": [
+      "The repository labels itself a reference implementation that is unaudited and not ready for public deployment.",
+      "Before another owner has mature shares, a verified seller can receive the full 2.90% sell component back and effectively pay only the 0.10% base hook fee; the advertised anti-flip pressure is therefore weak during bootstrap.",
+      "Verified buys place LOOONG in hook custody and rely on internal non-transferable position, basis, rebate, and reward accounting.",
+      "Free withdrawal and alternate pools can bypass the position-and-reward behavior, while separate wallets can sybil mature-holder eligibility.",
+      "Before- and after-swap return deltas, exact-output gross-up, partial-fill handling, and PoolManager claim conservation require independent review and target-chain fork testing.",
+      "The holder-incentive outcome depends on early-profit, maturity, wallet-sybil, ordinary-swap, and MEV behavior; source tests are not a production economic review.",
+      "No public deployment, initialized pool, locked-liquidity receipt, source verification, or live monitoring evidence has been supplied."
+    ]
+  },
+  "deployments": []
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "hookr.contract-source-sync.v1",
+  "syncedAt": "2026-08-26",
+  "upstreamCommit": "2fc1e6691430ef29fba79064f212af88af55d6a7",
+  "gitTrees": {
+    "contracts/src": "3e7dc7a51a93c4ef38499e1ee983045230287bed",
+    "contracts/script": "b1196a4c38f8ea3c40f935ac41089f9c48e1b4bf",
+    "contracts/test": "b5f80fd2def058a10ed897082218d8bd7226ea67"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.external-hook.v1",
+  "slug": "voladelta-wager",
+  "name": "Wager Hook",
+  "summary": "An immutable canonical ETH/WAGER pool where ordinary swaps use empty hook data and exact-input swaps may optionally attach a fixed-odds WETH wager settled with Chainlink VRF.",
+  "status": "source-only",
+  "integrationMode": "standalone-hook-product",
+  "author": {
+    "github": "voladelta"
+  },
+  "source": {
+    "repository": "https://github.com/voladelta/wager-hook",
+    "pinnedCommit": "9870b9e3e5ac8b49dc0178a9be9514e2873d1109",
+    "license": "MIT",
+    "hookContract": "src/WagerHook.sol",
+    "contracts": [
+      "src/WagerHook.sol",
+      "src/tokens/WagerToken.sol",
+      "src/router/WagerRouter.sol",
+      "src/vrf/WagerRandomnessAdapter.sol",
+      "src/launch/WagerLaunchFactory.sol",
+      "src/launch/PermanentPositionLocker.sol"
+    ]
+  },
+  "integration": {
+    "poolScope": "canonical-pool-only",
+    "supportedTracks": ["hook_publication", "hook_token_launch"],
+    "standardSwapBehavior": "Empty hookData remains an ordinary swap. The optional wager path uses versioned hookData and the dedicated router; routed Uniswap trades can use the ordinary path without enabling the wager feature.",
+    "dedicatedRouter": {
+      "requiredForAllSwaps": false,
+      "contract": "src/router/WagerRouter.sol",
+      "purpose": "Required only for the optional wager flow that binds a WETH stake to executed swap volume."
+    },
+    "dependencies": [
+      { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
+      { "name": "Wrapped Ether", "kind": "token", "required": true },
+      {
+        "name": "Production randomness provider",
+        "kind": "oracle",
+        "required": true,
+        "notes": "No target-chain provider has been evidenced for Robinhood Chain. The integration remains blocked until the provider and trust model are selected and reviewed."
+      },
+      { "name": "WagerRandomnessAdapter", "kind": "oracle", "required": true },
+      { "name": "WagerLaunchFactory", "kind": "factory", "required": true },
+      { "name": "PermanentPositionLocker", "kind": "locker", "required": true },
+      { "name": "WagerRouter", "kind": "router", "required": false }
+    ]
+  },
+  "uniswapClassification": {
+    "flags": {
+      "beforeInitialize": false,
+      "afterInitialize": true,
+      "beforeAddLiquidity": false,
+      "afterAddLiquidity": false,
+      "beforeRemoveLiquidity": false,
+      "afterRemoveLiquidity": false,
+      "beforeSwap": true,
+      "afterSwap": true,
+      "beforeDonate": false,
+      "afterDonate": false,
+      "beforeSwapReturnsDelta": false,
+      "afterSwapReturnsDelta": false,
+      "afterAddLiquidityReturnsDelta": false,
+      "afterRemoveLiquidityReturnsDelta": false
+    },
+    "properties": {
+      "dynamicFee": false,
+      "upgradeable": false,
+      "requiresCustomSwapData": false,
+      "vanillaSwap": true,
+      "swapAccess": "none"
+    }
+  },
+  "security": {
+    "auditStatus": "unaudited",
+    "auditUrls": [],
+    "authorityModel": "The source describes no mutable administrator, pause, upgrade, rescue, odds-change, or dependency-replacement path after launch.",
+    "immutableDependencies": true,
+    "knownRisks": [
+      "The repository states that it is unaudited and not ready for real-value deployment.",
+      "The Robinhood Chain path has no evidenced production randomness provider; changing away from Chainlink VRF requires a new dependency and trust-model review.",
+      "Wager solvency and settlement depend on reserve accounting and the selected randomness provider's lifecycle behavior.",
+      "A real-money wager product requires jurisdiction-specific product and legal review before public launch."
+    ]
+  },
+  "deployments": []
+}

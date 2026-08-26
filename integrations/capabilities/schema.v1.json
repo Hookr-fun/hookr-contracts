@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hookr.fun/schemas/integration-capabilities.v1.json",
+  "title": "Hookr integration capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "updatedAt", "release", "capabilities"],
+  "properties": {
+    "schemaVersion": { "const": "hookr.integration-capabilities.v1" },
+    "updatedAt": { "type": "string", "format": "date" },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chainId", "generation", "publicSourceStatus"],
+      "properties": {
+        "chainId": { "const": 4663 },
+        "generation": { "const": 5 },
+        "publicSourceStatus": { "enum": ["v5-sync-required", "current"] }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fiveBlockComposer", "partnerSdk", "externalHooks", "existingTokenPool", "arbRecapture"],
+      "properties": {
+        "fiveBlockComposer": { "$ref": "#/$defs/capability" },
+        "partnerSdk": { "$ref": "#/$defs/capability" },
+        "externalHooks": { "$ref": "#/$defs/capability" },
+        "existingTokenPool": { "$ref": "#/$defs/capability" },
+        "arbRecapture": {
+          "allOf": [
+            { "$ref": "#/$defs/capability" },
+            {
+              "type": "object",
+              "required": ["name", "production", "routeSigning", "appliesTo", "behavior", "compatibleHookBlocks", "incompatibleHookBlocks", "boundaries"],
+              "properties": {
+                "name": { "const": "Arb Recapture" },
+                "production": { "const": false },
+                "routeSigning": { "const": false },
+                "appliesTo": { "type": "string", "minLength": 20 },
+                "behavior": { "type": "string", "minLength": 20 },
+                "compatibleHookBlocks": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "enum": ["anti-snipe", "surge-fees", "auto-burn", "lp-rewards", "nth-buy-pot"] }
+                },
+                "incompatibleHookBlocks": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "enum": ["anti-snipe", "surge-fees", "auto-burn", "lp-rewards", "nth-buy-pot"] }
+                },
+                "boundaries": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 10 }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["availability"],
+      "properties": {
+        "availability": {
+          "enum": ["live", "release-candidate", "technical-review", "new-release-required", "source-review"]
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -13,9 +13,7 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "@uniswap/v4-core/src/test/PoolModifyLiquidityTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrToken} from "../src/HookrToken.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
@@ -27,6 +25,9 @@ import {HookMiner} from "./utils/HookMiner.sol";
 ///
 ///         Every test here fails against the pre-fix contracts and passes against the fixed ones.
 contract RegressionTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     IPoolManager constant PM = IPoolManager(0x8366a39CC670B4001A1121B8F6A443A643e40951);
@@ -37,8 +38,6 @@ contract RegressionTest is Test {
     uint96 constant TARGET = 0.01 ether;
 
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     PoolSwapTest router;
     PoolModifyLiquidityTest lpRouter;
@@ -50,22 +49,23 @@ contract RegressionTest is Test {
     address attacker = address(0xBADBAD);
 
     function setUp() public {
+        string memory rpc = vm.envOr("FORK_RPC_URL", string("robinhood"));
         uint256 requestedForkBlock = vm.envOr("ROBINHOOD_FORK_BLOCK", uint256(0));
         if (requestedForkBlock == 0) {
-            vm.createSelectFork("robinhood");
+            vm.createSelectFork(rpc);
         } else {
-            vm.createSelectFork("robinhood", requestedForkBlock);
+            vm.createSelectFork(rpc, requestedForkBlock);
         }
         selectedForkBlock = vm.getBlockNumber();
         emit log_named_uint("Robinhood fork block", selectedForkBlock);
         assertEq(block.chainid, 4663);
         if (requestedForkBlock != 0) assertEq(selectedForkBlock, requestedForkBlock);
 
-        pad = new HookrLaunchpad(PM, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad)));
+        pad = new HookrLaunchpad(PM);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(PM, address(pad));
+        hook = new HookrHook{salt: salt}(PM, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted, "mined address must match");
         pad.setHook(hook);
 
@@ -81,8 +81,8 @@ contract RegressionTest is Test {
 
     // ------------------------------------------------------------ helpers
 
-    function _baseParams() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
-        p = HookrLaunchpadLib.HookParams({
+    function _baseParams() internal pure returns (HookrLaunchpad.HookParams memory p) {
+        p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -94,16 +94,11 @@ contract RegressionTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
     }
 
-    function _launchAndGraduate(HookrLaunchpadLib.HookParams memory p, string memory symbol, uint96 target)
+    function _launchAndGraduate(HookrLaunchpad.HookParams memory p, string memory symbol, uint96 target)
         internal
         returns (address token, PoolKey memory key)
     {
@@ -119,7 +114,7 @@ contract RegressionTest is Test {
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(a, bytes32(0));
+        token = pad.launch{value: fee}(a);
 
         // Buy out the whole curve with headroom; the excess is refunded.
         uint256 buyout = (uint256(target) * 12) / 10 + 0.001 ether;
@@ -168,7 +163,7 @@ contract RegressionTest is Test {
     ///      launch sold out its entire curve and then reverted forever at graduation, stranding
     ///      the raise. Post-fix the launchpad normalizes the ceiling to baseFeePips.
     function test_fix1_maxFeeZero_graduatesAndPoolChargesBaseFee() public {
-        HookrLaunchpadLib.HookParams memory p = _baseParams();
+        HookrLaunchpad.HookParams memory p = _baseParams();
         p.baseFeePips = 3000;
         p.maxFeePips = 0; // "no surge block stacked" — exactly what the UI emits
 
@@ -186,18 +181,14 @@ contract RegressionTest is Test {
 
         // And the pool actually trades at the base fee with no surge headroom.
         // PoolConfig: initialized, guardEndBlock, baseFeePips, maxFeePips, ...
-        (,,, uint24 cfgMaxFee,,,,,,,,,,,,,,,,,) = hook.poolConfig(id);
+        (,,, uint24 cfgMaxFee,,,,,,,,,,,,,) = hook.poolConfig(id);
         assertEq(cfgMaxFee, 3000, "maxFee normalized to base, surge disabled");
         _buy(bob, key, 0.001 ether, abi.encode(bob));
     }
 
     // ============================================================ #2 jackpot RNG
 
-    function _jackpotParams(uint32 everyN, uint96 minBuy)
-        internal
-        pure
-        returns (HookrLaunchpadLib.HookParams memory p)
-    {
+    function _jackpotParams(uint32 everyN, uint96 minBuy) internal pure returns (HookrLaunchpad.HookParams memory p) {
         p = _baseParams();
         p.potBps = 100;
         p.potEveryNBuys = everyN;
@@ -286,7 +277,7 @@ contract RegressionTest is Test {
     /// @dev Pre-fix the guard's snipe tax sat outside the isBuy branch, so a seller paid up to
     ///      +45% LP fee during the guard window. The product only ever claimed to tax buys.
     function test_fix3_snipeTaxHitsBuysOnly_sellsAreUntaxed() public {
-        HookrLaunchpadLib.HookParams memory p = _baseParams();
+        HookrLaunchpad.HookParams memory p = _baseParams();
         p.guardBlocks = 50;
         p.snipeTaxPips = 400_000; // +40%
         p.baseFeePips = 3000;
@@ -323,7 +314,7 @@ contract RegressionTest is Test {
 
     // ============================================================ #4 LP rewards / JIT LP
 
-    function _lpParams() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
+    function _lpParams() internal pure returns (HookrLaunchpad.HookParams memory p) {
         p = _baseParams();
         p.lpBps = 100; // 1% of every buy to LPs
     }
@@ -400,10 +391,9 @@ contract RegressionTest is Test {
         assertGt(donated, 0);
 
         uint256 creatorBefore = pad.creatorFeesWei(token);
-        uint256 protoBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protoBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
-        uint256 collected =
-            (pad.creatorFeesWei(token) - creatorBefore) + (pad.protocolFeesByQuote(address(0)) - protoBefore);
+        uint256 collected = (pad.creatorFeesWei(token) - creatorBefore) + (pad.protocolFeesWei() - protoBefore);
         assertGe(collected, donated, "POL collects at least the donated ETH, plus swap LP fees");
     }
 
@@ -412,7 +402,7 @@ contract RegressionTest is Test {
     ///      slice the hook takes (so the donated wei provably stayed in the pool), and on a sell
     ///      the hook's balance does not move at all.
     function test_fix4_deltasSettleExactly_bothDirections() public {
-        HookrLaunchpadLib.HookParams memory p = _lpParams();
+        HookrLaunchpad.HookParams memory p = _lpParams();
         p.burnBps = 100;
         p.burnTriggerWei = 0;
         p.potBps = 100;
@@ -471,7 +461,7 @@ contract RegressionTest is Test {
     /// @dev The legacy trigger is ignored: burn happens against actual token output in every
     ///      qualifying buy, and no buyer-paid ETH can accumulate in a burn vault.
     function test_fix5_autoBurn_neverCreatesAStrandedEthVault() public {
-        HookrLaunchpadLib.HookParams memory p = _baseParams();
+        HookrLaunchpad.HookParams memory p = _baseParams();
         p.burnBps = 1000; // 10% of actual token output, the maximum
         p.burnTriggerWei = 0; // compatibility-only field must remain zero
         p.baseFeePips = 3000;
@@ -495,7 +485,7 @@ contract RegressionTest is Test {
     /// @dev Auto-burn is a deterministic cut of the buy's actual output. The legacy entrypoint is
     ///      disabled, so there is no separate, publicly triggerable market order to sandwich.
     function test_fix6_autoBurnExactOutputCut_andLegacyEntrypointDisabled() public {
-        HookrLaunchpadLib.HookParams memory p = _baseParams();
+        HookrLaunchpad.HookParams memory p = _baseParams();
         p.burnBps = 100;
         p.burnTriggerWei = 0;
 

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  developer-surface:
+    name: integrations and sdk
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run sdk:pack
+
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Format
+        run: forge fmt --check
+        working-directory: contracts
+
+      - name: Build and enforce EIP-170
+        run: forge build --sizes
+        working-directory: contracts
+
+      - name: Test
+        env:
+          FORK_RPC_URL: https://robinhood-rpc.publicnode.com
+        run: forge test
+        working-directory: contracts

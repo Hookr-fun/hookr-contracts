@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
@@ -12,6 +12,7 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
 
 import {ILeverage, ILeverageHook} from "./interfaces/ILeverage.sol";
+import {LeverageBookLib} from "./libraries/LeverageBookLib.sol";
 import {LeverageMath} from "./libraries/LeverageMath.sol";
 import {V4PoolMath} from "./libraries/V4PoolMath.sol";
 
@@ -94,6 +95,8 @@ contract LeverageMarket is IUnlockCallback {
 
     error NotPoolManager();
     error NotFactory();
+    error NotHook();
+    error NotSelf();
     error NoPosition();
     error Healthy();
     error Unhealthy();
@@ -253,17 +256,47 @@ contract LeverageMarket is IUnlockCallback {
     //
     // Bucketing on the RAW liquidation price would need rebucketing on every accrual. Bucketing
     // on the index-normalised one does not — see `_bookWrite`.
-    uint256 internal constant MANT = 4; // 16 buckets per octave
-    uint256 internal constant EMAX = 250;
-    uint256 internal constant TAIL = (EMAX << MANT) | 15;
+    //
+    // The key format itself lives in `LeverageBookLib`, because the hook reads these same
+    // buckets back as the order an incoming sell reaches positions in. One layout, one file.
+    uint256 internal constant MANT = LeverageBookLib.MANT;
+    uint256 internal constant TAIL = LeverageBookLib.TAIL;
 
     /// @dev idx => sum(scaledDebt) << 128 | sum(threshold-discounted collateral).
     mapping(uint256 => uint256) internal bookBucket;
-    /// @dev octave => 16-bit mask of occupied mantissas within it.
-    mapping(uint256 => uint256) internal bookSub;
+    /// @dev octave => 16-bit mask of occupied mantissas within it. Public for the same reason
+    ///      `bucketHead` is: the hook descends these two masks to find who the next sell
+    ///      reaches first, and a mask it cannot read is a queue it cannot order.
+    mapping(uint256 => uint256) public bookSub;
     /// @dev 256-bit mask of occupied octaves. Two levels, so the read skips empty ground
-    ///      without scanning it — the same shape as a v4 tick bitmap.
-    uint256 internal bookOct;
+    ///      without scanning it — the same shape as a v4 tick bitmap. Public alongside
+    ///      `bookSub`, so the hook can descend the book from its worst position down.
+    uint256 public bookOct;
+
+    // ---- bucket membership, so the book can be READ BACK as positions and not only as sums
+    //
+    // The two sums above answer "how impaired is this book" without enumerating it, which is
+    // what NAV needs. `liquidateAhead` needs the opposite: the ADDRESSES filed at or above a
+    // price, in the order the price will reach them. A mapping cannot be walked, so the walk
+    // is stored — one intrusive doubly-linked list per bucket, threaded through the same
+    // buckets the two-level bitmap already indexes.
+    //
+    // Doubly-linked and not singly: removal has to be O(1). A position leaves the book on
+    // every close, every liquidation and every repay, and a singly-linked list would have to
+    // scan its bucket to find the predecessor — an unbounded scan on a path that must not be
+    // allowed to become expensive, since the whole point of the queue is that it runs inside
+    // somebody else's swap.
+    //
+    // Membership is not a flag. `_bookWrite` unlinks exactly when `oldScaled != 0` and links
+    // exactly when `newScaled != 0`, which is the same condition that maintains the sums — so
+    // a position is in exactly one list whenever it is counted in exactly one bucket, and
+    // there is no second source of truth to drift.
+    // `bucketHead` / `bucketNext` are PUBLIC because the hook walks them. `bucketPrev` is not:
+    // it exists only so removal is O(1), and nothing outside this contract has any business
+    // reading a list backwards.
+    mapping(uint256 => address) public bucketHead;
+    mapping(address => address) public bucketNext;
+    mapping(address => address) internal bucketPrev;
 
     /// @notice Scaled debt filed in the book. Must always equal `totalScaledDebt`.
     /// @dev Five call sites mutate `positions`, and a book that misses one drifts SILENTLY —
@@ -294,18 +327,18 @@ contract LeverageMarket is IUnlockCallback {
         if (face == 0) return 0;
         // Compare in normalised space, since that is the space the buckets are keyed in.
         uint256 p = FullMath.mulDiv(price, WAD, borrowIndex);
-        uint256 ep = _msb(p);
-        if (ep > EMAX) ep = EMAX;
+        uint256 ep = LeverageBookLib.msb(p);
+        if (ep > LeverageBookLib.EMAX) ep = LeverageBookLib.EMAX;
         uint256 mp = ep < MANT ? 0 : (p >> (ep - MANT)) & 15;
         uint256 om = (bookOct >> ep) << ep; // drop every octave below the price's
         uint256 sh;
         while (om != 0) {
-            uint256 e = _msb(om);
+            uint256 e = LeverageBookLib.msb(om);
             om ^= uint256(1) << e;
             uint256 sm = bookSub[e];
             if (e == ep) sm = (sm >> mp) << mp; // inside the price octave, only mantissas >= the price's
             while (sm != 0) {
-                uint256 m = _msb(sm);
+                uint256 m = LeverageBookLib.msb(sm);
                 sm ^= uint256(1) << m;
                 sh += _bucketShortfall((e << MANT) | m, p);
             }
@@ -323,7 +356,7 @@ contract LeverageMarket is IUnlockCallback {
         uint256 S = w >> 128;
         if (S == 0) return 0;
         uint256 K = uint128(w);
-        (uint256 lo, uint256 hi) = _bounds(idx);
+        (uint256 lo, uint256 hi) = LeverageBookLib.bounds(idx);
         // Below the price bucket every member has q < p, so every hinge term is zero. Above it
         // every member is on the same side of its hinge, so the sum of the hinges EQUALS the
         // hinge of the sums. The min-of-sums fallacy can only bite where a hinge is crossed,
@@ -363,63 +396,6 @@ contract LeverageMarket is IUnlockCallback {
     // one that an attacker sets. Upper bound in, lower bound out is the right instinct when the
     // only options are two wrong numbers; it is the wrong one when an honest number exists.
 
-    function _msb(uint256 x) internal pure returns (uint256 r) {
-        unchecked {
-            if (x >= 1 << 128) {
-                x >>= 128;
-                r += 128;
-            }
-            if (x >= 1 << 64) {
-                x >>= 64;
-                r += 64;
-            }
-            if (x >= 1 << 32) {
-                x >>= 32;
-                r += 32;
-            }
-            if (x >= 1 << 16) {
-                x >>= 16;
-                r += 16;
-            }
-            if (x >= 1 << 8) {
-                x >>= 8;
-                r += 8;
-            }
-            if (x >= 1 << 4) {
-                x >>= 4;
-                r += 4;
-            }
-            if (x >= 1 << 2) {
-                x >>= 2;
-                r += 2;
-            }
-            if (x >= 1 << 1) r += 1;
-        }
-    }
-
-    /// @dev Bucket index for a normalised liquidation price: octave in the high bits, the four
-    ///      leading mantissa bits below it.
-    function _key(uint256 q) internal pure returns (uint256) {
-        uint256 e = _msb(q);
-        if (e >= EMAX) return TAIL;
-        // Below 2**MANT the mantissa has no bits to read, so the octave is one whole bucket.
-        // It MUST keep its own octave index: the read skips octaves below the price's, so
-        // collapsing these into octave 0 dropped live shortfall for 1 <= price < 2**MANT and
-        // the mark OVERSTATED — the exact error being fixed, reintroduced. Caught by fuzzing.
-        if (e < MANT) return e << MANT;
-        return (e << MANT) | ((q >> (e - MANT)) & 15);
-    }
-
-    function _bounds(uint256 idx) internal pure returns (uint256 lo, uint256 hi) {
-        if (idx == TAIL) return (type(uint256).max, type(uint256).max);
-        uint256 e = idx >> MANT;
-        uint256 m = idx & 15;
-        if (e < MANT) return (e == 0 ? 0 : uint256(1) << e, uint256(1) << (e + 1));
-        // Exact, with no truncation, because e >= MANT.
-        lo = (16 + m) << (e - MANT);
-        hi = (17 + m) << (e - MANT);
-    }
-
     /// @dev Moves a position between buckets. Nothing is stored per position: the index is
     ///      RECOMPUTED from (collateral, scaledDebt) on both the remove and the add, with the
     ///      same truncation and the same rounding, so the removal lands in exactly the bucket
@@ -433,11 +409,14 @@ contract LeverageMarket is IUnlockCallback {
     ///      boundary; only a write to that position can. `accrue()` is therefore not a call
     ///      site here and there is no staleness story to tell. The read compensates by
     ///      normalising the price the same way.
-    function _bookWrite(uint256 oldColl, uint256 oldScaled, uint256 newColl, uint256 newScaled) internal {
+    function _bookWrite(address trader, uint256 oldColl, uint256 oldScaled, uint256 newColl, uint256 newScaled)
+        internal
+    {
         uint256 thr = config.liqThresholdBps;
         if (oldScaled != 0) {
             uint256 k = oldColl * thr / BPS;
-            uint256 idx = k == 0 ? TAIL : _key(FullMath.mulDivRoundingUp(oldScaled, WAD, k));
+            uint256 idx = k == 0 ? TAIL : LeverageBookLib.key(FullMath.mulDivRoundingUp(oldScaled, WAD, k));
+            _unlink(trader, idx);
             uint256 w = bookBucket[idx];
             uint256 s = (w >> 128) - oldScaled;
             uint256 c = uint128(w) - k;
@@ -457,7 +436,7 @@ contract LeverageMarket is IUnlockCallback {
             // whole debt — is conservative. NOT filing it, which is the obvious reading, left
             // the debt in totalDebt() with no bucket entry at all: marked at FULL FACE with no
             // backing whatsoever, reachable by supplying dust collateral. Caught by fuzzing.
-            uint256 idx = k == 0 ? TAIL : _key(FullMath.mulDivRoundingUp(newScaled, WAD, k));
+            uint256 idx = k == 0 ? TAIL : LeverageBookLib.key(FullMath.mulDivRoundingUp(newScaled, WAD, k));
             uint256 w = bookBucket[idx];
             uint256 s = (w >> 128) + newScaled;
             uint256 c = uint128(w) + k;
@@ -467,7 +446,35 @@ contract LeverageMarket is IUnlockCallback {
             uint256 e = idx >> MANT;
             bookSub[e] |= uint256(1) << (idx & 15);
             bookOct |= uint256(1) << e;
+            _link(trader, idx);
         }
+    }
+
+    /// @dev Push to the front. Order within a bucket carries no meaning — every member of a
+    ///      bucket shares a liquidation price to within one sixteenth of an octave, so there is
+    ///      no fair ordering to preserve and a head insert is the cheapest one that exists.
+    function _link(address trader, uint256 idx) internal {
+        address head = bucketHead[idx];
+        bucketNext[trader] = head;
+        bucketPrev[trader] = address(0);
+        if (head != address(0)) bucketPrev[head] = trader;
+        bucketHead[idx] = trader;
+    }
+
+    /// @dev The mirror, and it must be the exact mirror: `idx` is RECOMPUTED by the caller from
+    ///      the same (collateral, scaledDebt) the link used, so an unlink cannot address a
+    ///      bucket the position was never in and orphan it in the one it was.
+    function _unlink(address trader, uint256 idx) internal {
+        address prev = bucketPrev[trader];
+        address next = bucketNext[trader];
+        if (prev == address(0)) {
+            bucketHead[idx] = next;
+        } else {
+            bucketNext[prev] = next;
+        }
+        if (next != address(0)) bucketPrev[next] = prev;
+        bucketNext[trader] = address(0);
+        bucketPrev[trader] = address(0);
     }
 
     /// @notice The position's ACTUAL reserves, split at the live price.
@@ -814,7 +821,17 @@ contract LeverageMarket is IUnlockCallback {
         // and risk limits, not about the balance — so with the escrow reserved out of
         // idleQuote() a borrower could still be handed ETH that belongs to a keeper or a
         // liquidated trader, and `claim()` would revert for good.
-        if (borrow > idleQuote()) revert InsufficientLiquidity();
+        //
+        // `msg.value` must be excluded, exactly as the two capacity checks below exclude it:
+        // openPosition is payable, so the equity is ALREADY in address(this).balance by the time
+        // idleQuote() reads it. Comparing `borrow` against the raw idleQuote() counted the
+        // borrower's own equity as lendable cash and let a borrow of up to `msg.value` more than
+        // the market's free balance settle out of the `claimable` escrow — breaking
+        // `balance >= totalClaimable` and DoS-ing `claim()`, the precise outcome this guard's
+        // comment promises to prevent. Bound `borrow` against the balance the market held BEFORE
+        // this call: `borrow <= idleQuote() - msg.value`, written to avoid the underflow when the
+        // escrow exceeds the free balance.
+        if (borrow + msg.value > idleQuote()) revert InsufficientLiquidity();
         // Capacity must be measured WITHOUT the equity that just arrived. openPosition is
         // payable, so msg.value is already in address(this).balance by the time idleQuote()
         // reads it — counting it would let a trader borrow against their own deposit.
@@ -838,7 +855,7 @@ contract LeverageMarket is IUnlockCallback {
         if (_openHealthWad(msg.sender) <= WAD) revert Unhealthy();
         // The old book state is provably (0, 0): PositionExists refuses unless collateral is
         // zero, and `_clear` deletes the whole struct, so zero collateral implies zero debt.
-        _bookWrite(0, 0, pos.collateral, pos.scaledDebt);
+        _bookWrite(msg.sender, 0, 0, pos.collateral, pos.scaledDebt);
         emit Opened(msg.sender, msg.value, borrow, received);
     }
 
@@ -873,12 +890,38 @@ contract LeverageMarket is IUnlockCallback {
     ///      because it doubted its price would be choosing to accumulate exactly the
     ///      positions it can least afford.
     function liquidate(address trader, uint256 minQuoteOut) external {
+        _liquidateOne(trader, minQuoteOut, 0, false);
+    }
+
+    /// @dev The one liquidation body, reached two ways.
+    ///
+    ///      Written as a single function rather than two similar ones on purpose, and not only
+    ///      for the bytecode: the two paths differ in exactly three places — where the lock
+    ///      comes from, whether a keeper is owed a bonus, and whether an incoming trade has to
+    ///      corroborate the trigger — and every OTHER decision a liquidation makes has to stay
+    ///      identical between them. Two copies would have been two places for the seize cap,
+    ///      the average-marked trigger, the floor and the shortfall waterfall to drift.
+    ///
+    /// @param projectedPriceWad Zero for an ordinary keeper liquidation, which asks nothing of
+    ///        the future. Non-zero from the queue, where the seizure must ALSO be one the
+    ///        incoming trade itself triggers.
+    /// @param inLock True when a lock is already open and the sale must run inside it, which
+    ///        is also exactly when there is no keeper to pay — see `_settle`.
+    function _liquidateOne(address trader, uint256 minQuoteOut, uint256 projectedPriceWad, bool inLock)
+        internal
+        returns (uint256 seize)
+    {
         ILeverage.Position memory pos = positions[trader];
         if (pos.collateral == 0) revert NoPosition();
         accrue();
         if (liquidationHealthOf(trader) > WAD) revert Healthy();
 
         uint256 owed = debtOf(trader);
+        // The queue's extra condition, and only the queue's: this trade has to be what puts
+        // the position under. Without it a single sell would drain the whole eligible queue
+        // into the pool however small it was — which is a keeper's job, done on a keeper's
+        // gas, not a passing trader's.
+        if (projectedPriceWad != 0 && _healthAt(projectedPriceWad, pos.collateral, owed) > WAD) revert Healthy();
 
         // Seize only what the pool can absorb inside the unwind floor. Selling the whole
         // position in one swap is what made the floor unsatisfiable: on a constant-product
@@ -886,11 +929,36 @@ contract LeverageMarket is IUnlockCallback {
         // so the largest positions reverted at the trigger and stayed open until they had
         // already destroyed the collateral that would have covered them. A partial seize
         // closes what it can now; the rest stays liquidatable and is taken on the next call.
-        uint256 seize = _seizeCap(uint256(pos.collateral));
+        seize = _seizeCap(uint256(pos.collateral));
         if (seize == 0) revert InsufficientLiquidity();
-        bytes memory res = poolManager.unlock(abi.encode(Action.Liquidate, trader, seize, owed, minQuoteOut));
-        uint256 proceeds = abi.decode(res, (uint256));
 
+        uint256 proceeds;
+        if (inLock) {
+            proceeds = this.sellInLock(seize, minQuoteOut, true);
+        } else {
+            proceeds = abi.decode(
+                poolManager.unlock(abi.encode(Action.Liquidate, trader, seize, owed, minQuoteOut)), (uint256)
+            );
+        }
+        _settle(trader, pos, seize, owed, proceeds, inLock ? address(0) : msg.sender);
+    }
+
+    /// @dev Everything a liquidation does AFTER the sale has landed, shared by the two ways a
+    ///      sale can land: `liquidate`, which opens its own unlock, and `liquidateAhead`, which
+    ///      is already inside somebody else's. Factored rather than duplicated because this is
+    ///      the half that decides who is owed what — a second copy is a second place for the
+    ///      partial-seize book sync, the pull-payment escrow and the shortfall waterfall to
+    ///      drift apart, and the drift would be silent.
+    /// @param keeper Who earns the liquidation bonus, or `address(0)` for "nobody" — see
+    ///        `liquidateAhead` for why the queue path pays no keeper.
+    function _settle(
+        address trader,
+        ILeverage.Position memory pos,
+        uint256 seize,
+        uint256 owed,
+        uint256 proceeds,
+        address keeper
+    ) internal {
         bool isPartial = seize < uint256(pos.collateral);
         if (isPartial) {
             // Reduce the position by what was actually taken and leave it open.
@@ -900,7 +968,13 @@ contract LeverageMarket is IUnlockCallback {
             _clear(trader, pos);
         }
 
-        uint256 bonus = proceeds * config.liqBonusBps / BPS;
+        // No keeper, no bonus. The bonus buys a stranger's gas and inventory risk for work
+        // nobody was obliged to do; the queue path is done by the pool itself, on the incoming
+        // trader's gas, so there is no such work to buy. Paying it to the triggering swapper
+        // instead would have made a cascade something worth CAUSING, which is the opposite of
+        // what this is for. What the bonus would have been simply stays in the recovery, which
+        // means it reaches the debt first and the liquidated trader's residual second.
+        uint256 bonus = keeper == address(0) ? 0 : proceeds * config.liqBonusBps / BPS;
         uint256 net = proceeds - bonus;
         uint256 repaid = net < owed ? net : owed;
         uint256 residual = net - repaid;
@@ -917,7 +991,7 @@ contract LeverageMarket is IUnlockCallback {
             // alone would file the position in a bucket it never actually occupies — reduced
             // collateral against undiminished debt — and the removal would then be computed
             // from a state that never existed. `pos` is the pre-seize copy taken on entry.
-            _bookWrite(pos.collateral, pos.scaledDebt, positions[trader].collateral, held - scaledRepaid);
+            _bookWrite(trader, pos.collateral, pos.scaledDebt, positions[trader].collateral, held - scaledRepaid);
             // `residual` stays as computed. A slice that recovers more than the whole debt
             // leaves an excess, and that excess is the trader's — zeroing it here handed
             // their money to the market while leaving them an open position with no debt.
@@ -931,14 +1005,63 @@ contract LeverageMarket is IUnlockCallback {
         // already booked bad debt. A liquidation must never depend on the liquidated party
         // being willing to accept money.
         if (bonus > 0) {
-            claimable[msg.sender] += bonus;
+            claimable[keeper] += bonus;
             totalClaimable += bonus;
         }
         if (residual > 0) {
             claimable[trader] += residual;
             totalClaimable += residual;
         }
-        emit Liquidated(trader, msg.sender, pos.collateral, repaid, shortfall);
+        emit Liquidated(trader, keeper, pos.collateral, repaid, shortfall);
+    }
+
+    /// @notice Liquidates ONE position into the pool AHEAD of the swap that is about to
+    ///         execute against it. Called by the hook, from `beforeSwap`.
+    ///
+    /// @dev The ordering rule, stated plainly: a forced sale that the incoming trade itself
+    ///      triggers goes through the pool FIRST, and the incoming trade fills against what is
+    ///      left. A seller who moves the price past somebody's liquidation price is not
+    ///      entitled to the price that existed before the liquidation they caused — that
+    ///      liquidation is ahead of them in the queue, and its impact is part of their fill.
+    ///      It is an ORDERING change and not a pricing one: the curve, the LP fee and the swap
+    ///      the trader signed are all untouched.
+    ///
+    ///      Runs inside the incoming swapper's `unlock`, never its own, which is the whole
+    ///      reason this is a separate entrypoint rather than another `Action`: `unlock` cannot
+    ///      nest, and by the time `beforeSwap` reaches here one is already open. Everything
+    ///      after the sale is `_settle`, shared verbatim with `liquidate`.
+    ///
+    ///      WHAT AUTHORISES A SEIZURE IS UNCHANGED, and this is the load-bearing sentence in
+    ///      the file. A position is taken only if it is unhealthy AT THE TIME-WEIGHTED
+    ///      AVERAGE — the same proof `liquidate` demands, for the same reason: spot can be
+    ///      shoved inside one block and restored, so a spot-triggered liquidation is a
+    ///      liquidation an attacker can manufacture. `projectedPriceWad` only ever NARROWS
+    ///      that set; it adds the second condition that this particular trade is what crosses
+    ///      the position's liquidation price. So a trade can change WHEN an
+    ///      already-liquidatable position is taken and WHERE IN THE QUEUE it lands, and it
+    ///      cannot make a position liquidatable that the average calls healthy. Widening this
+    ///      to trigger on the projected price alone would reintroduce the stop-hunt the
+    ///      average was chosen to close (see `liquidationHealthOf`), and no amount of
+    ///      queue-ordering pays for that.
+    ///
+    ///      Execution is bounded by machinery that already exists rather than by new limits.
+    ///      `_seizeCap`'s per-BLOCK token budget caps what every liquidation in a block may
+    ///      sell COMBINED — keeper-driven and queue-driven alike — and `_execSell`'s
+    ///      block-anchored floor bounds each sale against the spot the block opened at. Both
+    ///      are anchored before the incoming trade rather than after it, so the queue prices
+    ///      off the pre-trade market and not off the hole that trade is about to dig.
+    ///
+    ///      REVERTS FREELY, and the hook swallows it. Every refusal here — healthy at the
+    ///      average, not crossed by this trade, budget spent, floor breached — must leave the
+    ///      incoming swap to execute exactly as it would have. A queue that can brick a pool's
+    ///      trading costs more than it can ever return, so the failure mode is "no
+    ///      liquidation", never "no trade".
+    function liquidateAhead(address trader, uint256 projectedPriceWad) external returns (uint256 tokensSold) {
+        if (msg.sender != address(hook)) revert NotHook();
+        if (projectedPriceWad == 0) revert NothingToDo();
+        // minOut zero: the floor inside `_execSell` is the real bound here, and it is measured
+        // against the block's anchored spot rather than against a number this call chose.
+        return _liquidateOne(trader, 0, projectedPriceWad, true);
     }
 
     /// @notice Adds collateral to an open position, in the quote asset.
@@ -957,7 +1080,7 @@ contract LeverageMarket is IUnlockCallback {
         uint256 wasColl = pos.collateral;
         pos.collateral = _toU128(wasColl + received);
         collateralHeld += received;
-        _bookWrite(wasColl, pos.scaledDebt, pos.collateral, pos.scaledDebt);
+        _bookWrite(msg.sender, wasColl, pos.scaledDebt, pos.collateral, pos.scaledDebt);
         emit CollateralAdded(msg.sender, msg.value, received);
     }
 
@@ -975,7 +1098,7 @@ contract LeverageMarket is IUnlockCallback {
         uint256 wasScaled = pos.scaledDebt;
         pos.scaledDebt = uint128(wasScaled - scaled);
         totalScaledDebt -= scaled;
-        _bookWrite(pos.collateral, wasScaled, pos.collateral, pos.scaledDebt);
+        _bookWrite(msg.sender, pos.collateral, wasScaled, pos.collateral, pos.scaledDebt);
 
         uint256 refund = msg.value - applied;
         if (refund > 0) {
@@ -1085,7 +1208,7 @@ contract LeverageMarket is IUnlockCallback {
         collateralHeld -= pos.collateral;
         totalScaledDebt -= pos.scaledDebt;
         delete positions[trader];
-        _bookWrite(pos.collateral, pos.scaledDebt, 0, 0);
+        _bookWrite(trader, pos.collateral, pos.scaledDebt, 0, 0);
     }
 
     // ------------------------------------------------------------------ pool execution
@@ -1123,8 +1246,7 @@ contract LeverageMarket is IUnlockCallback {
 
         if (action == Action.Open) return abi.encode(_execBuy(a, c));
         if (action == Action.Close || action == Action.Liquidate) {
-            bool enforceFloor = action == Action.Liquidate;
-            return abi.encode(_execSell(a, c, enforceFloor));
+            return abi.encode(this.sellInLock(a, c, action == Action.Liquidate));
         }
         if (action == Action.Seed) {
             _execSeed(int256(a), int24(int256(b)), int24(int256(c)));
@@ -1137,6 +1259,26 @@ contract LeverageMarket is IUnlockCallback {
         who; // silence unused in the Seed branch
         b;
         return "";
+    }
+
+    /// @notice The market's sale of its own tokens into its own pool. Self-call only.
+    ///
+    /// @dev External, and called as `this.sellInLock(...)` from inside this contract, for a
+    ///      reason that is about bytecode rather than about design. Two paths need this sale —
+    ///      the unlock callback, and the liquidation queue that runs inside somebody else's
+    ///      unlock — and `_execSell` is the largest body in the file. As a two-site internal
+    ///      function the optimiser inlined it into both, which measured 1,074 bytes and put
+    ///      `LeverageMarketDeployLib` 672 bytes past EIP-170; the deploy library carries this
+    ///      contract's whole initcode, so the market's size limit is really the library's. One
+    ///      external entry point is one body.
+    ///
+    ///      The cost is a self-CALL to a warm address on paths already spending tens of
+    ///      thousands of gas, and it changes nothing about custody: `msg.sender` to the pool
+    ///      manager is still this contract either way, so the deltas, the sync and the settle
+    ///      all land exactly where they did.
+    function sellInLock(uint256 tokensIn, uint256 minOut, bool enforceFloor) external returns (uint256) {
+        if (msg.sender != address(this)) revert NotSelf();
+        return _execSell(tokensIn, minOut, enforceFloor);
     }
 
     /// @dev Spends `quoteIn` of ETH through the pool and takes the token output to this
@@ -1288,11 +1430,19 @@ contract LeverageMarket is IUnlockCallback {
             // why liquidation cleared the floor and redemption did not — the two paths were
             // sized against different caps.
             //
-            // The sandwich is real and remains OPEN: measured at +33.63 ETH to the attacker
-            // and -45.2 ETH to the redeeming LP. Closing it needs a reference price the
-            // attacker cannot set inside the same transaction — the average rather than spot —
-            // and a deviation gate alone is not enough, since a quiet push that stays under
-            // the 500 bps band still pays. That is a design change, not a constant.
+            // The sandwich WAS real — measured at +33.63 ETH to the attacker and -45.2 ETH to
+            // the redeeming LP — and the exploitable version is CLOSED upstream of this sell:
+            // `_unwindForRedemption` declines (returns, does not execute) when
+            // `hook.isRecentlyDislocated(poolId)` reads spot more than 150 bps below the 90s
+            // short-window mean, a mean the attacker cannot move inside one transaction. See
+            // finding 2 in contracts/AUDIT.md and the gate at the top of `_unwindForRedemption`.
+            // This block only runs once that gate has let the unwind proceed, so the proceeds do
+            // not settle against a same-transaction push of MORE than 150 bps below the mean; a
+            // push within that one-sided band still executes, and that bounded residual (an
+            // ~1.5%-of-unwound-leg skim, socialised through NAV) is the deliberate cost of not
+            // refusing honest exits. A bare deviation gate was not enough — a quiet push under the
+            // 500 bps band still paid — which is why the fix is the tight 90s window, not a wider
+            // band.
             poolManager.take(key.currency0, address(this), gained);
         }
         if (delta.amount0() > 0) poolManager.take(key.currency0, address(this), uint256(int256(delta.amount0())));

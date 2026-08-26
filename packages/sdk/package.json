@@ -1,0 +1,92 @@
+{
+  "name": "@hookr/sdk",
+  "version": "0.1.0-rc.1",
+  "description": "Typed launch, blueprint, swap, capability, and release-verification helpers for Hookr.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./abi": {
+      "types": "./dist/types/abi.d.ts",
+      "import": "./dist/esm/abi.js",
+      "require": "./dist/cjs/abi.js"
+    },
+    "./chain": {
+      "types": "./dist/types/chain.d.ts",
+      "import": "./dist/esm/chain.js",
+      "require": "./dist/cjs/chain.js"
+    },
+    "./hooks": {
+      "types": "./dist/types/hooks.d.ts",
+      "import": "./dist/esm/hooks.js",
+      "require": "./dist/cjs/hooks.js"
+    },
+    "./launch": {
+      "types": "./dist/types/launch.d.ts",
+      "import": "./dist/esm/launch.js",
+      "require": "./dist/cjs/launch.js"
+    },
+    "./release": {
+      "types": "./dist/types/release.d.ts",
+      "import": "./dist/esm/release.js",
+      "require": "./dist/cjs/release.js"
+    },
+    "./router": {
+      "types": "./dist/types/router.d.ts",
+      "import": "./dist/esm/router.js",
+      "require": "./dist/cjs/router.js"
+    },
+    "./verification": {
+      "types": "./dist/types/verification.d.ts",
+      "import": "./dist/esm/verification.js",
+      "require": "./dist/cjs/verification.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "typecheck:examples": "tsc -p tsconfig.examples.json",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types && npm run typecheck:examples && node scripts/finalize-build.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepack": "npm test && node scripts/verify-package.mjs"
+  },
+  "peerDependencies": {
+    "viem": ">=2.55.0 <3"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2",
+    "viem": "2.55.10"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hookr-fun/hookr-contracts.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://hookr.fun/integrations/sdk",
+  "bugs": {
+    "url": "https://github.com/Hookr-fun/hookr-contracts/issues"
+  }
+}

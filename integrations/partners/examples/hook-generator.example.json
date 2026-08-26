@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-hook-generator",
+  "track": "hook_generator",
+  "project": {
+    "name": "Example hook generator"
+  },
+  "source": {
+    "repository": "https://github.com/example/hook-generator",
+    "pinnedCommit": "3333333333333333333333333333333333333333",
+    "contracts": ["examples/generated/ExampleHook.sol"],
+    "compiler": "Solidity 0.8.28",
+    "dependencyLock": "package-lock.json"
+  },
+  "interface": {
+    "generatedArtifacts": [
+      "Solidity source",
+      "compiler settings",
+      "dependency lock",
+      "test report"
+    ],
+    "authorityModel": "The generator exports reproducible artifacts only; a human review and separate Hookr release gate control any deployment or external submission."
+  },
+  "requirements": [
+    "Reject generated claims that cannot be reproduced from the pinned generator and dependency identities."
+  ]
+}

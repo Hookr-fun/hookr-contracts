@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "hookr.integration-capabilities.v1",
+  "updatedAt": "2026-08-26",
+  "release": {
+    "chainId": 4663,
+    "generation": 5,
+    "publicSourceStatus": "current"
+  },
+  "capabilities": {
+    "fiveBlockComposer": {
+      "availability": "live",
+      "appliesTo": "New Hookr V5 launches",
+      "hookBlocks": ["anti-snipe", "surge-fees", "auto-burn", "lp-rewards", "nth-buy-pot"]
+    },
+    "partnerSdk": {
+      "availability": "release-candidate",
+      "package": "@hookr/sdk",
+      "version": "0.1.0-rc.1",
+      "tracks": ["launchpad_sdk", "hook_generator"],
+      "note": "Source, tests, examples, and package smoke checks exist; npm publication is a separate release action."
+    },
+    "externalHooks": {
+      "availability": "technical-review",
+      "tracks": ["hook_publication", "hook_token_launch"],
+      "note": "A pinned public manifest can enter review. Source review is not deployment or routing approval."
+    },
+    "existingTokenPool": {
+      "availability": "new-release-required",
+      "tracks": ["existing_token_pool"],
+      "note": "A hook cannot be attached to an existing pool. The path creates a new reviewed PoolKey."
+    },
+    "arbRecapture": {
+      "name": "Arb Recapture",
+      "availability": "source-review",
+      "tracks": ["executor_adapter", "hook_token_launch", "existing_token_pool"],
+      "production": false,
+      "routeSigning": false,
+      "appliesTo": "Eligible new V6 Hookr pools after a supported second venue exists",
+      "behavior": "Attempts one bounded, signer-approved post-swap correction and allocates realized quote profit.",
+      "compatibleHookBlocks": ["anti-snipe", "surge-fees", "auto-burn", "nth-buy-pot"],
+      "incompatibleHookBlocks": ["lp-rewards"],
+      "boundaries": [
+        "Does not retrofit an existing V5 pool",
+        "Does not apply to every external hook",
+        "Does not guarantee that arbitrage is prevented or captured",
+        "Has no production deployment or route-signing manifest"
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
@@ -13,14 +13,18 @@ import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 /// @notice Production settlement boundary for graduated Hookr pools.
 /// @dev Unlike PoolSwapTest, every entrypoint binds the output recipient and hookData recipient,
 ///      enforces a deadline and an execution-time amount bound, settles only measured deltas, and
-///      refunds only the native input left from the current call. Hookr pools use the configured
-///      quote token on currency0 and launch token on currency1.
+///      refunds only the native input left from the current call. Hookr pools are native-ETH or
+///      HOOKR currency0 / ERC-20 currency1 pools; an ERC-20 quote settles by transferFrom (the
+///      payer approves this router), pays no msg.value, and needs no refund — the pull is exact.
 contract HookrSwapRouter is IUnlockCallback {
     uint24 internal constant DYNAMIC_FEE_FLAG = 0x800000;
     int24 internal constant TICK_SPACING = 60;
 
     IPoolManager public immutable poolManager;
     IHooks public immutable hook;
+    /// @notice The one ERC-20 quote this router accepts as currency0 (the HOOKR token). Native ETH
+    ///         is always accepted; any other currency0 is refused.
+    address public immutable quoteToken;
 
     uint256 private unlocked = 1;
 
@@ -78,10 +82,11 @@ contract HookrSwapRouter is IUnlockCallback {
     error TransferFailed();
     error SettlementMismatch(uint256 expected, uint256 settled);
 
-    constructor(IPoolManager poolManager_, IHooks hook_) {
+    constructor(IPoolManager poolManager_, IHooks hook_, address quoteToken_) {
         if (address(poolManager_) == address(0) || address(hook_) == address(0)) revert InvalidPoolKey();
         poolManager = poolManager_;
         hook = hook_;
+        quoteToken = quoteToken_;
     }
 
     modifier nonReentrant() {
@@ -132,13 +137,7 @@ contract HookrSwapRouter is IUnlockCallback {
         _refundNative(p.key, p.zeroForOne, uint256(p.amountIn) - amountInUsed);
 
         emit SwapExecuted(
-            msg.sender,
-            p.recipient,
-            Currency.unwrap(p.zeroForOne ? p.key.currency1 : p.key.currency0),
-            p.zeroForOne,
-            true,
-            amountInUsed,
-            received
+            msg.sender, p.recipient, Currency.unwrap(p.key.currency1), p.zeroForOne, true, amountInUsed, received
         );
         return received;
     }
@@ -174,13 +173,7 @@ contract HookrSwapRouter is IUnlockCallback {
         _refundNative(p.key, p.zeroForOne, uint256(p.amountInMaximum) - used);
 
         emit SwapExecuted(
-            msg.sender,
-            p.recipient,
-            Currency.unwrap(p.zeroForOne ? p.key.currency1 : p.key.currency0),
-            p.zeroForOne,
-            false,
-            used,
-            amountOutReceived
+            msg.sender, p.recipient, Currency.unwrap(p.key.currency1), p.zeroForOne, false, used, amountOutReceived
         );
         return used;
     }
@@ -221,25 +214,23 @@ contract HookrSwapRouter is IUnlockCallback {
     function _validate(PoolKey calldata key, address recipient, uint256 deadline, uint128 amount) internal view {
         if (block.timestamp > deadline) revert DeadlineExpired(deadline, block.timestamp);
         if (recipient == address(0) || recipient == address(this)) revert InvalidRecipient();
+        address c0 = Currency.unwrap(key.currency0);
         if (
-            Currency.unwrap(key.currency1) == address(0) || address(key.hooks) != address(hook)
-                || key.fee != DYNAMIC_FEE_FLAG || key.tickSpacing != TICK_SPACING
+            (c0 != address(0) && c0 != quoteToken) || Currency.unwrap(key.currency1) == address(0)
+                || address(key.hooks) != address(hook) || key.fee != DYNAMIC_FEE_FLAG || key.tickSpacing != TICK_SPACING
         ) revert InvalidPoolKey();
         if (amount == 0) revert InvalidAmount();
         if (amount > uint128(type(int128).max)) revert AmountTooLarge();
     }
 
     function _validateNativeValue(PoolKey calldata key, bool zeroForOne, uint256 maximumInput) internal view {
-        Currency inputCurrency = zeroForOne ? key.currency0 : key.currency1;
-        bool nativeInput = Currency.unwrap(inputCurrency) == address(0);
+        bool nativeInput = zeroForOne && Currency.unwrap(key.currency0) == address(0);
         uint256 expected = nativeInput ? maximumInput : 0;
         if (msg.value != expected) revert InvalidNativeValue(expected, msg.value);
     }
 
     function _refundNative(PoolKey calldata key, bool zeroForOne, uint256 amount) internal {
-        if (amount == 0) return;
-        Currency inputCurrency = zeroForOne ? key.currency0 : key.currency1;
-        if (Currency.unwrap(inputCurrency) != address(0)) return;
+        if (amount == 0 || !zeroForOne || Currency.unwrap(key.currency0) != address(0)) return;
         (bool ok,) = payable(msg.sender).call{value: amount}("");
         if (!ok) revert TransferFailed();
     }

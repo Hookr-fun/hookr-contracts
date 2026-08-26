@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 
 import {HookrLaunchBoostV1} from "../src/HookrLaunchBoostV1.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrLockRewardsV1} from "../src/HookrLockRewardsV1.sol";
 import {IHookrLockRewardsV1} from "../src/interfaces/IHookrLockRewardsV1.sol";
 import {IHookrUtilityToken} from "../src/libraries/HookrTokenTransfer.sol";
@@ -97,7 +96,7 @@ contract DeployHookrUtilities is Script {
         require(launch.sqrtPriceX96AtGraduation == sqrtPriceX96, "v4 core canary sqrt price wrong");
         require(PoolId.unwrap(launch.poolId) != bytes32(0), "v4 core canary pool missing");
 
-        HookrLaunchpadLib.HookParams memory params = launch.hookParams;
+        HookrLaunchpad.HookParams memory params = launch.hookParams;
         require(params.guardBlocks == 200 && params.maxBuyBps == 1000, "v4 core guard block wrong");
         require(params.snipeTaxPips == 200_000, "v4 core snipe block wrong");
         require(

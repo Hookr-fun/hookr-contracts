@@ -22,7 +22,7 @@ Verified against the vendored core before writing. Three facts changed the desig
 
 ## 1. File set
 
-Nine files. Each one justified by a limit, a callback boundary, or a custody boundary — not by taste.
+Ten files. Each one justified by a limit, a callback boundary, or a custody boundary — not by taste.
 
 | # | File | Responsibility (one line) |
 |---|---|---|
@@ -34,7 +34,8 @@ Nine files. Each one justified by a limit, a callback boundary, or a custody bou
 | 6 | `src/libraries/LeverageOracleLib.sol` | `internal` — observation ring write, bounded backward walk, TWAP, quality score. Inlines into the hook. |
 | 7 | `src/libraries/LeveragePositionLib.sol` | `public`, linked — the OPEN / CLOSE / REPAY / LIQUIDATE unlock bodies, swap-and-reconcile, bad-debt waterfall. |
 | 8 | `src/libraries/LeverageVaultLib.sol` | `public`, linked — NAV, deposit / redeem / queue service / in-kind strip / harvest unlock bodies. |
-| 9 | `src/interfaces/ILeverage.sol` | Shared structs, errors, and the `ILeverageHook` / `ILeverageMarket` interfaces that break the hook↔market import cycle. |
+| 9 | `src/interfaces/ILeverage.sol` | Shared structs, errors, and the `ILeverageHook` / `ILeverageQueue` interfaces that break the hook↔market import cycle. |
+| 10 | `src/libraries/LeverageBookLib.sol` | `internal pure` — the credit book's bucket key format. One layout, two readers: the market files positions into buckets, the hook reads them back as the order an incoming sell reaches them in. |
 
 **Why not fewer.**
 - 1 and 2 must split: constraint (a).
@@ -43,6 +44,10 @@ Nine files. Each one justified by a limit, a callback boundary, or a custody bou
 - 3 exists because `HookrLaunchpad.setHook` is one-shot (`HookAlreadySet`) and every `PoolKey` it builds hardcodes `IHooks(address(hook))`. There is no per-launch hook parameter. A leverage pool needs its own opener.
 - 4 is shared, not per-market: $HOOKR is a protocol-level asset, and per-market copies of ERC-20 custody logic is how you get eleven bugs instead of one.
 - 5 and 6 are `internal` so they cost bytecode where they inline, not a link step — matching `V4PoolMath` (all `internal`) versus `HookrLaunchpadLib` (`public`, linked).
+- 10 exists the moment the book gained a SECOND reader. The liquidation queue makes the hook
+  walk the same buckets the market marks itself from, and two contracts encoding one layout
+  privately is how a book gets written in one shape and read in another — silently, in the
+  place it matters most. `internal`, for the same reason 5 and 6 are.
 
 **Contingency, stated up front.** If `LeverageMarket` still exceeds 24,576 B after 7 and 8 are extracted, move every non-essential view to a standalone `src/LeverageLens.sol` with no storage and no privileges, reading the market's public getters. Do *not* solve it by shrinking the invariant checks.
 
@@ -850,6 +855,60 @@ tokenClaimsBooked == totalCollateralTokens + tokenTreasury + claimableTokenTotal
 
 ---
 
+## 4.5 The liquidation queue — a sell waits behind what it triggers
+
+`LeverageHook.beforeSwap` runs the liquidations an incoming sell TRIGGERS before that sell
+executes, so the seller fills against the price their own trade created rather than the one
+they were quoted. It is an ordering change and not a pricing one: the curve, the LP fee and the
+swap the trader signed are untouched.
+
+**Where it runs, and why it is a separate entrypoint.** `beforeSwap` is already inside the
+swapper's `unlock`, and `unlock` cannot nest (§0c). So the market cannot open a lock for this
+and `LeverageMarket.liquidateAhead` is the one flow in the contract that works under a lock it
+did not open. Everything after the sale — the partial-seize book sync, the pull-payment escrow,
+the shortfall waterfall — is `_settle`, shared verbatim with `liquidate`, so the two ways into a
+liquidation cannot drift.
+
+**What authorises a seizure is unchanged, and this is the load-bearing property.** A position
+is taken only if it is unhealthy at the TIME-WEIGHTED AVERAGE, which is the same proof
+`liquidate` demands and for the same reason: spot can be shoved inside one block and restored,
+so a spot-triggered liquidation is one an attacker can manufacture (§3.3). The projected
+post-swap price only ever NARROWS that set — it adds the condition that this particular trade is
+what crosses the position's liquidation price. A trade can therefore change WHEN an
+already-liquidatable position is taken and WHERE IN THE QUEUE it lands, and it cannot make a
+position liquidatable that the average calls healthy. `LeverageLiquidationQueue.t.sol`'s
+`test_aSameBlockPushCannotManufactureALiquidation` is that property written down.
+
+**Bounds are the ones that already existed.** `_seizeCap`'s per-block token budget caps what
+every liquidation in a block may sell combined, keeper-driven and queue-driven alike, and
+`_execSell`'s block-anchored floor bounds each sale against the spot the block opened at. Both
+anchor before the incoming trade, so the queue prices off the pre-trade market rather than off
+the hole that trade is about to dig. On top of them the hook adds only what a stranger's gas
+justifies: at most 3 positions and 12 bucket steps per swap, and it will not start at all below
+900k gas remaining.
+
+**No keeper bonus.** The bonus buys a stranger's gas and inventory risk for work nobody was
+obliged to do; the queue is run by the pool itself on the incoming trader's gas, so there is no
+such work to buy. Paying it to the triggering swapper would have made a cascade something worth
+CAUSING. What the bonus would have been stays in the recovery, reaching the debt first and the
+liquidated trader's residual second.
+
+**Failure is silent and the swap survives it.** Every refusal — healthy at the average, not
+crossed by this trade, budget spent, floor breached — leaves the incoming swap to execute
+exactly as it would have. A queue that can brick a pool's trading costs more than it can ever
+return.
+
+**One bytecode note, because it shaped the code.** `LeverageMarketDeployLib` carries the
+market's whole initcode, so the market's real size limit is the library's. Two paths needing
+`_execSell` made the optimiser inline it into both, which measured 1,074 B and put the deploy
+library 672 B past EIP-170; `sellInLock` is an external self-call for no other reason than to
+give that body one home. Measured after: deploy library 24,453 B, **123 B of margin**. That is
+thin, and the next material addition to `LeverageMarket` will need the §1 contingency — move
+non-essential views to a `LeverageLens`, or link the book's marking walk out as a `public`
+library. Do not solve it by shrinking the invariant checks.
+
+---
+
 ## 5. The oracle
 
 **v4 gives you nothing.** `getSlot0` is spot; core ships no observation array. The ring is ours, and it lives in the hook because only the hook receives swap callbacks.
@@ -1042,7 +1101,7 @@ Modelled on `AdversarialAudit.t.sol:243-250`'s `_assertHookSolvent`, which asser
 ## 9. Implementation order
 
 1. `ILeverage.sol`, `LeverageMath.sol`, `LeverageOracleLib.sol` — pure, unit-testable with no PoolManager. Get the `Pq` inversion (§3.0) and the TWAP accumulator right here or nothing downstream is trustworthy.
-2. `LeverageHook.sol` + `HookMiner.find(address(this), 0x3AC0, creation)` — stand up a pool with a scratch harness (`ScratchLeverageHarness.t.sol`, already passing). Prove I26–I30 before any credit code exists.
+2. `LeverageHook.sol` + `HookMiner.find(address(this), 0x3AC0, creation)` — stand up a pool with the §7-verified harness (`ScratchLeverageHarness.t.sol` at `/private/tmp/claude-501/-Users-nodes-repos-hookr--claude-worktrees-discover-launch-token-pages-b7d5a2/49c62140-9672-482f-88e7-0610d6325979/scratchpad/ScratchLeverageHarness.t.sol`, already passing). Prove I26–I30 before any credit code exists.
 3. `LeverageMarket.sol` custody skeleton + `LeverageVaultLib` deposit/NAV — prove I1–I7, I11 with zero debt.
 4. `LeveragePositionLib` open/close — prove I8–I9, I12–I13, I16, and the fill reconciliation (step 15 of §4.1) with a fuzzed book.
 5. Liquidation + bad debt — I10, I17–I20.

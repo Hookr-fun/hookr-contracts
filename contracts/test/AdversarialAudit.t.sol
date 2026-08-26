@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -15,9 +15,7 @@ import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
 import {PoolModifyLiquidityTest} from "@uniswap/v4-core/src/test/PoolModifyLiquidityTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrToken} from "../src/HookrToken.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
@@ -66,11 +64,11 @@ contract JackpotFarmer {
 
 /// @notice A blueprint author / jackpot recipient that cannot receive ETH.
 contract NonPayableAccount {
-    function saveBlueprint(HookrBlueprints reg, HookrLaunchpadLib.HookParams memory p, uint16 royaltyBps)
+    function saveBlueprint(HookrLaunchpad pad, HookrLaunchpad.HookParams memory p, uint16 royaltyBps)
         external
         returns (uint32)
     {
-        return reg.saveBlueprint("nonpayable-bp", p, royaltyBps);
+        return pad.saveBlueprint("nonpayable-bp", p, royaltyBps);
     }
 
     function claimFromHook(HookrHook hook) external {
@@ -87,6 +85,9 @@ contract NonPayableAccount {
 ///         Nothing here is copied from the engineer's own regression suite; every assertion is
 ///         re-derived from the contract source and from Uniswap v4-core's actual settlement rules.
 contract AdversarialAuditTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     IPoolManager constant PM = IPoolManager(0x8366a39CC670B4001A1121B8F6A443A643e40951);
@@ -96,8 +97,6 @@ contract AdversarialAuditTest is Test {
     uint96 constant TARGET = 0.01 ether;
 
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     PoolSwapTest router;
     PoolModifyLiquidityTest lpRouter;
@@ -112,23 +111,24 @@ contract AdversarialAuditTest is Test {
     uint256 nonce;
 
     function setUp() public {
+        string memory rpc = vm.envOr("FORK_RPC_URL", string("robinhood"));
         uint256 requestedForkBlock = vm.envOr("ROBINHOOD_FORK_BLOCK", uint256(0));
         if (requestedForkBlock == 0) {
-            vm.createSelectFork("robinhood");
+            vm.createSelectFork(rpc);
         } else {
-            vm.createSelectFork("robinhood", requestedForkBlock);
+            vm.createSelectFork(rpc, requestedForkBlock);
         }
         selectedForkBlock = vm.getBlockNumber();
         emit log_named_uint("Robinhood fork block", selectedForkBlock);
         assertEq(block.chainid, 4663);
         if (requestedForkBlock != 0) assertEq(selectedForkBlock, requestedForkBlock);
 
-        pad = new HookrLaunchpad(PM, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        BlueprintSeeds.seed(pad.blueprints());
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad)));
+        pad = new HookrLaunchpad(PM);
+        BlueprintSeeds.seed(pad);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(PM, address(pad));
+        hook = new HookrHook{salt: salt}(PM, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
 
@@ -145,8 +145,8 @@ contract AdversarialAuditTest is Test {
 
     // ------------------------------------------------------------------ harness
 
-    function _p() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
-        p = HookrLaunchpadLib.HookParams({
+    function _p() internal pure returns (HookrLaunchpad.HookParams memory p) {
+        p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -158,12 +158,7 @@ contract AdversarialAuditTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
     }
 
@@ -177,7 +172,7 @@ contract AdversarialAuditTest is Test {
         });
     }
 
-    function _grad(HookrLaunchpadLib.HookParams memory p, uint96 target)
+    function _grad(HookrLaunchpad.HookParams memory p, uint96 target)
         internal
         returns (address token, PoolKey memory key)
     {
@@ -192,7 +187,7 @@ contract AdversarialAuditTest is Test {
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(a, bytes32(0));
+        token = pad.launch{value: fee}(a);
 
         uint256 buyout = (uint256(target) * 13) / 10 + 0.001 ether;
         vm.deal(alice, buyout + 10_000 ether);
@@ -290,7 +285,7 @@ contract AdversarialAuditTest is Test {
         uint16 sens = uint16(bound(sensRaw, 0, 10));
         uint32 guard = uint32(bound(guardRaw, 0, 100_000));
 
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.baseFeePips = base;
         p.maxFeePips = maxF;
         p.snipeTaxPips = snipe;
@@ -308,7 +303,7 @@ contract AdversarialAuditTest is Test {
         assertEq(cachedFee, base, "cached LP fee == baseFeePips");
         assertGt(PM.getLiquidity(id), 0, "POL seeded");
 
-        (, uint40 guardEnd, uint24 cfgBase, uint24 cfgMax,,,,,,,,,,,,,,,,,) = hook.poolConfig(id);
+        (, uint40 guardEnd, uint24 cfgBase, uint24 cfgMax,,,,,,,,,,,,,) = hook.poolConfig(id);
         assertEq(cfgBase, base);
         assertGe(cfgMax, cfgBase, "hook ceiling never below the floor");
         assertEq(cfgMax, maxF == 0 ? base : maxF, "ceiling is the normalized value");
@@ -347,7 +342,7 @@ contract AdversarialAuditTest is Test {
         uint16 lpB = uint16(bound(lpRaw, 0, 1000 - burn));
         uint16 potB = uint16(bound(potRaw, 0, 1000 - burn - lpB));
 
-        HookrLaunchpadLib.HookParams memory p = HookrLaunchpadLib.HookParams({
+        HookrLaunchpad.HookParams memory p = HookrLaunchpad.HookParams({
             guardBlocks: uint32(bound(guardRaw, 0, 100_000)),
             maxBuyBps: uint16(bound(maxBuyBpsRaw, 0, 10_000)),
             snipeTaxPips: uint24(bound(snipeRaw, 0, 500_000 - base)),
@@ -363,20 +358,15 @@ contract AdversarialAuditTest is Test {
                 : uint32(bound(everyNRaw, 0, type(uint32).max)),
             potMinBuyWei: potB > 0
                 ? uint96(bound(minBuyRaw, hook.MIN_POT_BUY_WEI(), type(uint96).max))
-                : uint96(bound(minBuyRaw, 0, type(uint96).max)),
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+                : uint96(bound(minBuyRaw, 0, type(uint96).max))
         });
         uint256 pFinal = bound(pFinalRaw, 1e5, 1e13); // the real graduation range for 1e-4..1e3 ETH
 
         // Every one of these MUST be accepted by the launchpad; a revert here is a bad bound.
         uint16 royaltyBps = lpB + potB > 0 ? 1000 : 0;
-        bpReg.saveBlueprint("probe", p, royaltyBps);
+        pad.saveBlueprint("probe", p, royaltyBps);
 
-        HookrHook.PoolConfig memory cfg = HookrLaunchpadLib.previewPoolConfig(p, pFinal, pad.SUPPLY());
+        HookrHook.PoolConfig memory cfg = pad.previewPoolConfig(p, 0, pFinal, pad.SUPPLY());
         assertGe(cfg.maxFeePips, cfg.baseFeePips, "normalized ceiling never below the floor");
         PoolKey memory k = PoolKey({
             currency0: Currency.wrap(address(0)),
@@ -396,7 +386,7 @@ contract AdversarialAuditTest is Test {
     function _potParams(uint32 everyN, uint96 minBuy, uint16 potBps)
         internal
         pure
-        returns (HookrLaunchpadLib.HookParams memory p)
+        returns (HookrLaunchpad.HookParams memory p)
     {
         p = _p();
         p.potBps = potBps;
@@ -407,11 +397,11 @@ contract AdversarialAuditTest is Test {
     /// @dev Both validators enforce the same protocol-wide qualifying-buy floor. A blueprint
     ///      cannot create free schedule slots, and previewed data cannot bypass the hook itself.
     function test_adv2_potMinBelowProtocolFloor_rejectedByLaunchpadAndHook() public {
-        HookrLaunchpadLib.HookParams memory p = _potParams(5, 0, 100);
+        HookrLaunchpad.HookParams memory p = _potParams(5, 0, 100);
         vm.expectRevert(HookrLaunchpad.BadHookParams.selector);
-        bpReg.saveBlueprint("free-pot-trap", p, 0);
+        pad.saveBlueprint("free-pot-trap", p, 0);
 
-        HookrHook.PoolConfig memory cfg = HookrLaunchpadLib.previewPoolConfig(p, 5.18e9, pad.SUPPLY());
+        HookrHook.PoolConfig memory cfg = pad.previewPoolConfig(p, 0, 5.18e9, pad.SUPPLY());
         PoolKey memory k = _key(address(0xDEAD1));
         vm.prank(address(pad));
         vm.expectRevert(HookrHook.BadConfig.selector);
@@ -421,7 +411,7 @@ contract AdversarialAuditTest is Test {
     /// @dev A pool consumes at most one qualifying counter slot per block. A one-transaction loop
     ///      can trade repeatedly, but it cannot atomically manufacture every remaining slot.
     function test_adv2_atomicSingleTxFarm_cannotWalkTheCounter() public {
-        HookrLaunchpadLib.HookParams memory p = _potParams(20, 0.001 ether, 1000); // 10% of buys -> pot
+        HookrLaunchpad.HookParams memory p = _potParams(20, 0.001 ether, 1000); // 10% of buys -> pot
         (, PoolKey memory key) = _grad(p, 1 ether);
         PoolId id = key.toId();
 
@@ -498,7 +488,7 @@ contract AdversarialAuditTest is Test {
 
     /// @dev A failed swap cannot leave the counter advanced (state is rolled back with the tx).
     function test_adv2_revertedAttempt_doesNotAdvanceTheCounter() public {
-        HookrLaunchpadLib.HookParams memory p = _potParams(3, 0.001 ether, 100);
+        HookrLaunchpad.HookParams memory p = _potParams(3, 0.001 ether, 100);
         p.guardBlocks = 100;
         p.maxBuyBps = 1; // tiny per-swap cap during the guard
         (, PoolKey memory key) = _grad(p, TARGET);
@@ -518,7 +508,7 @@ contract AdversarialAuditTest is Test {
     ///      (so a regression that leaks the tax into the surge path is also caught). Exact-input
     ///      and exact-output sells are both checked.
     function test_adv3_sellsDuringGuard_payExactlyTheUnguardedFee() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.guardBlocks = 200;
         p.snipeTaxPips = 450_000; // +45%, the legal max on top of a 0.5% base
         p.baseFeePips = 5000;
@@ -564,7 +554,7 @@ contract AdversarialAuditTest is Test {
     ///      (a) exact ETH conservation across the PoolManager and (b) that the hook holds nothing
     ///      that is not owed to a vault or a claimant.
     function test_adv4_allSwapShapes_settleExactly_andLeaveNothingStuck() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.lpBps = 300;
         p.burnBps = 400;
         p.potBps = 300;
@@ -683,7 +673,7 @@ contract AdversarialAuditTest is Test {
 
     /// @dev Auto-burn executes inside guarded buys without a recursive swap or ETH-side vault.
     function test_adv4_autoBurnDuringGuard_hasNoRecursiveCutOrVault() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.burnBps = 1000;
         p.burnTriggerWei = 0;
         p.guardBlocks = 10_000;
@@ -707,7 +697,7 @@ contract AdversarialAuditTest is Test {
 
     /// @dev A latecomer LP must not be able to reach value donated before it was in range.
     function test_adv4_jitLp_roundTripIsNonPositive() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.lpBps = 1000;
         (address token, PoolKey memory key) = _grad(p, 1 ether);
         PoolId id = key.toId();
@@ -747,7 +737,7 @@ contract AdversarialAuditTest is Test {
     ///      the buy executes. Measure whether a JIT LP can profitably sandwich a single large buy
     ///      and walk away with the donation, fully unwinding back to ETH so the number is real.
     function test_adv4_jitLp_sandwichingOneLargeBuy() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.lpBps = 1000; // the maximum LP cut: 10% of every buy
         p.baseFeePips = 3000;
         (address token, PoolKey memory key) = _grad(p, 1 ether);
@@ -797,7 +787,7 @@ contract AdversarialAuditTest is Test {
     /// @dev There is no separate burn market order to sandwich. The burn is a direct cut of each
     ///      buy's actual output and the legacy permissionless trigger always reverts.
     function test_adv6_autoBurn_hasNoPermissionlessMarketOrder() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.burnBps = 1000; // 10% of actual token output
         p.burnTriggerWei = 0;
         p.baseFeePips = 3000;
@@ -817,7 +807,7 @@ contract AdversarialAuditTest is Test {
     /// @dev A burn-only pool takes no native ETH from the PoolManager in beforeSwap. The entire
     ///      exact input settles into the pool while the output-token cut goes straight to 0xdEaD.
     function test_adv_misc_autoBurnDoesNotTakeNativeEthFromPoolManager() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.burnBps = 1000;
         p.burnTriggerWei = 0;
         (address token, PoolKey memory key) = _grad(p, TARGET);
@@ -844,9 +834,9 @@ contract AdversarialAuditTest is Test {
     /// @dev A non-payable blueprint author can redirect its own claim to a payable recipient.
     function test_adv7_hookSideClaimTo_recoversNonPayableRoyalty() public {
         NonPayableAccount author = new NonPayableAccount();
-        HookrLaunchpadLib.HookParams memory bpParams = _p();
+        HookrLaunchpad.HookParams memory bpParams = _p();
         bpParams.lpBps = 500;
-        uint32 bpId = author.saveBlueprint(bpReg, bpParams, 1000); // 10% royalty on the cuts
+        uint32 bpId = author.saveBlueprint(pad, bpParams, 1000); // 10% royalty on the cuts
 
         nonce++;
         HookrLaunchpad.LaunchArgs memory a;
@@ -857,7 +847,7 @@ contract AdversarialAuditTest is Test {
         a.blueprintId = bpId;
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launch{value: fee}(a, bytes32(0));
+        address token = pad.launch{value: fee}(a);
         vm.prank(alice);
         pad.buy{value: 0.02 ether}(token, 0);
         assertTrue(pad.getLaunch(token).graduated);
@@ -987,10 +977,10 @@ contract AdversarialAuditTest is Test {
     /// @dev A malicious blueprint cannot publish a dust-slot stack, and direct hook configuration
     ///      independently enforces the same floor.
     function test_adv2_zeroMinBuyIsRejectedByEveryValidator() public {
-        HookrLaunchpadLib.HookParams memory p = _potParams(2, 0, 1000);
+        HookrLaunchpad.HookParams memory p = _potParams(2, 0, 1000);
         vm.expectRevert(HookrLaunchpad.BadHookParams.selector);
-        bpReg.saveBlueprint("free-pot-trap", p, 1000);
-        HookrHook.PoolConfig memory cfg = HookrLaunchpadLib.previewPoolConfig(p, 5.18e9, pad.SUPPLY());
+        pad.saveBlueprint("free-pot-trap", p, 1000);
+        HookrHook.PoolConfig memory cfg = pad.previewPoolConfig(p, 0, 5.18e9, pad.SUPPLY());
         PoolKey memory k = _key(address(0xDEAD1));
         vm.prank(address(pad));
         vm.expectRevert(HookrHook.BadConfig.selector);
@@ -1000,13 +990,13 @@ contract AdversarialAuditTest is Test {
     /// @dev Even if a future launchpad regression bypasses saveBlueprint validation, the hook
     ///      independently rejects a royalty with no native LP/pot cut backing it.
     function test_adv_misc_hookRejectsPhantomRoyaltyWithoutNativeCut() public {
-        HookrLaunchpadLib.HookParams memory p = _p();
+        HookrLaunchpad.HookParams memory p = _p();
         p.burnBps = 100;
         p.lpBps = 0;
         p.potBps = 0;
         p.potEveryNBuys = 0;
         p.potMinBuyWei = 0;
-        HookrHook.PoolConfig memory cfg = HookrLaunchpadLib.previewPoolConfig(p, 5.18e9, pad.SUPPLY());
+        HookrHook.PoolConfig memory cfg = pad.previewPoolConfig(p, 0, 5.18e9, pad.SUPPLY());
         cfg.royaltyBps = 1;
         cfg.royaltyTo = bob;
         PoolKey memory k = _key(address(0xDEAD2));
