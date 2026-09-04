@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -10,7 +10,6 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
@@ -33,6 +32,9 @@ import {HookMiner} from "./utils/HookMiner.sol";
 ///           5. (covered in `src/components/TokenDetail.test.tsx`) the token page rendered a
 ///              bonding curve for a launch that never had one.
 contract InstantLaunchDefectsTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -41,8 +43,6 @@ contract InstantLaunchDefectsTest is Test {
 
     IPoolManager manager;
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     HookrSwapRouter router;
 
@@ -53,14 +53,14 @@ contract InstantLaunchDefectsTest is Test {
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
 
         vm.deal(creator, 5000 ether);
         vm.deal(trader, 500 ether);
@@ -68,7 +68,7 @@ contract InstantLaunchDefectsTest is Test {
 
     // ------------------------------------------------------------------ helpers
 
-    function _params() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
+    function _params() internal pure returns (HookrLaunchpad.HookParams memory p) {
         p.baseFeePips = 3000;
         p.maxFeePips = 3000; // surge off, so the fee arithmetic in these tests is exactly base+tax
         p.surgeSens = 0;
@@ -100,7 +100,7 @@ contract InstantLaunchDefectsTest is Test {
         // `vm.prank` and the launch would arrive from this test contract instead of the creator.
         uint256 value = pad.creationFeeWei() + a.creatorBuyWei;
         vm.prank(creator);
-        token = pad.launchInstant{value: value}(a, bps, bytes32(0));
+        token = pad.launchInstant{value: value}(a, bps);
         key = _key(token);
         id = key.toId();
     }
@@ -121,7 +121,7 @@ contract InstantLaunchDefectsTest is Test {
     }
 
     function _maxBuyWei(PoolId id) internal view returns (uint96 maxBuyWei) {
-        (,,,,,,,,,,, maxBuyWei,,,,,,,,,) = hook.poolConfig(id);
+        (,,,,,,,,,,, maxBuyWei,,,,,) = hook.poolConfig(id);
     }
 
     // ============================================================ 1. cap vs the float
@@ -261,11 +261,11 @@ contract InstantLaunchDefectsTest is Test {
         _buy(creator, key, 0.5 ether);
         assertGt(hook.guardLpEarnedWei(id), 0, "the guard window earned the position nothing");
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
 
         assertEq(pad.creatorFeesWei(token), 0, "guard-window fees were credited to the creator");
-        uint256 collected = pad.protocolFeesByQuote(address(0)) - protocolBefore;
+        uint256 collected = pad.protocolFeesWei() - protocolBefore;
         assertGt(collected, 0, "nothing was collected at all, so the test proves nothing");
         assertEq(pad.guardFeesWithheldWei(token), collected, "the whole collection should be withheld");
 
@@ -298,10 +298,10 @@ contract InstantLaunchDefectsTest is Test {
         _buy(trader, key, 0.5 ether);
         assertEq(hook.guardLpEarnedWei(id), accrued, "the guard accrual kept growing after the window");
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
         uint256 creatorSide = pad.creatorFeesWei(token);
-        uint256 protocolSide = pad.protocolFeesByQuote(address(0)) - protocolBefore;
+        uint256 protocolSide = pad.protocolFeesWei() - protocolBefore;
 
         // The accrual is computed with v4's round-UP fee arithmetic while the position's collected
         // fees round down, so a wei or two of the guard window can still be outstanding here. It
@@ -329,14 +329,14 @@ contract InstantLaunchDefectsTest is Test {
     ///      creator cannot configure one.
     function test_defect4_anUnboundedBandOffsetIsRejectedAtLaunch() public {
         HookrLaunchpad.LaunchArgs memory a = _args(4 ether);
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
+        a.lpTranches = new HookrLaunchpad.LpTranche[](1);
         a.lpTranches[0] =
-            HookrLaunchpadLib.LpTranche({startOffset: 60, endOffset: pad.MAX_TRANCHE_OFFSET() + 1, bps: 5000});
+            HookrLaunchpad.LpTranche({startOffset: 60, endOffset: pad.MAX_TRANCHE_OFFSET() + 1, bps: 5000});
         uint256 value = pad.creationFeeWei() + 4 ether;
 
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launchInstant{value: value}(a, 5000, bytes32(0));
+        pad.launchInstant{value: value}(a, 5000);
 
         // The same plan on the curve path, which is where the live brick was demonstrated.
         HookrLaunchpad.LaunchArgs memory c = _args(0);
@@ -345,15 +345,13 @@ contract InstantLaunchDefectsTest is Test {
         c.lpTranches = a.lpTranches;
         uint256 curveValue = pad.creationFeeWei();
         vm.prank(creator);
-        // The curve path refuses the out-of-range raise target before the band plan is read;
-        // the instant path above already proved the band bound itself with BadLpPlan.
-        vm.expectRevert(HookrLaunchpad.TargetOutOfRange.selector);
-        pad.launch{value: curveValue}(a, bytes32(0));
+        vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
+        pad.launch{value: curveValue}(c);
 
         // The bound itself is accepted, so this is a bound and not an off-by-one ban.
         a.lpTranches[0].endOffset = pad.MAX_TRANCHE_OFFSET();
         vm.prank(creator);
-        address token = pad.launchInstant{value: value}(a, 5000, bytes32(0));
+        address token = pad.launchInstant{value: value}(a, 5000);
         assertTrue(pad.getLaunch(token).graduated);
     }
 
@@ -411,19 +409,19 @@ contract InstantLaunchDefectsTest is Test {
         HookrLaunchpad.LaunchArgs memory a = _args(0);
         a.targetRaiseWei = 1000 ether;
         a.creatorBuyWei = 0;
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 850_000, endOffset: 1_000_000, bps: 10_000});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](1);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 850_000, endOffset: 1_000_000, bps: 10_000});
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
         // The same raise with a legal ladder graduates and opens a tradeable pool, so the bound
         // rejects the bricking shape rather than the feature.
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 60_000, bps: 9000});
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 60_000, bps: 9000});
         vm.prank(creator);
-        address token = pad.launch{value: fee}(a, bytes32(0));
+        address token = pad.launch{value: fee}(a);
         vm.deal(trader, 2000 ether);
         vm.prank(trader);
         pad.buy{value: 1400 ether}(token, 0);
@@ -435,10 +433,10 @@ contract InstantLaunchDefectsTest is Test {
     ///      still opens its pool, still trades, and still burns whatever it could not place.
     function test_defect4_aLadderAtTheBoundStillOpensATradeablePool() public {
         HookrLaunchpad.LaunchArgs memory a = _args(4 ether);
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 100_000, bps: 5000});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](2);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 100_000, bps: 5000});
         a.lpTranches[1] =
-            HookrLaunchpadLib.LpTranche({startOffset: 100_000, endOffset: pad.MAX_TRANCHE_OFFSET(), bps: 5000});
+            HookrLaunchpad.LpTranche({startOffset: 100_000, endOffset: pad.MAX_TRANCHE_OFFSET(), bps: 5000});
 
         (address token, PoolKey memory key, PoolId id) = _instant(a, 5000);
         assertTrue(pad.getLaunch(token).graduated);
@@ -469,7 +467,7 @@ contract AtomicSniper {
         payable
         returns (address token)
     {
-        token = pad.launchInstant{value: fee + a.creatorBuyWei}(a, bps, bytes32(0));
+        token = pad.launchInstant{value: fee + a.creatorBuyWei}(a, bps);
         PoolKey memory key = PoolKey({
             currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(token),
@@ -477,7 +475,7 @@ contract AtomicSniper {
             tickSpacing: 60,
             hooks: IHooks(address(hook))
         });
-        (,,,,,,,,,,, uint96 cap,,,,,,,,,) = hook.poolConfig(key.toId());
+        (,,,,,,,,,,, uint96 cap,,,,,) = hook.poolConfig(key.toId());
 
         for (uint256 i; i < buys; ++i) {
             router.exactInput{value: cap}(

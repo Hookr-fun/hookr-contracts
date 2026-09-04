@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {LeverageEndToEndTest} from "./LeverageEndToEnd.t.sol";
 import {LeverageMarket} from "../src/LeverageMarket.sol";

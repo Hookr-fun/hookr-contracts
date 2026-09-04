@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 /// @title LeverageOracleLib
 /// @notice A tick observation ring the hook writes on every swap, and the bounded walk that

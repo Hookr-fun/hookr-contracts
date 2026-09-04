@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -252,8 +252,11 @@ contract LeverageEndToEndTest is Test {
 
     function test_openRefusedPastCapacity() public {
         _warmOracle();
+        // Ample idle so the market can actually fund the loan — this isolates the CAPACITY
+        // ceiling from the cash guard (borrow <= own free cash). The depth-derived capacity
+        // does not rise with idle, so a 500-ETH borrow is still far past it.
         vm.prank(lp);
-        market.deposit{value: 1 ether}();
+        market.deposit{value: 600 ether}();
         _warmOracle();
         vm.prank(trader);
         // Named, not bare. A bare expectRevert passes on ANY revert — including Unhealthy or

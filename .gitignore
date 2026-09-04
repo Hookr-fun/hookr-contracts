@@ -4,6 +4,11 @@ contracts/cache/
 contracts/broadcast/*/*/
 !contracts/evidence/
 
+# node / package builds
+node_modules/
+packages/*/dist/
+*.tgz
+
 # editors / os
 .DS_Store
 *.pem

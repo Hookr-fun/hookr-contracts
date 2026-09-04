@@ -1,0 +1,187 @@
+{
+  "$schema": "https://hookr.fun/schemas/external-hook.v2.json",
+  "schemaVersion": "hookr.external-hook.v2",
+  "slug": "voladelta-wager",
+  "name": "Wager Hook",
+  "summary": "An immutable canonical ETH/WAGER pool where ordinary swaps use empty hook data, exact-input swaps may optionally create fixed-odds WETH wager tickets, and randomness is requested only after the season closes for later settlement.",
+  "status": "source-only",
+  "integrationMode": "standalone-hook-product",
+  "author": {
+    "github": "voladelta"
+  },
+  "source": {
+    "repository": "https://github.com/voladelta/wager-hook",
+    "pinnedCommit": "9870b9e3e5ac8b49dc0178a9be9514e2873d1109",
+    "license": "MIT",
+    "hookContract": "src/WagerHook.sol",
+    "contracts": [
+      "src/WagerHook.sol",
+      "src/tokens/WagerToken.sol",
+      "src/router/WagerRouter.sol",
+      "src/vrf/WagerRandomnessAdapter.sol",
+      "src/launch/WagerLaunchFactory.sol",
+      "src/launch/PermanentPositionLocker.sol"
+    ]
+  },
+  "provenance": {
+    "deploymentModel": "per-hook-instance",
+    "factoryContract": "src/launch/WagerLaunchFactory.sol",
+    "factoryInterface": "typed",
+    "allowlistedFactoryInterface": false,
+    "creationCodeHashEvidence": "source-derived",
+    "runtimeCodeHashEvidence": "absent",
+    "constructorArgsEvidence": "source-documented",
+    "saltDerivationEvidence": "source-documented",
+    "proxyModel": "non-proxy",
+    "mutableAuthorityReview": "reviewed-none",
+    "operatorDependencyReview": "reviewed-present"
+  },
+  "integration": {
+    "poolScope": "canonical-pool-only",
+    "supportedTracks": ["hook_publication", "hook_token_launch"],
+    "standardSwapBehavior": "Empty hookData remains an ordinary swap. The optional wager path uses exact 36-byte versioned hookData and the dedicated router; routed Uniswap trades can use the ordinary path without enabling the wager feature.",
+    "dedicatedRouter": {
+      "requiredForAllSwaps": false,
+      "contract": "src/router/WagerRouter.sol",
+      "purpose": "Required only for the optional wager flow that binds a WETH stake to executed swap volume."
+    },
+    "routingCompatibility": {
+      "hookData": {
+        "mode": "optional-versioned",
+        "version": "36 bytes: WAGER_DATA_VERSION + pendingId (exact-router)",
+        "maxBytes": 36,
+        "trustedFields": ["other"],
+        "emptyDataBehavior": "Empty hookData selects the unrestricted ordinary forwarded-sender path and creates no wager."
+      },
+      "swapMatrix": {
+        "exactInputZeroForOne": { "status": "untested", "routers": [] },
+        "exactInputOneForZero": { "status": "untested", "routers": [] },
+        "exactOutputZeroForOne": { "status": "untested", "routers": [] },
+        "exactOutputOneForZero": { "status": "untested", "routers": [] }
+      },
+      "officialUniversalRouter": {
+        "status": "untested",
+        "requiredAddressIdentity": true,
+        "notes": "The ordinary empty-data lane may be structurally compatible, but no exact Robinhood Universal Router address, code hash, four-quadrant fork test, or wallet-final settlement evidence is supplied."
+      },
+      "multihop": {
+        "status": "untested",
+        "notes": "No current Universal Router multihop evidence has been supplied, and the optional wager flow remains dedicated-router-only."
+      },
+      "quoteDiscovery": {
+        "mode": "none",
+        "alfCompatibility": "unsupported",
+        "simulationActorBinding": "not-applicable",
+        "notes": "The hook does not implement the Uniswap ALF indicative-quote interfaces."
+      },
+      "finalAmountEvidence": {
+        "poolManagerSwapBasis": "pre-after-swap-return-delta",
+        "canonicalRouterEvent": null,
+        "genericRouterFinalSettlement": "untested",
+        "notes": "No exact router event plus wallet-delta reconciliation has been supplied for either ordinary or wager-enabled swaps."
+      }
+    },
+    "dependencies": [
+      { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
+      { "name": "Wrapped Ether", "kind": "token", "required": true },
+      {
+        "name": "Production randomness provider",
+        "kind": "oracle",
+        "required": true,
+        "notes": "No target-chain provider has been evidenced for Robinhood Chain. The integration remains blocked until the provider and trust model are selected and reviewed."
+      },
+      { "name": "WagerRandomnessAdapter", "kind": "oracle", "required": true },
+      { "name": "WagerLaunchFactory", "kind": "factory", "required": true },
+      { "name": "PermanentPositionLocker", "kind": "locker", "required": true },
+      { "name": "WagerRouter", "kind": "router", "required": false }
+    ]
+  },
+  "uniswapClassification": {
+    "flags": {
+      "beforeInitialize": false,
+      "afterInitialize": true,
+      "beforeAddLiquidity": false,
+      "afterAddLiquidity": false,
+      "beforeRemoveLiquidity": false,
+      "afterRemoveLiquidity": false,
+      "beforeSwap": true,
+      "afterSwap": true,
+      "beforeDonate": false,
+      "afterDonate": false,
+      "beforeSwapReturnsDelta": false,
+      "afterSwapReturnsDelta": false,
+      "afterAddLiquidityReturnsDelta": false,
+      "afterRemoveLiquidityReturnsDelta": false
+    },
+    "properties": {
+      "dynamicFee": false,
+      "upgradeable": false,
+      "requiresCustomSwapData": false,
+      "customDataMode": "optional-feature",
+      "vanillaSwap": true,
+      "swapAccess": "none"
+    },
+    "callbackSemantics": [
+      {
+        "name": "afterInitialize",
+        "callerAuthorization": "exact-registrar",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "none", "maxBytes": 0, "trustedFields": [] },
+        "returnShape": "selector-only",
+        "deltaUnits": "none",
+        "failureMode": "fail-closed",
+        "externalCalls": false,
+        "reentrancyBoundary": "The canonical launch factory initializes the one configured pool; no arbitrary post-initialize external call is intended.",
+        "gasBoundary": "No independent callback gas cap is evidenced."
+      },
+      {
+        "name": "beforeSwap",
+        "callerAuthorization": "other",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "versioned", "maxBytes": 36, "trustedFields": ["other"] },
+        "returnShape": "selector-only",
+        "deltaUnits": "none",
+        "failureMode": "fail-closed",
+        "externalCalls": false,
+        "reentrancyBoundary": "Forwarded-sender authorization is branch-dependent: empty data is unrestricted, while an exact 4-byte WAGER_DATA_VERSION plus 32-byte pendingId requires the immutable wager router and binds a staged wager to the same-block exact-input swap.",
+        "gasBoundary": "The wager payload is exactly 36 bytes; the callback gas ceiling remains unmeasured."
+      },
+      {
+        "name": "afterSwap",
+        "callerAuthorization": "other",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "versioned", "maxBytes": 36, "trustedFields": ["other"] },
+        "returnShape": "selector-only",
+        "deltaUnits": "none",
+        "failureMode": "fail-closed",
+        "externalCalls": true,
+        "reentrancyBoundary": "Forwarded-sender authorization is branch-dependent: empty data is unrestricted, while nonempty wager data requires the immutable wager router. A wager-enabled swap creates a ticket and reads the immutable WETH balance for solvency; it does not request randomness.",
+        "gasBoundary": "Ticket creation and the WETH solvency read need target-chain measurement. Randomness is requested later, outside PoolManager callbacks, after the season closes."
+      }
+    ]
+  },
+  "security": {
+    "auditStatus": "unaudited",
+    "auditUrls": [],
+    "authorityModel": "The source describes no mutable administrator, pause, upgrade, rescue, odds-change, or dependency-replacement path after launch.",
+    "immutableDependencies": true,
+    "knownRisks": [
+      "The repository states that it is unaudited and not ready for real-value deployment.",
+      "The Robinhood Chain path has no evidenced production randomness provider; changing away from Chainlink VRF requires a new dependency and trust-model review.",
+      "Wager solvency and settlement depend on reserve accounting and the selected randomness provider's lifecycle behavior.",
+      "A real-money wager product requires jurisdiction-specific product and legal review before public launch."
+    ],
+    "frameworkAssessment": {
+      "frameworkUrl": "https://developers.uniswap.org/docs/protocols/v4/security",
+      "assessedAt": null,
+      "scoreStatus": "unscored",
+      "score": null,
+      "featureTriggers": ["oracle", "custom-data", "custody", "randomness", "external-liquidity"],
+      "requiredActions": ["dependency-failure-tests", "accounting-invariants", "stateful-fuzz", "fork-tests", "monitoring", "bug-bounty", "incident-procedure", "legal-review"],
+      "monitoringStatus": "not-planned",
+      "bugBountyStatus": "not-planned",
+      "incidentResponseStatus": "not-planned"
+    }
+  },
+  "deployments": []
+}

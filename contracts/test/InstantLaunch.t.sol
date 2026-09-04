@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
@@ -15,9 +15,7 @@ import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {PoolModifyLiquidityTest} from "@uniswap/v4-core/src/test/PoolModifyLiquidityTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -37,6 +35,9 @@ import {BlueprintSeeds} from "./utils/BlueprintSeeds.sol";
 ///         These tests pin that identity, pin the guards at both degenerate ends of it, and pin
 ///         the property the product is really selling: the liquidity is locked by construction.
 contract InstantLaunchTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -47,8 +48,6 @@ contract InstantLaunchTest is Test {
 
     IPoolManager manager;
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     HookrSwapRouter router;
     PoolModifyLiquidityTest lpRouter;
@@ -64,15 +63,15 @@ contract InstantLaunchTest is Test {
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        BlueprintSeeds.seed(pad.blueprints());
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        BlueprintSeeds.seed(pad);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
         lpRouter = new PoolModifyLiquidityTest(manager);
 
         vm.deal(creator, 5000 ether);
@@ -82,8 +81,8 @@ contract InstantLaunchTest is Test {
 
     // ------------------------------------------------------------------ helpers
 
-    function _quietParams() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
-        p = HookrLaunchpadLib.HookParams({
+    function _quietParams() internal pure returns (HookrLaunchpad.HookParams memory p) {
+        p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -95,12 +94,7 @@ contract InstantLaunchTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
     }
 
@@ -120,7 +114,7 @@ contract InstantLaunchTest is Test {
     {
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launchInstant{value: fee + a.creatorBuyWei}(a, poolSupplyBps, bytes32(0));
+        token = pad.launchInstant{value: fee + a.creatorBuyWei}(a, poolSupplyBps);
         key = _key(token);
         id = key.toId();
     }
@@ -147,7 +141,7 @@ contract InstantLaunchTest is Test {
         uint256 value = pad.creationFeeWei() + ethIn;
         vm.prank(creator);
         vm.expectRevert(err);
-        pad.launchInstant{value: value}(a, bps, bytes32(0));
+        pad.launchInstant{value: value}(a, bps);
     }
 
     function _buy(address who, PoolKey memory key, uint128 ethIn) internal returns (uint256 out) {
@@ -184,7 +178,7 @@ contract InstantLaunchTest is Test {
         uint256 ethIn = 1 ether;
         uint16 bps = 5000;
         uint256 creatorBefore = creator.balance;
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         uint256 fee = pad.creationFeeWei();
 
         vm.recordLogs();
@@ -237,9 +231,7 @@ contract InstantLaunchTest is Test {
             fee + address(manager).balance,
             "creator was charged more than the fee plus what the pool actually took"
         );
-        assertEq(
-            pad.protocolFeesByQuote(address(0)) - protocolBefore, fee, "protocol skimmed more than the creation fee"
-        );
+        assertEq(pad.protocolFeesWei() - protocolBefore, fee, "protocol skimmed more than the creation fee");
 
         // ---- the curve entrypoints are dead on arrival, because the launch is already graduated.
         vm.expectRevert(HookrLaunchpad.AlreadyGraduated.selector);
@@ -292,7 +284,7 @@ contract InstantLaunchTest is Test {
             // FDV == ethIn / share, to within the one-integer rounding of the price.
             assertApproxEqRel(previewFdv, (eths[i] * 10_000) / shares[i], 1e12, "FDV is not ethIn / share");
             assertGe(previewFdv, eths[i], "a launch may never open below the ETH committed");
-            assertLe(previewFdv, eths[i] * 5 + 1e6, "a launch may never open above 5x the ETH committed");
+            assertLe(previewFdv, eths[i] * 5 + 1e9, "a launch may never open above 5x the ETH committed");
 
             (uint160 sqrtNow, int24 tickNow,,) = manager.getSlot0(id);
             assertEq(sqrtNow, previewSqrt);
@@ -318,12 +310,12 @@ contract InstantLaunchTest is Test {
                 : (err == 2 ? HookrLaunchpad.PoolShareOutOfRange.selector : HookrLaunchpad.OpenPriceOutOfRange.selector);
             vm.prank(creator);
             vm.expectRevert(expected);
-            pad.launchInstant{value: value}(a, bps, bytes32(0));
+            pad.launchInstant{value: value}(a, bps);
             return;
         }
 
         vm.prank(creator);
-        address token = pad.launchInstant{value: value}(a, bps, bytes32(0));
+        address token = pad.launchInstant{value: value}(a, bps);
         PoolId id = _key(token).toId();
 
         uint256 tokensInPool = (pad.SUPPLY() * bps) / 10_000;
@@ -337,9 +329,9 @@ contract InstantLaunchTest is Test {
         // Valuation bounded by the share guard, in both directions.
         uint256 fdv = (pad.SUPPLY() * uint256(pad.getLaunch(token).basePriceWei)) / 1e18;
         assertGe(fdv, ethIn, "opened below the ETH committed");
-        // openPriceWei rounds UP to a whole wei-per-token; multiplied back over the FULL supply
-        // that ceiling can overshoot the ideal 5x valuation by up to SUPPLY/1e18 = 1e9 wei.
-        // Anything beyond one part in ~4e12 of the cap is a real guard failure.
+        // Slack = SUPPLY/1e18 (1e9): the per-token price rounds UP by at most one wei, and one
+        // wei of price is 1e9 wei of FDV. At the minimum pool share the bound is exact and a
+        // round-up seed lands right on it.
         assertLe(fdv, ethIn * 5 + 1e9, "opened above 5x the ETH committed");
 
         // Liquidity exists, is the launchpad's, and the creator holds nothing.
@@ -480,17 +472,15 @@ contract InstantLaunchTest is Test {
         HookrLaunchpad.LaunchArgs memory a = _args(1 ether);
         a.targetRaiseWei = 1 ether;
         uint256 value = pad.creationFeeWei() + 1 ether;
-        // `bytes32(0)` is the repeatable manual door; curve arguments are still refused, not
-        // silently ignored.
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLaunchArgs.selector);
-        pad.launchInstant{value: value}(a, 5000, bytes32(0));
+        pad.launchInstant{value: value}(a, 5000);
 
         a = _args(1 ether);
         a.minTokensOut = 1;
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLaunchArgs.selector);
-        pad.launchInstant{value: value}(a, 5000, bytes32(0));
+        pad.launchInstant{value: value}(a, 5000);
     }
 
     /// @dev The msg.value accounting is the curve path's, unchanged: creation fee plus the deposit.
@@ -502,11 +492,11 @@ contract InstantLaunchTest is Test {
 
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.InsufficientPayment.selector);
-        pad.launchInstant{value: 1 ether}(a, 5000, bytes32(0));
+        pad.launchInstant{value: 1 ether}(a, 5000);
 
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.InsufficientPayment.selector);
-        pad.launchInstant{value: exact + 1}(a, 5000, bytes32(0));
+        pad.launchInstant{value: exact + 1}(a, 5000);
     }
 
     /// @dev The launchpad re-exports the bounds the library enforces. Pin the two copies together
@@ -581,7 +571,7 @@ contract InstantLaunchTest is Test {
         pad.setCreatorPayout(token, bob);
         pad.claimCreatorFees(token);
         pad.setCreationFee(0.01 ether);
-        pad.withdrawProtocolFees(address(this), address(0));
+        pad.withdrawProtocolFees(address(this));
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.AlreadyGraduated.selector);
         pad.buy{value: 1 ether}(token, 0);
@@ -630,11 +620,11 @@ contract InstantLaunchTest is Test {
     function test_creatorFeeSplitsWorkOnTheInstantPath() public {
         HookrLaunchpad.LaunchArgs memory a = _args(1 ether);
         a.creatorFeeBps = 6000;
-        a.feeRecipients = new HookrLaunchpadLib.FeeRecipient[](3);
+        a.feeRecipients = new HookrLaunchpad.FeeRecipient[](3);
         // Indivisible shares, so the rounding remainder is actually exercised.
-        a.feeRecipients[0] = HookrLaunchpadLib.FeeRecipient({to: alice, bps: 3333});
-        a.feeRecipients[1] = HookrLaunchpadLib.FeeRecipient({to: bob, bps: 3333});
-        a.feeRecipients[2] = HookrLaunchpadLib.FeeRecipient({to: carol, bps: 3334});
+        a.feeRecipients[0] = HookrLaunchpad.FeeRecipient({to: alice, bps: 3333});
+        a.feeRecipients[1] = HookrLaunchpad.FeeRecipient({to: bob, bps: 3333});
+        a.feeRecipients[2] = HookrLaunchpad.FeeRecipient({to: carol, bps: 3334});
 
         (address token, PoolKey memory key,) = _instant(a, 5000);
         assertEq(pad.creatorFeeBpsOf(token), 6000, "creator share not stored on the instant path");
@@ -642,10 +632,10 @@ contract InstantLaunchTest is Test {
 
         _buy(trader, key, 0.1 ether);
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         uint256 creatorBalanceBefore = pad.creatorFeesWei(token);
         pad.collectPoolFees(token);
-        uint256 protocolSide = pad.protocolFeesByQuote(address(0)) - protocolBefore;
+        uint256 protocolSide = pad.protocolFeesWei() - protocolBefore;
 
         uint256 toAlice = pad.splitFeesWei(token, alice);
         uint256 toBob = pad.splitFeesWei(token, bob);
@@ -669,7 +659,7 @@ contract InstantLaunchTest is Test {
         uint256 value = pad.creationFeeWei() + 1 ether;
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadFeeSplit.selector);
-        pad.launchInstant{value: value}(bad, 5000, bytes32(0));
+        pad.launchInstant{value: value}(bad, 5000);
     }
 
     /// @dev Bands are the other thing a creator can do with the supply that is not in the pool.
@@ -678,9 +668,9 @@ contract InstantLaunchTest is Test {
     ///      on the deposit.
     function test_lpBandsWorkOnTheInstantPath() public {
         HookrLaunchpad.LaunchArgs memory a = _args(1 ether);
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
-        a.lpTranches[1] = HookrLaunchpadLib.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](2);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
+        a.lpTranches[1] = HookrLaunchpad.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
 
         (address token, PoolKey memory key, PoolId id) = _instant(a, 5000);
         assertEq(pad.getLpTranches(token).length, 2, "bands not stored");
@@ -714,29 +704,29 @@ contract InstantLaunchTest is Test {
         (, int24 tickNow,,) = manager.getSlot0(id);
         assertLt(tickNow, openTick, "price never entered the ladder");
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
-        uint256 collected = pad.creatorFeesWei(token) + (pad.protocolFeesByQuote(address(0)) - protocolBefore);
+        uint256 collected = pad.creatorFeesWei(token) + (pad.protocolFeesWei() - protocolBefore);
         assertGt(collected, 0, "no fees collected across the ranges");
 
         // Malformed plans are rejected here too.
         HookrLaunchpad.LaunchArgs memory bad = _args(1 ether);
-        bad.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
-        bad.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 0, endOffset: 600, bps: 5000});
+        bad.lpTranches = new HookrLaunchpad.LpTranche[](1);
+        bad.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 0, endOffset: 600, bps: 5000});
         uint256 badValue = pad.creationFeeWei() + 1 ether;
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launchInstant{value: badValue}(bad, 5000, bytes32(0));
+        pad.launchInstant{value: badValue}(bad, 5000);
     }
 
     /// @dev Everything the two paths share is shared literally — `_create` is one function, not a
     ///      copy — so a blueprint launch and the default 50/50 fee split must behave on the instant
     ///      path exactly as they do after a graduation.
     function test_blueprintsAndTheDefaultCreatorShareWorkOnTheInstantPath() public {
-        HookrLaunchpadLib.HookParams memory bp = _quietParams();
+        HookrLaunchpad.HookParams memory bp = _quietParams();
         bp.lpBps = 25; // a revenue-bearing block, so a royalty can actually accrue
         vm.prank(alice);
-        uint32 id = bpReg.saveBlueprint("instant-bp", bp, 500);
+        uint32 id = pad.saveBlueprint("instant-bp", bp, 500);
 
         HookrLaunchpad.LaunchArgs memory a = _args(1 ether);
         a.blueprintId = id;
@@ -745,11 +735,11 @@ contract InstantLaunchTest is Test {
         (address token, PoolKey memory key, PoolId poolId) = _instant(a, 5000);
         assertTrue(pad.getLaunch(token).graduated);
         assertEq(pad.getLaunch(token).blueprintId, id, "blueprint not recorded");
-        assertEq(bpReg.getBlueprint(id).uses, 1, "blueprint use not counted");
+        assertEq(pad.getBlueprint(id).uses, 1, "blueprint use not counted");
         assertEq(pad.creatorFeeBpsOf(token), 0, "unset share must stay unset in storage");
 
         // The blueprint's royalty is live on the pool the instant launch opened.
-        (,,,,,,,,, uint16 royaltyBps,,,,,,,,,, address royaltyTo,) = hook.poolConfig(poolId);
+        (,,,,,,,,, uint16 royaltyBps,,,,, address royaltyTo,,) = hook.poolConfig(poolId);
         assertEq(royaltyBps, 500);
         assertEq(royaltyTo, alice);
 
@@ -757,10 +747,10 @@ contract InstantLaunchTest is Test {
         assertGt(hook.claimableWei(alice), 0, "blueprint author earned no royalty");
 
         // ...and the unset creator share resolves to the documented default at collection.
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
         uint256 creatorSide = pad.creatorFeesWei(token);
-        uint256 total = creatorSide + (pad.protocolFeesByQuote(address(0)) - protocolBefore);
+        uint256 total = creatorSide + (pad.protocolFeesWei() - protocolBefore);
         assertGt(creatorSide, 0);
         assertEq(creatorSide, (total * pad.DEFAULT_CREATOR_FEE_BPS()) / 10_000, "default share is not 50%");
     }
@@ -780,7 +770,7 @@ contract InstantLaunchTest is Test {
         (, PoolKey memory key, PoolId id) = _instant(a, 5000);
 
         // The window opens at the launch block and closes guardBlocks later.
-        (, uint40 guardEndBlock,,,,,,,,,,,,,,,,,,,) = hook.poolConfig(id);
+        (, uint40 guardEndBlock,,,,,,,,,,,,,,,) = hook.poolConfig(id);
         assertEq(guardEndBlock, uint40(launchBlock + 20), "guard is not anchored to the launch block");
 
         // The cap is denominated against the tokens ACTUALLY PLACED, not against total supply:
@@ -837,13 +827,12 @@ contract InstantLaunchTest is Test {
         uint256 value = pad.creationFeeWei() + 1 ether;
         bytes32 intentId = keccak256("packet-1");
 
-        // A zero intent is the repeatable manual door; it consumes nothing.
         vm.prank(creator);
-        pad.launchInstant{value: value}(a, 5000, bytes32(0));
-        assertEq(pad.launchedByIntent(creator, bytes32(0)), address(0), "zero intent must not record");
+        vm.expectRevert(HookrLaunchpad.ZeroLaunchIntent.selector);
+        pad.launchInstantWithIntent{value: value}(a, 5000, bytes32(0));
 
         vm.prank(creator);
-        address token = pad.launchInstant{value: value}(a, 5000, intentId);
+        address token = pad.launchInstantWithIntent{value: value}(a, 5000, intentId);
         assertEq(pad.launchedByIntent(creator, intentId), token, "intent must record the token");
         assertTrue(pad.getLaunch(token).graduated);
 
@@ -852,7 +841,7 @@ contract InstantLaunchTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(HookrLaunchpad.LaunchIntentAlreadyUsed.selector, creator, intentId, token)
         );
-        pad.launchInstant{value: value}(a, 5000, intentId);
+        pad.launchInstantWithIntent{value: value}(a, 5000, intentId);
 
         // And the same identifier cannot be laundered through the curve path either.
         HookrLaunchpad.LaunchArgs memory curveArgs = _args(0);
@@ -863,13 +852,13 @@ contract InstantLaunchTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(HookrLaunchpad.LaunchIntentAlreadyUsed.selector, creator, intentId, token)
         );
-        pad.launch{value: curveValue}(curveArgs, intentId);
+        pad.launchWithIntent{value: curveValue}(curveArgs, intentId);
 
         // A different creator's namespace is untouched.
         HookrLaunchpad.LaunchArgs memory other = _args(1 ether);
         other.expectedCreator = trader;
         vm.prank(trader);
-        address second = pad.launchInstant{value: value}(other, 5000, intentId);
+        address second = pad.launchInstantWithIntent{value: value}(other, 5000, intentId);
         assertTrue(second != token);
     }
 
@@ -880,7 +869,7 @@ contract InstantLaunchTest is Test {
         vm.deal(address(cc), 10 ether);
         HookrLaunchpad.LaunchArgs memory a = _args(1 ether);
         a.expectedCreator = address(cc);
-        address token = cc.launch(pad, a, 5000, pad.creationFeeWei() + 1 ether, bytes32(0));
+        address token = cc.launch(pad, a, 5000, pad.creationFeeWei() + 1 ether);
         assertTrue(pad.getLaunch(token).graduated, "contract creator could not launch");
         assertEq(HookrToken(token).balanceOf(address(cc)), 0, "contract creator received supply");
     }
@@ -896,10 +885,10 @@ contract InstantLaunchTest is Test {
 contract ContractCreator {
     receive() external payable {}
 
-    function launch(HookrLaunchpad pad, HookrLaunchpad.LaunchArgs memory a, uint16 bps, uint256 value, bytes32 intentId)
+    function launch(HookrLaunchpad pad, HookrLaunchpad.LaunchArgs memory a, uint16 bps, uint256 value)
         external
         returns (address)
     {
-        return pad.launchInstant{value: value}(a, bps, intentId);
+        return pad.launchInstant{value: value}(a, bps);
     }
 }

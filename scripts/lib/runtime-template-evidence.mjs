@@ -7,15 +7,21 @@ export const REVIEWED_COMPILER_SETTINGS = Object.freeze({
 });
 
 /**
- * Review anchors for runtime templates with only solc-declared address immutable/link slots zeroed.
- * Re-derive and review these after an intentional contract-source change; do not derive them from
- * live code during promotion.
+ * Review anchors for runtime templates with only solc-declared immutable/link slots zeroed
+ * (immutable slots hold 32-byte constructor words — addresses or packed scalars — and link slots
+ * hold 20-byte library addresses). Re-derive and review these after an intentional contract-source
+ * change; do not derive them from live code during promotion.
  */
 export const REVIEWED_NORMALIZED_RUNTIME_HASHES = Object.freeze({
   launchpad: "0xd331e42e132f7d6907e5b2bce39a35d9dc776cdb1b2fee1c0d0bce402c2e3ed1",
   hook: "0x6e3c932352b1fe5d5033e26e342b776544301298b3fc0a41a889a530563464ab",
   router: "0xb73b3147d5d096916c25989789e3dea9b0c6778f1cd582c19f874b66ef8ebfd2",
   launchpadLib: "0x64fb218ddce6f33077749e3a750b04461b2f9b9929d3d4a6baaf5711c05ba5c6",
+  launchpadV5: "0xd0d330b0b0d731d6b48defae99f4a6a32843006b5da989a52310be292b54dcc6",
+  hookV5: "0x7759a5862c68ccc0ed63b2fc6a3af315d54db2f1d7936170c3a3891e3959e518",
+  routerV5: "0x0f20f67c6c3c034d4b285db571a77a379f5a01b7316fe28361e4830353fac22d",
+  burnerV5: "0x303ab60c095740bc8c05c800b80bd3ac52589cde10c3afab667905dc0206aa81",
+  launchpadLibV5: "0xcf277f4d31ec5290c5a911ef0334c5530a40397b7a74ce86a777bd53fc90e257",
 });
 
 /** Pin the exact solc-declared ranges so an edited artifact cannot widen what promotion masks. */
@@ -24,6 +30,11 @@ export const REVIEWED_RUNTIME_REFERENCE_LAYOUT_HASHES = Object.freeze({
   hook: "0xa1203eda2e0df9323b6f8e0a71780c998f5ae1307ca1557f18417f0aa8eb5e25",
   router: "0x0435c7cacba198223bcbdaa78774867a126dd67911dda37ec4c54d99f789bb1c",
   launchpadLib: "0x75765f00a5d68c4c25ba2df8c18c5fd0060f3cee6edff20fb88bd0e987521ce5",
+  launchpadV5: "0x9b05e5b50cb54c5dcd5b2764cdac7005a9527c5ff04dbcdd4ca18ba513359477",
+  hookV5: "0x3252ccdadb703331be0a53726b57e5ca591cb61c134678733639a688e2b8fd20",
+  routerV5: "0x52c132533076ec597f50ed200ec82e8dc6af783436957e83117acec606b67ff1",
+  burnerV5: "0x3703145d37f0a6b8b1c918e5d591fb1a62f9f91f592ec547335cce659d09305d",
+  launchpadLibV5: "0x75765f00a5d68c4c25ba2df8c18c5fd0060f3cee6edff20fb88bd0e987521ce5",
 });
 
 const check = (condition, message) => {
@@ -155,16 +166,24 @@ export const deriveRuntimeReferenceLayoutHash = (artifact) =>
 const canonicalAddresses = (addresses) =>
   addresses.map((address) => getAddress(address).toLowerCase()).sort();
 
+/** A checksummed address zero-extended into the 64-hex-char slot encoding solc uses for it. */
+const addressAsImmutableWord = (address) =>
+  `${"0".repeat(24)}${getAddress(address).slice(2).toLowerCase()}`;
+
 /**
  * Compare live runtime byte-for-byte with a locally reviewed Foundry runtime template. Only slots
  * declared by solc as immutable or link references are masked, and every masked slot is first
- * required to contain its exact verified constructor/link value.
+ * required to contain its exact verified constructor/link value. Immutable slots are always
+ * 32-byte words: addresses arrive via `expectedImmutableAddresses` (zero-extended here), while
+ * packed scalar immutables (uintN zero-extended, intN sign-extended by solc) arrive pre-encoded as
+ * full 32-byte hex words via `expectedImmutableWords`.
  */
 export function validateReviewedRuntime({
   artifact,
   liveCode,
   expectedTarget,
   expectedImmutableAddresses,
+  expectedImmutableWords = [],
   expectedLinks = {},
   expectedNormalizedTemplateHash,
   expectedReferenceLayoutHash,
@@ -183,6 +202,16 @@ export function validateReviewedRuntime({
   const templateChars = template.split("");
   const liveChars = live.split("");
   const immutableValues = [];
+  // Canonicalize the scalar allowlist up front so a malformed reviewed word fails closed before
+  // any live slot could be excused by it.
+  const canonicalScalarWords = expectedImmutableWords.map((word) => {
+    const value = strip0x(word).toLowerCase();
+    check(
+      /^[0-9a-f]{64}$/.test(value),
+      `${label} expected immutable word ${word} is not a 32-byte hex word`,
+    );
+    return value;
+  });
   const groups = [...immutableGroups(artifact), ...linkGroups(artifact)];
   const referenceLayoutHash = deriveRuntimeReferenceLayoutHash(artifact);
   check(
@@ -212,7 +241,7 @@ export function validateReviewedRuntime({
       check(value === groupValue, `${label} ${group.kind} ${group.id} has inconsistent live values`);
 
       if (group.kind === "immutable") {
-        check(length === 32, `${label} immutable ${group.id} is not an address word`);
+        check(length === 32, `${label} immutable ${group.id} is not a 32-byte word`);
         const artifactValue = template.slice(start * 2, (start + length) * 2);
         check(/^0+$/.test(artifactValue), `${label} immutable ${group.id} template is not zero-filled`);
       } else {
@@ -223,8 +252,15 @@ export function validateReviewedRuntime({
     }
 
     if (group.kind === "immutable") {
-      check(/^0{24}[0-9a-f]{40}$/.test(groupValue), `${label} immutable ${group.id} is not an encoded address`);
-      immutableValues.push(getAddress(`0x${groupValue.slice(24)}`).toLowerCase());
+      // A slot must be excusable as EITHER an address word (top 12 bytes zero) or an exact
+      // reviewed scalar word; sign-extended scalars (e.g. negative int24 ticks) match only the
+      // scalar path. The full-word multiset comparison below still binds each slot to the exact
+      // reviewed constructor value.
+      check(
+        canonicalScalarWords.includes(groupValue) || /^0{24}[0-9a-f]{40}$/.test(groupValue),
+        `${label} immutable ${group.id} is not an encoded address or a reviewed immutable word`,
+      );
+      immutableValues.push(groupValue);
     } else {
       const expected = expectedLinks[group.id];
       check(expected, `${label} has unexpected linked library ${group.id}`);
@@ -241,10 +277,15 @@ export function validateReviewedRuntime({
     JSON.stringify(actualLinkNames) === JSON.stringify(expectedLinkNames),
     `${label} linked-library set differs from the reviewed template`,
   );
+  const expectedImmutableValues = [
+    ...canonicalAddresses(expectedImmutableAddresses).map((address) =>
+      addressAsImmutableWord(address),
+    ),
+    ...canonicalScalarWords,
+  ].sort();
   check(
-    JSON.stringify(immutableValues.sort()) ===
-      JSON.stringify(canonicalAddresses(expectedImmutableAddresses)),
-    `${label} immutable address set differs from constructor evidence`,
+    JSON.stringify(immutableValues.sort()) === JSON.stringify(expectedImmutableValues),
+    `${label} immutable ${canonicalScalarWords.length > 0 ? "value" : "address"} set differs from constructor evidence`,
   );
 
   const normalizedTemplate = templateChars.join("").toLowerCase();

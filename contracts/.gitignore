@@ -1,0 +1,6 @@
+
+# Audit scratch. Agents write probes and PoCs here as Z-prefixed files; they are
+# working notes, not part of the suite, and must never be committed.
+test/Z[a-z]_*.t.sol
+test/Zz*.t.sol
+test/probe/

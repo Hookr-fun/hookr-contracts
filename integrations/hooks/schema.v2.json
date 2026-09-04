@@ -1,0 +1,1692 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hookr.fun/schemas/external-hook.v2.json",
+  "title": "Hookr external hook integration manifest",
+  "description": "Portable source, compatibility, security, deployment, and Uniswap-listing evidence for a third-party Uniswap v4 hook.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "slug",
+    "name",
+    "summary",
+    "status",
+    "integrationMode",
+    "author",
+    "source",
+    "provenance",
+    "integration",
+    "uniswapClassification",
+    "security",
+    "deployments"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://hookr.fun/schemas/external-hook.v2.json"
+    },
+    "schemaVersion": {
+      "const": "hookr.external-hook.v2"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 80
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "status": {
+      "enum": [
+        "source-only",
+        "testnet-verified",
+        "production-verified",
+        "listing-submitted",
+        "listed"
+      ]
+    },
+    "integrationMode": {
+      "enum": ["composable-blueprint", "standalone-hook-product"]
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["github"],
+      "properties": {
+        "github": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+        },
+        "website": {
+          "$ref": "#/definitions/httpsUrl"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "pinnedCommit",
+        "license",
+        "hookContract",
+        "contracts"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/definitions/httpsUrl"
+        },
+        "pinnedCommit": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{40}$"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "hookContract": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "contracts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deploymentModel",
+        "factoryContract",
+        "factoryInterface",
+        "allowlistedFactoryInterface",
+        "creationCodeHashEvidence",
+        "runtimeCodeHashEvidence",
+        "constructorArgsEvidence",
+        "saltDerivationEvidence",
+        "proxyModel",
+        "mutableAuthorityReview",
+        "operatorDependencyReview"
+      ],
+      "properties": {
+        "deploymentModel": {
+          "enum": ["per-hook-instance", "allowlisted-factory", "singleton"]
+        },
+        "factoryContract": {
+          "type": ["string", "null"],
+          "maxLength": 240
+        },
+        "factoryInterface": {
+          "enum": ["none", "typed", "versioned"]
+        },
+        "allowlistedFactoryInterface": { "type": "boolean" },
+        "creationCodeHashEvidence": {
+          "enum": ["absent", "source-derived", "deployment-verified"]
+        },
+        "runtimeCodeHashEvidence": {
+          "enum": ["absent", "source-derived", "deployment-verified"]
+        },
+        "constructorArgsEvidence": {
+          "enum": ["absent", "source-documented", "deployment-verified"]
+        },
+        "saltDerivationEvidence": {
+          "enum": ["not-applicable", "source-documented", "deployment-verified"]
+        },
+        "proxyModel": {
+          "enum": ["non-proxy", "immutable-proxy", "upgradeable-proxy", "unknown"]
+        },
+        "mutableAuthorityReview": {
+          "enum": ["unreviewed", "reviewed-none", "reviewed-present"]
+        },
+        "operatorDependencyReview": {
+          "enum": ["unreviewed", "reviewed-none", "reviewed-present"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "deploymentModel": { "const": "allowlisted-factory" }
+            },
+            "required": ["deploymentModel"]
+          },
+          "then": {
+            "properties": {
+              "factoryContract": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "factoryInterface": {
+                "enum": ["typed", "versioned"]
+              },
+              "allowlistedFactoryInterface": { "const": true }
+            },
+            "required": [
+              "factoryContract",
+              "factoryInterface",
+              "allowlistedFactoryInterface"
+            ]
+          }
+        }
+      ]
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "poolScope",
+        "supportedTracks",
+        "standardSwapBehavior",
+        "dedicatedRouter",
+        "routingCompatibility",
+        "dependencies"
+      ],
+      "properties": {
+        "poolScope": {
+          "enum": ["canonical-pool-only", "multi-pool", "per-pool-instance"]
+        },
+        "supportedTracks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "hook_publication",
+              "hook_token_launch",
+              "existing_token_pool",
+              "launchpad_sdk",
+              "hook_generator",
+              "executor_adapter"
+            ]
+          }
+        },
+        "standardSwapBehavior": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "dedicatedRouter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requiredForAllSwaps", "contract", "purpose"],
+          "properties": {
+            "requiredForAllSwaps": {
+              "type": "boolean"
+            },
+            "contract": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "purpose": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        },
+        "routingCompatibility": {
+          "$ref": "#/definitions/routingCompatibility"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "required"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "kind": {
+                "enum": [
+                  "protocol",
+                  "oracle",
+                  "token",
+                  "router",
+                  "factory",
+                  "locker",
+                  "other"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "notes": {
+                "type": "string",
+                "maxLength": 500
+              }
+            }
+          }
+        }
+      }
+    },
+    "uniswapClassification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["flags", "properties", "callbackSemantics"],
+      "properties": {
+        "flags": {
+          "$ref": "#/definitions/hookFlags"
+        },
+        "properties": {
+          "$ref": "#/definitions/hookProperties"
+        },
+        "callbackSemantics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/callbackSemantic"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "beforeInitialize": { "const": true } },
+                "required": ["beforeInitialize"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "beforeInitialize" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "afterInitialize": { "const": true } },
+                "required": ["afterInitialize"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "afterInitialize" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "beforeAddLiquidity": { "const": true } },
+                "required": ["beforeAddLiquidity"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "beforeAddLiquidity" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "afterAddLiquidity": { "const": true } },
+                "required": ["afterAddLiquidity"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "afterAddLiquidity" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "beforeRemoveLiquidity": { "const": true } },
+                "required": ["beforeRemoveLiquidity"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "beforeRemoveLiquidity" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "afterRemoveLiquidity": { "const": true } },
+                "required": ["afterRemoveLiquidity"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "afterRemoveLiquidity" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "beforeSwap": { "const": true } },
+                "required": ["beforeSwap"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "beforeSwap" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "afterSwap": { "const": true } },
+                "required": ["afterSwap"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "afterSwap" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "beforeDonate": { "const": true } },
+                "required": ["beforeDonate"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "beforeDonate" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "type": "object",
+                "properties": { "afterDonate": { "const": true } },
+                "required": ["afterDonate"]
+              }
+            },
+            "required": ["flags"]
+          },
+          "then": {
+            "properties": {
+              "callbackSemantics": {
+                "type": "array",
+                "contains": {
+                  "type": "object",
+                  "properties": { "name": { "const": "afterDonate" } },
+                  "required": ["name"]
+                }
+              }
+            },
+            "required": ["callbackSemantics"]
+          }
+        }
+      ]
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "auditStatus",
+        "auditUrls",
+        "authorityModel",
+        "immutableDependencies",
+        "knownRisks",
+        "frameworkAssessment"
+      ],
+      "properties": {
+        "auditStatus": {
+          "enum": ["unaudited", "reviewed", "audited"]
+        },
+        "auditUrls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/httpsUrl"
+          }
+        },
+        "authorityModel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "immutableDependencies": {
+          "type": "boolean"
+        },
+        "knownRisks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "frameworkAssessment": {
+          "$ref": "#/definitions/securityFrameworkAssessment"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "auditStatus": { "const": "audited" }
+            },
+            "required": ["auditStatus"]
+          },
+          "then": {
+            "properties": {
+              "auditUrls": { "type": "array", "minItems": 1 }
+            },
+            "required": ["auditUrls"]
+          }
+        }
+      ]
+    },
+    "deployments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/deployment"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "source-only"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "deployments": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "deployments": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["production-verified", "listing-submitted", "listed"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "environment": {
+                  "const": "mainnet"
+                },
+                "sourceVerified": {
+                  "const": true
+                },
+                "routeEvidence": {
+                  "$ref": "#/definitions/productionDeploymentRouteEvidence"
+                }
+              },
+              "required": ["environment", "sourceVerified", "routeEvidence"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "listing-submitted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uniswap": {
+                  "type": "object",
+                  "properties": {
+                    "hooklist": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "const": "pending" }
+                      },
+                      "required": ["status"]
+                    }
+                  },
+                  "required": ["hooklist"]
+                }
+              },
+              "required": ["uniswap"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "listed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uniswap": {
+                  "type": "object",
+                  "properties": {
+                    "hooklist": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "const": "listed" }
+                      },
+                      "required": ["status"]
+                    }
+                  },
+                  "required": ["hooklist"]
+                }
+              },
+              "required": ["uniswap"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "proxyModel": { "const": "upgradeable-proxy" }
+            },
+            "required": ["proxyModel"]
+          }
+        },
+        "required": ["provenance"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "uniswapClassification": {
+            "type": "object",
+            "properties": {
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "upgradeable": { "const": true }
+                },
+                "required": ["upgradeable"]
+              }
+            },
+            "required": ["properties"]
+          }
+        },
+        "required": ["uniswapClassification"]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "uniswapClassification": {
+            "type": "object",
+            "properties": {
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "upgradeable": { "const": true }
+                },
+                "required": ["upgradeable"]
+              }
+            },
+            "required": ["properties"]
+          }
+        },
+        "required": ["uniswapClassification"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "proxyModel": { "const": "upgradeable-proxy" }
+            },
+            "required": ["proxyModel"]
+          }
+        },
+        "required": ["provenance"]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "integration": {
+            "type": "object",
+            "properties": {
+              "routingCompatibility": {
+                "type": "object",
+                "properties": {
+                  "hookData": {
+                    "type": "object",
+                    "properties": {
+                      "mode": { "const": "required-versioned" }
+                    },
+                    "required": ["mode"]
+                  }
+                },
+                "required": ["hookData"]
+              }
+            },
+            "required": ["routingCompatibility"]
+          }
+        },
+        "required": ["integration"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "uniswapClassification": {
+            "type": "object",
+            "properties": {
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "requiresCustomSwapData": { "const": true },
+                  "customDataMode": { "const": "ordinary-swap-required" }
+                },
+                "required": ["requiresCustomSwapData", "customDataMode"]
+              }
+            },
+            "required": ["properties"]
+          }
+        },
+        "required": ["uniswapClassification"]
+      }
+    }
+  ],
+  "definitions": {
+    "address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "bytes32": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "pattern": "^https://(?:[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?|\\[[A-Fa-f0-9:.]+\\])(?::[0-9]{1,5})?(?:[/?#][^\\s]*)?$",
+      "format": "uri"
+    },
+    "hookFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beforeInitialize",
+        "afterInitialize",
+        "beforeAddLiquidity",
+        "afterAddLiquidity",
+        "beforeRemoveLiquidity",
+        "afterRemoveLiquidity",
+        "beforeSwap",
+        "afterSwap",
+        "beforeDonate",
+        "afterDonate",
+        "beforeSwapReturnsDelta",
+        "afterSwapReturnsDelta",
+        "afterAddLiquidityReturnsDelta",
+        "afterRemoveLiquidityReturnsDelta"
+      ],
+      "properties": {
+        "beforeInitialize": { "type": "boolean" },
+        "afterInitialize": { "type": "boolean" },
+        "beforeAddLiquidity": { "type": "boolean" },
+        "afterAddLiquidity": { "type": "boolean" },
+        "beforeRemoveLiquidity": { "type": "boolean" },
+        "afterRemoveLiquidity": { "type": "boolean" },
+        "beforeSwap": { "type": "boolean" },
+        "afterSwap": { "type": "boolean" },
+        "beforeDonate": { "type": "boolean" },
+        "afterDonate": { "type": "boolean" },
+        "beforeSwapReturnsDelta": { "type": "boolean" },
+        "afterSwapReturnsDelta": { "type": "boolean" },
+        "afterAddLiquidityReturnsDelta": { "type": "boolean" },
+        "afterRemoveLiquidityReturnsDelta": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "beforeSwapReturnsDelta": { "const": true } }, "required": ["beforeSwapReturnsDelta"] },
+          "then": { "properties": { "beforeSwap": { "const": true } } }
+        },
+        {
+          "if": { "properties": { "afterSwapReturnsDelta": { "const": true } }, "required": ["afterSwapReturnsDelta"] },
+          "then": { "properties": { "afterSwap": { "const": true } } }
+        },
+        {
+          "if": { "properties": { "afterAddLiquidityReturnsDelta": { "const": true } }, "required": ["afterAddLiquidityReturnsDelta"] },
+          "then": { "properties": { "afterAddLiquidity": { "const": true } } }
+        },
+        {
+          "if": { "properties": { "afterRemoveLiquidityReturnsDelta": { "const": true } }, "required": ["afterRemoveLiquidityReturnsDelta"] },
+          "then": { "properties": { "afterRemoveLiquidity": { "const": true } } }
+        }
+      ]
+    },
+    "hookProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dynamicFee",
+        "upgradeable",
+        "requiresCustomSwapData",
+        "customDataMode",
+        "vanillaSwap",
+        "swapAccess"
+      ],
+      "properties": {
+        "dynamicFee": { "type": "boolean" },
+        "upgradeable": { "type": "boolean" },
+        "requiresCustomSwapData": { "type": "boolean" },
+        "customDataMode": {
+          "enum": ["none", "optional-feature", "ordinary-swap-required"]
+        },
+        "vanillaSwap": { "type": "boolean" },
+        "swapAccess": {
+          "enum": ["none", "temporal", "allowlist", "governance", "other"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "requiresCustomSwapData": { "const": true }
+            },
+            "required": ["requiresCustomSwapData"]
+          },
+          "then": {
+            "properties": {
+              "customDataMode": { "const": "ordinary-swap-required" }
+            },
+            "required": ["customDataMode"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "customDataMode": { "const": "ordinary-swap-required" }
+            },
+            "required": ["customDataMode"]
+          },
+          "then": {
+            "properties": {
+              "requiresCustomSwapData": { "const": true }
+            },
+            "required": ["requiresCustomSwapData"]
+          }
+        }
+      ]
+    },
+    "routeStatus": {
+      "enum": ["untested", "source-tested", "fork-tested", "live-verified", "unsupported"]
+    },
+    "routeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "identity", "status", "evidenceUrls"],
+      "properties": {
+        "family": {
+          "enum": [
+            "dedicated-router",
+            "pool-swap-test",
+            "universal-router",
+            "direct-pool-manager",
+            "alf-multiplexer",
+            "other"
+          ]
+        },
+        "identity": { "type": "string", "minLength": 1, "maxLength": 240, "pattern": "\\S" },
+        "status": { "$ref": "#/definitions/routeStatus" },
+        "evidenceUrls": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/httpsUrl" }
+        }
+      }
+    },
+    "swapQuadrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "routers"],
+      "properties": {
+        "status": { "$ref": "#/definitions/routeStatus" },
+        "routers": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/routeEvidence" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": { "const": "live-verified" }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "routers": {
+                "type": "array",
+                "minItems": 1,
+                "contains": { "$ref": "#/definitions/productionRouteEvidence" }
+              }
+            },
+            "required": ["routers"]
+          }
+        }
+      ]
+    },
+    "routingCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hookData",
+        "swapMatrix",
+        "officialUniversalRouter",
+        "multihop",
+        "quoteDiscovery",
+        "finalAmountEvidence"
+      ],
+      "properties": {
+        "hookData": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "version", "maxBytes", "trustedFields", "emptyDataBehavior"],
+          "properties": {
+            "mode": {
+              "enum": ["empty-only", "optional-versioned", "required-versioned", "arbitrary", "unknown"]
+            },
+            "version": { "type": ["string", "null"], "maxLength": 120 },
+            "maxBytes": { "type": ["integer", "null"], "minimum": 0 },
+            "trustedFields": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": ["payer", "recipient", "authorization", "gate", "arb-plan", "other"]
+              }
+            },
+            "emptyDataBehavior": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        "swapMatrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "exactInputZeroForOne",
+            "exactInputOneForZero",
+            "exactOutputZeroForOne",
+            "exactOutputOneForZero"
+          ],
+          "properties": {
+            "exactInputZeroForOne": { "$ref": "#/definitions/swapQuadrant" },
+            "exactInputOneForZero": { "$ref": "#/definitions/swapQuadrant" },
+            "exactOutputZeroForOne": { "$ref": "#/definitions/swapQuadrant" },
+            "exactOutputOneForZero": { "$ref": "#/definitions/swapQuadrant" }
+          }
+        },
+        "officialUniversalRouter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "requiredAddressIdentity", "notes"],
+          "properties": {
+            "status": { "$ref": "#/definitions/routeStatus" },
+            "requiredAddressIdentity": { "type": "boolean" },
+            "notes": { "type": "string", "minLength": 1, "maxLength": 500 }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": { "const": "live-verified" }
+                },
+                "required": ["status"]
+              },
+              "then": {
+                "properties": {
+                  "requiredAddressIdentity": { "const": true }
+                },
+                "required": ["requiredAddressIdentity"]
+              }
+            }
+          ]
+        },
+        "multihop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "notes"],
+          "properties": {
+            "status": { "$ref": "#/definitions/routeStatus" },
+            "notes": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        "quoteDiscovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "alfCompatibility", "simulationActorBinding", "notes"],
+          "properties": {
+            "mode": { "enum": ["none", "hookr-reverting-execution", "alf-indicative", "other"] },
+            "alfCompatibility": { "$ref": "#/definitions/routeStatus" },
+            "simulationActorBinding": {
+              "enum": ["unknown", "caller-supplied", "wallet-bound", "contract-bound", "not-applicable"]
+            },
+            "notes": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        "finalAmountEvidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "poolManagerSwapBasis",
+            "canonicalRouterEvent",
+            "genericRouterFinalSettlement",
+            "notes"
+          ],
+          "properties": {
+            "poolManagerSwapBasis": { "const": "pre-after-swap-return-delta" },
+            "canonicalRouterEvent": { "type": ["string", "null"], "maxLength": 240 },
+            "genericRouterFinalSettlement": { "$ref": "#/definitions/routeStatus" },
+            "notes": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        }
+      }
+    },
+    "callbackSemantic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "callerAuthorization",
+        "stateScope",
+        "hookData",
+        "returnShape",
+        "deltaUnits",
+        "failureMode",
+        "externalCalls",
+        "reentrancyBoundary",
+        "gasBoundary"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "beforeInitialize",
+            "afterInitialize",
+            "beforeAddLiquidity",
+            "afterAddLiquidity",
+            "beforeRemoveLiquidity",
+            "afterRemoveLiquidity",
+            "beforeSwap",
+            "afterSwap",
+            "beforeDonate",
+            "afterDonate"
+          ]
+        },
+        "callerAuthorization": {
+          "enum": [
+            "none",
+            "exact-registrar",
+            "exact-router",
+            "exact-quoter",
+            "allowlisted-callers",
+            "pool-manager-sender",
+            "other"
+          ]
+        },
+        "stateScope": { "enum": ["none", "pool-id", "immutable-single-pool", "global", "other"] },
+        "hookData": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "maxBytes", "trustedFields"],
+          "properties": {
+            "schema": { "enum": ["none", "empty-only", "versioned", "custom", "other"] },
+            "maxBytes": { "type": ["integer", "null"], "minimum": 0 },
+            "trustedFields": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": ["payer", "recipient", "authorization", "gate", "arb-plan", "other"]
+              }
+            }
+          }
+        },
+        "returnShape": {
+          "enum": [
+            "selector-only",
+            "selector-and-delta",
+            "selector-balance-delta",
+            "selector-and-fee-override",
+            "other"
+          ]
+        },
+        "deltaUnits": {
+          "enum": ["none", "specified-unspecified", "currency0-currency1", "liquidity-balance-delta", "other"]
+        },
+        "failureMode": { "enum": ["fail-open", "fail-closed", "mixed"] },
+        "externalCalls": { "type": "boolean" },
+        "reentrancyBoundary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "gasBoundary": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "securityFrameworkAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameworkUrl",
+        "assessedAt",
+        "scoreStatus",
+        "score",
+        "featureTriggers",
+        "requiredActions",
+        "monitoringStatus",
+        "bugBountyStatus",
+        "incidentResponseStatus"
+      ],
+      "properties": {
+        "frameworkUrl": {
+          "const": "https://developers.uniswap.org/docs/protocols/v4/security"
+        },
+        "assessedAt": { "type": ["string", "null"], "format": "date-time" },
+        "scoreStatus": { "enum": ["unscored", "scored"] },
+        "score": { "type": ["integer", "null"], "minimum": 0 },
+        "featureTriggers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "external-amm",
+              "oracle",
+              "price-impact",
+              "dynamic-math",
+              "autonomous-math",
+              "external-liquidity",
+              "custom-data",
+              "custody",
+              "randomness",
+              "access-control",
+              "other"
+            ]
+          }
+        },
+        "requiredActions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "dependency-failure-tests",
+              "accounting-invariants",
+              "stateful-fuzz",
+              "math-review",
+              "fork-tests",
+              "monitoring",
+              "bug-bounty",
+              "incident-procedure",
+              "legal-review",
+              "other"
+            ]
+          }
+        },
+        "monitoringStatus": { "$ref": "#/definitions/releaseEvidenceStatus" },
+        "bugBountyStatus": { "$ref": "#/definitions/releaseEvidenceStatus" },
+        "incidentResponseStatus": { "$ref": "#/definitions/releaseEvidenceStatus" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scoreStatus": { "const": "scored" }
+            },
+            "required": ["scoreStatus"]
+          },
+          "then": {
+            "properties": {
+              "assessedAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["assessedAt"]
+          }
+        }
+      ]
+    },
+    "releaseEvidenceStatus": {
+      "enum": ["not-planned", "planned", "evidenced", "not-applicable"]
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deploymentId",
+        "environment",
+        "chain",
+        "chainId",
+        "hookAddress",
+        "deployerAddress",
+        "poolManagerAddress",
+        "transactionHash",
+        "blockNumber",
+        "runtimeCodeHash",
+        "verifiedSourceCommit",
+        "sourceVerified",
+        "sourceVerificationUrl",
+        "observedBlock",
+        "observedAt",
+        "pools",
+        "routeEvidence",
+        "uniswapEligibility",
+        "uniswap"
+      ],
+      "properties": {
+        "deploymentId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 160
+        },
+        "environment": {
+          "enum": ["testnet", "mainnet"]
+        },
+        "chain": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$",
+          "maxLength": 40
+        },
+        "chainId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hookAddress": {
+          "$ref": "#/definitions/address"
+        },
+        "deployerAddress": {
+          "$ref": "#/definitions/address"
+        },
+        "poolManagerAddress": {
+          "$ref": "#/definitions/address"
+        },
+        "transactionHash": {
+          "$ref": "#/definitions/bytes32"
+        },
+        "blockNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runtimeCodeHash": {
+          "$ref": "#/definitions/bytes32"
+        },
+        "verifiedSourceCommit": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{40}$"
+        },
+        "sourceVerified": {
+          "type": "boolean"
+        },
+        "sourceVerificationUrl": {
+          "$ref": "#/definitions/httpsUrl"
+        },
+        "observedBlock": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "pools": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "poolId",
+              "routingFormPoolReference",
+              "initializationTransactionHash",
+              "initializationBlockNumber",
+              "liquidityTransactionHash",
+              "liquidityBlockNumber",
+              "liquidityEvidenceUrl",
+              "observedAt",
+              "majorTokenPair"
+            ],
+            "properties": {
+              "poolId": {
+                "$ref": "#/definitions/bytes32"
+              },
+              "routingFormPoolReference": {
+                "type": "string",
+                "pattern": "^0x(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$"
+              },
+              "initializationTransactionHash": {
+                "$ref": "#/definitions/bytes32"
+              },
+              "initializationBlockNumber": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "liquidityTransactionHash": {
+                "$ref": "#/definitions/bytes32"
+              },
+              "liquidityBlockNumber": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "liquidityEvidenceUrl": {
+                "$ref": "#/definitions/httpsUrl"
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "majorTokenPair": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "routeEvidence": {
+          "$ref": "#/definitions/deploymentRouteEvidence"
+        },
+        "uniswapEligibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "modifiesOrBypassesProtocolFee",
+            "requiresRouterModificationForOrdinarySwaps",
+            "knownMaliciousOrExtractiveBehavior",
+            "attestedAt",
+            "attestedBy"
+          ],
+          "properties": {
+            "modifiesOrBypassesProtocolFee": { "type": "boolean" },
+            "requiresRouterModificationForOrdinarySwaps": { "type": "boolean" },
+            "knownMaliciousOrExtractiveBehavior": { "type": "boolean" },
+            "attestedAt": { "type": "string", "format": "date-time" },
+            "attestedBy": { "type": "string", "minLength": 1, "maxLength": 120 }
+          }
+        },
+        "uniswap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hooklist", "routing"],
+          "properties": {
+            "hooklist": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status"],
+              "properties": {
+                "status": {
+                  "enum": ["not-submitted", "pending", "listed", "rejected"]
+                },
+                "issueUrl": { "$ref": "#/definitions/httpsUrl" },
+                "listingUrl": { "$ref": "#/definitions/httpsUrl" }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "status": { "const": "pending" }
+                    },
+                    "required": ["status"]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "issueUrl": { "$ref": "#/definitions/httpsUrl" }
+                    },
+                    "required": ["issueUrl"]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "status": { "const": "listed" }
+                    },
+                    "required": ["status"]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "listingUrl": { "$ref": "#/definitions/httpsUrl" }
+                    },
+                    "required": ["listingUrl"]
+                  }
+                }
+              ]
+            },
+            "routing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status"],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "not-evaluated",
+                    "automatic",
+                    "review-required",
+                    "submitted",
+                    "allowlisted",
+                    "rejected"
+                  ]
+                },
+                "receiptUrl": { "$ref": "#/definitions/httpsUrl" }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "status": { "enum": ["submitted", "allowlisted"] }
+                    },
+                    "required": ["status"]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "receiptUrl": { "$ref": "#/definitions/httpsUrl" }
+                    },
+                    "required": ["receiptUrl"]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "deploymentRouteEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["swapMatrix", "finalSettlement", "scannerAssessments"],
+      "properties": {
+        "swapMatrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "exactInputZeroForOne",
+            "exactInputOneForZero",
+            "exactOutputZeroForOne",
+            "exactOutputOneForZero"
+          ],
+          "properties": {
+            "exactInputZeroForOne": { "$ref": "#/definitions/swapQuadrant" },
+            "exactInputOneForZero": { "$ref": "#/definitions/swapQuadrant" },
+            "exactOutputZeroForOne": { "$ref": "#/definitions/swapQuadrant" },
+            "exactOutputOneForZero": { "$ref": "#/definitions/swapQuadrant" }
+          }
+        },
+        "finalSettlement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "walletDeltaEvidenceUrls", "routerEventEvidenceUrls"],
+          "properties": {
+            "status": { "$ref": "#/definitions/routeStatus" },
+            "walletDeltaEvidenceUrls": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/definitions/httpsUrl" }
+            },
+            "routerEventEvidenceUrls": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/definitions/httpsUrl" }
+            }
+          }
+        },
+        "scannerAssessments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["provider", "observedAt", "status", "evidenceUrl", "nonAuthoritative"],
+            "properties": {
+              "provider": { "type": "string", "minLength": 1, "maxLength": 120 },
+              "observedAt": { "type": "string", "format": "date-time" },
+              "status": { "enum": ["clear", "warning", "blocked", "unknown"] },
+              "evidenceUrl": { "$ref": "#/definitions/httpsUrl" },
+              "nonAuthoritative": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    "productionRouteEvidence": {
+      "allOf": [
+        { "$ref": "#/definitions/routeEvidence" },
+        {
+          "type": "object",
+          "properties": {
+            "status": { "const": "live-verified" },
+            "evidenceUrls": {
+              "type": "array",
+              "minItems": 1
+            }
+          },
+          "required": ["status", "evidenceUrls"]
+        }
+      ]
+    },
+    "productionSwapQuadrant": {
+      "allOf": [
+        { "$ref": "#/definitions/swapQuadrant" },
+        {
+          "type": "object",
+          "properties": {
+            "status": { "const": "live-verified" },
+            "routers": {
+              "type": "array",
+              "minItems": 1,
+              "contains": { "$ref": "#/definitions/productionRouteEvidence" }
+            }
+          },
+          "required": ["status", "routers"]
+        }
+      ]
+    },
+    "productionDeploymentRouteEvidence": {
+      "allOf": [
+        { "$ref": "#/definitions/deploymentRouteEvidence" },
+        {
+          "type": "object",
+          "properties": {
+            "swapMatrix": {
+              "type": "object",
+              "properties": {
+                "exactInputZeroForOne": { "$ref": "#/definitions/productionSwapQuadrant" },
+                "exactInputOneForZero": { "$ref": "#/definitions/productionSwapQuadrant" },
+                "exactOutputZeroForOne": { "$ref": "#/definitions/productionSwapQuadrant" },
+                "exactOutputOneForZero": { "$ref": "#/definitions/productionSwapQuadrant" }
+              },
+              "required": [
+                "exactInputZeroForOne",
+                "exactInputOneForZero",
+                "exactOutputZeroForOne",
+                "exactOutputOneForZero"
+              ]
+            },
+            "finalSettlement": {
+              "type": "object",
+              "properties": {
+                "status": { "const": "live-verified" },
+                "walletDeltaEvidenceUrls": {
+                  "type": "array",
+                  "minItems": 1
+                },
+                "routerEventEvidenceUrls": {
+                  "type": "array",
+                  "minItems": 1
+                }
+              },
+              "required": ["status", "walletDeltaEvidenceUrls", "routerEventEvidenceUrls"]
+            }
+          },
+          "required": ["swapMatrix", "finalSettlement"]
+        }
+      ]
+    }
+  }
+}

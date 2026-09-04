@@ -1,0 +1,177 @@
+{
+  "$schema": "https://hookr.fun/schemas/external-hook.v2.json",
+  "schemaVersion": "hookr.external-hook.v2",
+  "slug": "voladelta-luck",
+  "name": "Lucky Hook",
+  "summary": "An ownerless canonical ETH/LUCK pool that takes hook-level swap fees, funds Chainlink VRF, and distributes periodic rewards to eligible mature buyers.",
+  "status": "source-only",
+  "integrationMode": "standalone-hook-product",
+  "author": {
+    "github": "voladelta"
+  },
+  "source": {
+    "repository": "https://github.com/voladelta/luck-hook",
+    "pinnedCommit": "19e2c9582959ae2454454d619d7064f101dd017b",
+    "license": "MIT",
+    "hookContract": "src/RandomHolderRewardsHook.sol",
+    "contracts": [
+      "src/RandomHolderRewardsHook.sol",
+      "src/RewardToken.sol",
+      "src/LuckyLaunchFactory.sol",
+      "src/LuckySwapRouter.sol"
+    ]
+  },
+  "provenance": {
+    "deploymentModel": "per-hook-instance",
+    "factoryContract": "src/LuckyLaunchFactory.sol",
+    "factoryInterface": "typed",
+    "allowlistedFactoryInterface": false,
+    "creationCodeHashEvidence": "source-derived",
+    "runtimeCodeHashEvidence": "absent",
+    "constructorArgsEvidence": "source-documented",
+    "saltDerivationEvidence": "source-documented",
+    "proxyModel": "non-proxy",
+    "mutableAuthorityReview": "reviewed-none",
+    "operatorDependencyReview": "reviewed-present"
+  },
+  "integration": {
+    "poolScope": "canonical-pool-only",
+    "supportedTracks": ["hook_publication", "hook_token_launch"],
+    "standardSwapBehavior": "Empty hookData is accepted and non-empty hookData reverts. Delta-return fee accounting changes swap settlement, so the pool is not vanilla even though ordinary swaps do not require custom hook data.",
+    "dedicatedRouter": {
+      "requiredForAllSwaps": false,
+      "contract": "src/LuckySwapRouter.sol",
+      "purpose": "The repository's authenticated payer and recipient settlement surface for the canonical product flow."
+    },
+    "routingCompatibility": {
+      "hookData": {
+        "mode": "empty-only",
+        "version": null,
+        "maxBytes": 0,
+        "trustedFields": [],
+        "emptyDataBehavior": "Only empty hookData is accepted; non-empty hookData reverts."
+      },
+      "swapMatrix": {
+        "exactInputZeroForOne": { "status": "untested", "routers": [] },
+        "exactInputOneForZero": { "status": "untested", "routers": [] },
+        "exactOutputZeroForOne": { "status": "untested", "routers": [] },
+        "exactOutputOneForZero": { "status": "untested", "routers": [] }
+      },
+      "officialUniversalRouter": {
+        "status": "untested",
+        "requiredAddressIdentity": true,
+        "notes": "Empty hookData is structurally compatible, but no exact deployed Universal Router fork matrix or final wallet-settlement evidence has been supplied."
+      },
+      "multihop": {
+        "status": "untested",
+        "notes": "No current Universal Router multihop evidence has been supplied for the return-delta fee path."
+      },
+      "quoteDiscovery": {
+        "mode": "none",
+        "alfCompatibility": "unsupported",
+        "simulationActorBinding": "not-applicable",
+        "notes": "The hook does not implement the Uniswap ALF indicative-quote interfaces."
+      },
+      "finalAmountEvidence": {
+        "poolManagerSwapBasis": "pre-after-swap-return-delta",
+        "canonicalRouterEvent": null,
+        "genericRouterFinalSettlement": "untested",
+        "notes": "The hook changes settlement with return deltas; raw PoolManager Swap amounts are not sufficient proof of trader-final input and output."
+      }
+    },
+    "dependencies": [
+      { "name": "Uniswap v4 PoolManager", "kind": "protocol", "required": true },
+      { "name": "Chainlink VRF v2.5 wrapper", "kind": "oracle", "required": true },
+      { "name": "RewardToken", "kind": "token", "required": true },
+      { "name": "LuckyLaunchFactory", "kind": "factory", "required": true },
+      { "name": "LuckySwapRouter", "kind": "router", "required": false }
+    ]
+  },
+  "uniswapClassification": {
+    "flags": {
+      "beforeInitialize": true,
+      "afterInitialize": false,
+      "beforeAddLiquidity": false,
+      "afterAddLiquidity": false,
+      "beforeRemoveLiquidity": false,
+      "afterRemoveLiquidity": false,
+      "beforeSwap": true,
+      "afterSwap": true,
+      "beforeDonate": false,
+      "afterDonate": false,
+      "beforeSwapReturnsDelta": true,
+      "afterSwapReturnsDelta": true,
+      "afterAddLiquidityReturnsDelta": false,
+      "afterRemoveLiquidityReturnsDelta": false
+    },
+    "properties": {
+      "dynamicFee": false,
+      "upgradeable": false,
+      "requiresCustomSwapData": false,
+      "customDataMode": "none",
+      "vanillaSwap": false,
+      "swapAccess": "none"
+    },
+    "callbackSemantics": [
+      {
+        "name": "beforeInitialize",
+        "callerAuthorization": "exact-registrar",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "none", "maxBytes": 0, "trustedFields": [] },
+        "returnShape": "selector-only",
+        "deltaUnits": "none",
+        "failureMode": "fail-closed",
+        "externalCalls": false,
+        "reentrancyBoundary": "Initialization is restricted to the immutable registrar and canonical pool configuration.",
+        "gasBoundary": "No independent callback gas cap is evidenced."
+      },
+      {
+        "name": "beforeSwap",
+        "callerAuthorization": "none",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "empty-only", "maxBytes": 0, "trustedFields": [] },
+        "returnShape": "selector-and-delta",
+        "deltaUnits": "specified-unspecified",
+        "failureMode": "fail-closed",
+        "externalCalls": true,
+        "reentrancyBoundary": "Specified-fee paths call PoolManager.take; other quadrants defer fee collection to afterSwap. VRF is never requested from a PoolManager callback.",
+        "gasBoundary": "No independent callback gas cap is evidenced; return-delta gas needs target-chain fork measurement."
+      },
+      {
+        "name": "afterSwap",
+        "callerAuthorization": "none",
+        "stateScope": "immutable-single-pool",
+        "hookData": { "schema": "empty-only", "maxBytes": 0, "trustedFields": [] },
+        "returnShape": "selector-and-delta",
+        "deltaUnits": "specified-unspecified",
+        "failureMode": "fail-closed",
+        "externalCalls": true,
+        "reentrancyBoundary": "Fee-bearing paths call PoolManager.take, and buy paths call RewardToken.openCanonicalBuyCredit. VRF is requested only by the separate permissionless requestRound entry point once its interval, reward-pot, and buyer-count gates pass.",
+        "gasBoundary": "PoolManager fee collection and buyer-credit gas need target-chain fork measurement; VRF request gas belongs to the separate requestRound transaction."
+      }
+    ]
+  },
+  "security": {
+    "auditStatus": "unaudited",
+    "auditUrls": [],
+    "authorityModel": "The source describes an ownerless hook with immutable token, PoolManager, VRF wrapper, registrar, and reward parameters.",
+    "immutableDependencies": true,
+    "knownRisks": [
+      "The repository states that it has not been audited.",
+      "Reward liveness depends on Chainlink VRF funding, fulfillment, and timeout recovery.",
+      "Fee, liability, buyer-index, and random-selection invariants require independent production review."
+    ],
+    "frameworkAssessment": {
+      "frameworkUrl": "https://developers.uniswap.org/docs/protocols/v4/security",
+      "assessedAt": null,
+      "scoreStatus": "unscored",
+      "score": null,
+      "featureTriggers": ["oracle", "price-impact", "external-liquidity", "randomness"],
+      "requiredActions": ["dependency-failure-tests", "accounting-invariants", "stateful-fuzz", "math-review", "fork-tests", "monitoring", "bug-bounty", "incident-procedure"],
+      "monitoringStatus": "not-planned",
+      "bugBountyStatus": "not-planned",
+      "incidentResponseStatus": "not-planned"
+    }
+  },
+  "deployments": []
+}

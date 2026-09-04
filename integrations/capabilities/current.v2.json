@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "hookr.integration-capabilities.v2",
+  "updatedAt": "2026-08-26",
+  "release": {
+    "chainId": 4663,
+    "generation": 5,
+    "publicSourceStatus": "current"
+  },
+  "capabilities": {
+    "fiveBlockComposer": {
+      "availability": "live",
+      "appliesTo": "New Hookr V5 launches",
+      "hookBlocks": ["anti-snipe", "surge-fees", "auto-burn", "lp-rewards", "nth-buy-pot"]
+    },
+    "partnerSdk": {
+      "availability": "release-candidate",
+      "package": "@hookr/sdk",
+      "version": "0.1.0-rc.1",
+      "generation": 5,
+      "tracks": ["launchpad_sdk", "hook_generator"],
+      "note": "Source, tests, examples, and package smoke checks exist; npm publication is a separate release action."
+    },
+    "externalHooks": {
+      "availability": "technical-review",
+      "tracks": ["hook_publication", "hook_token_launch"],
+      "note": "A pinned public manifest can enter review. Source review is not deployment or routing approval."
+    },
+    "existingTokenPool": {
+      "availability": "new-release-required",
+      "tracks": ["existing_token_pool"],
+      "note": "A hook cannot be attached to an existing pool. The path creates a new reviewed PoolKey."
+    },
+    "v6IntegrationModel": {
+      "availability": "source-review",
+      "production": false,
+      "sdkTransactionApi": false,
+      "poolKeyRoot": {
+        "rootHookSlots": 1,
+        "checkoutSelection": "one-root-profile"
+      },
+      "paths": {
+        "nativeRootBlocks": {
+          "requiresNewImmutableHookrGeneration": true,
+          "composition": "reviewed-schema-only"
+        },
+        "typedSubordinateExecutor": {
+          "optional": true,
+          "binding": "exact-versioned-profile"
+        },
+        "exclusiveExternalRoot": {
+          "composesWithNativeBlocks": false,
+          "requiredPolicyBindings": [
+            "purpose-built-adapter",
+            "router-policy",
+            "quoter-policy"
+          ]
+        },
+        "existingToken": {
+          "poolSemantics": "new-pool-key",
+          "existingPoolsChanged": false
+        },
+        "launchpadAdapter": {
+          "binding": "atomic",
+          "exactFields": ["profile", "config", "caller", "creator", "beneficiary", "funding", "deadline", "nonce"]
+        }
+      },
+      "existingDeployedHookAsNativeBlock": "unsupported",
+      "monetization": {
+        "availability": "explicit-versioned-policy-only",
+        "feePolicyIdentity": "versioned-feePolicyHash",
+        "recipientAccounting": "explicit"
+      }
+    },
+    "arbRecapture": {
+      "name": "WTH Arb Recapture",
+      "availability": "source-review",
+      "tracks": ["executor_adapter", "hook_token_launch", "existing_token_pool"],
+      "production": false,
+      "routeSigning": false,
+      "activationStatus": "inactive",
+      "selection": "optional",
+      "integrationProfile": {
+        "candidateGeneration": "v6.1",
+        "sourceBoundary": "separate-versioned-release-required",
+        "sourceCheckpointStatus": "clean-v61-source-checkpoint",
+        "sourceCheckpointSha": "5168888ed69cc738492368203197ee72a009a964",
+        "profileLabel": "WTH",
+        "profileLabelStatus": "source-label",
+        "serviceIdentity": {
+          "status": "unverified",
+          "productionRecipient": null,
+          "externalAbiAcceptance": "unaccepted"
+        },
+        "integrationIdPreimage": "hookr.integration.wth-arb.v2",
+        "integrationId": "0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680",
+        "feePolicyIdPreimage": "hookr.fee-policy.wth-arb.v2:hookr=1000,wth=1000,configurable-creator-trader-trigger-pool-sum=8000",
+        "feePolicyId": "0x656d4d246973da37dc2020b1c4494018646a8033d212c09dc3bb82a4b0898ba7",
+        "binding": "release-required"
+      },
+      "feePolicy": {
+        "basis": "gross-realized-quote-profit",
+        "generation": "v2",
+        "fixedProtocolShares": {
+          "wthBps": 1000,
+          "hookrBps": 1000
+        },
+        "configurablePoolShares": {
+          "sumBps": 8000,
+          "abiStruct": "ProfitSplit",
+          "abiFields": ["creator", "traderBps", "creatorBps", "triggerPoolBps"],
+          "bpsFields": ["traderBps", "creatorBps", "triggerPoolBps"],
+          "lockedAt": "pool-configuration",
+          "defaults": {
+            "traderBps": 2000,
+            "creatorBps": 4000,
+            "triggerPoolBps": 2000
+          },
+          "semantics": {
+            "creator": "pool-configured-creator-or-authorized-attacher",
+            "traderBps": "authenticated-rebate-recipient-never-tx-origin",
+            "triggerPoolBps": "pool-id-scoped-lp-escrow-not-position-distribution"
+          }
+        },
+        "recipientIdentity": {
+          "hookr": "hookr.eth-resolved-address-pinned-at-release",
+          "wth": "whatthehook.eth-resolved-address-pinned-at-release"
+        },
+        "externalRoundingAcceptance": "unverified",
+        "externalRecipientSemanticsAcceptance": "unverified-no-tx-origin"
+      },
+      "v6Sdk": {
+        "availability": "held",
+        "transactionApi": false,
+        "reason": "No promoted V6 release manifest or canary readback"
+      },
+      "existingTokenAttach": {
+        "poolSemantics": "new-pool-key",
+        "existingPoolsChanged": false,
+        "creatorBeneficiary": "authorized-attacher",
+        "admission": {
+          "scope": "initial-pull-only",
+          "requiredDecimals": 18,
+          "initialFactoryBalanceDelta": "exact-requested-amount",
+          "laterMutableTransferSemantics": "unsupported",
+          "unsupportedLaterBehaviors": [
+            "transfer-tax",
+            "rebase",
+            "pause-or-freeze",
+            "blacklist",
+            "callback-or-reentrancy",
+            "code-loss"
+          ]
+        }
+      },
+      "triggerPoolLpDelivery": {
+        "status": "adapter-escrow",
+        "distributed": false,
+        "claimableByLps": false,
+        "distributorStatus": "absent",
+        "note": "Source reserves a PoolId-scoped amount for one adapter; adapter withdrawal is not LP distribution and does not prove delivery to eligible LP positions."
+      },
+      "routingAndScanner": {
+        "canonicalRouter": "required-for-authenticated-gated-pot-and-wth-routes",
+        "genericEmptyData": {
+          "ungatedExactInputBuy": "candidate-source-supported",
+          "exactInputExit": "candidate-source-supported",
+          "gatedBuy": "unsupported",
+          "potQualifyingBuy": "unsupported",
+          "exactOutputExit": "conditional-unverified"
+        },
+        "quoter": {
+          "simulationActor": "caller-supplied",
+          "executableOnlyWhenBoundToActiveWallet": true
+        },
+        "robinhoodUniversalRouter": {
+          "status": "unverified",
+          "officialSourceState": "conflicting-addresses",
+          "exactForkMatrix": false
+        },
+        "scannerEvidence": {
+          "authoritative": false,
+          "v5Token": "0x0093005884142Fb305A3991DCD24e55Bfebf1570",
+          "blockaidStatus": "warning-observed",
+          "successfulSellTransaction": "0xac74066b69caaf84df9a9f86a118bc09a977ae315e712047dcf895bb76dfcd9c",
+          "conclusion": "sellability-proved-for-one-route-not-scanner-clearance"
+        }
+      },
+      "appliesTo": "Intended for eligible new V6.1 Hookr pools only after service verification, profile activation, and a supported second venue",
+      "behavior": "Source design for attempting one bounded, signer-approved post-swap correction. Hookr and WTH are fixed at 10% each; the pool locks creator, authenticated-swap-recipient, and trigger-pool shares that must total the remaining 80%, defaulting to 40/20/20. No WTH service is active.",
+      "compatibleHookBlocks": ["surge-fees", "auto-burn", "nth-buy-pot"],
+      "conditionalHookBlocks": [
+        {
+          "block": "anti-snipe",
+          "duringGuard": {
+            "outerBuyCorrection": "supported",
+            "outerSellCorrection": "fail-open",
+            "outerSellRequirement": "exact-output-target-buy"
+          },
+          "afterGuard": "supported",
+          "note": "During the Anti-Snipe guard, outer-buy Arb corrections can operate. Outer-sell corrections require an exact-output target buy and fail open until the guard ends."
+        }
+      ],
+      "incompatibleHookBlocks": ["lp-rewards"],
+      "boundaries": [
+        "Does not retrofit an existing V5 pool",
+        "Does not apply to every external hook",
+        "Does not guarantee that arbitrage is prevented or captured",
+        "WTH is a source profile label; service identity and external ABI acceptance are unverified",
+        "LP source allocation remains adapter escrow, is not distributed, and is not claimable by LPs",
+        "Existing-token checks cover only 18 decimals and the exact initial factory balance delta; later mutable token behavior is unsupported",
+        "A qualifying Nth-buy Pot buy requires the exact registry-bound Hookr router or simulation quoter plus an authenticated recipient; the official Universal Router is unsupported for that buy path",
+        "Exact-output buys are blocked while Anti-Snipe is active; the guard does not block sells",
+        "PoolManager emits Swap before Hookr afterSwap return deltas, so scanners and indexers must use final deltas and settlement transfers for realized amounts",
+        "The public SDK remains V5-only and exposes no V6 transaction API",
+        "The frozen V6/WTH-v1 reference uses a superseded fixed-share ABI and is not the V6.1 WTH-v2 interface",
+        "WTH trader-share semantics are unaccepted: tx.origin is prohibited; the recipient must be authenticated and bound to the Hookr envelope or the share must remain disabled/escrowed",
+        "Has no production deployment or route-signing manifest"
+      ]
+    }
+  }
+}

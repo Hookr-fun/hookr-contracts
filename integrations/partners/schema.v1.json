@@ -1,0 +1,242 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hookr.fun/schemas/partner-integration.v1.json",
+  "title": "Hookr partner technical brief",
+  "description": "A public, contact-free technical handoff for a Hookr integration track. Private relationship details stay in Hookr's operator intake.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "slug",
+    "track",
+    "project",
+    "requirements"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": "hookr.partner-integration.v1" },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 80
+    },
+    "track": {
+      "enum": [
+        "hook_publication",
+        "hook_token_launch",
+        "existing_token_pool",
+        "launchpad_sdk",
+        "hook_generator",
+        "executor_adapter"
+      ]
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "website": { "$ref": "#/definitions/httpsUrl" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "pinnedCommit", "contracts"],
+      "properties": {
+        "repository": { "$ref": "#/definitions/httpsUrl" },
+        "pinnedCommit": { "$ref": "#/definitions/commit" },
+        "contracts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 40,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+        },
+        "compiler": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "dependencyLock": { "type": "string", "minLength": 1, "maxLength": 240 }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chainId": { "type": "integer", "minimum": 1 },
+        "tokenAddress": { "$ref": "#/definitions/address" },
+        "quoteAssetAddress": { "$ref": "#/definitions/address" },
+        "poolTopology": { "enum": ["single_pool", "dual_pool", "multi_pool"] },
+        "currentPoolIds": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/bytes32" }
+        },
+        "poolKeys": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/definitions/poolKey" }
+        },
+        "liquidityPlan": { "type": "string", "minLength": 20, "maxLength": 2000 }
+      }
+    },
+    "interface": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apiOrSdk": { "type": "string", "minLength": 5, "maxLength": 1000 },
+        "launchLifecycle": { "type": "string", "minLength": 20, "maxLength": 2000 },
+        "executorInterface": { "type": "string", "minLength": 5, "maxLength": 1000 },
+        "authorityModel": { "type": "string", "minLength": 20, "maxLength": 2000 },
+        "rotationProcess": { "type": "string", "minLength": 20, "maxLength": 2000 },
+        "profitPolicy": { "type": "string", "minLength": 20, "maxLength": 2000 },
+        "generatedArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 2, "maxLength": 160 }
+        }
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 5, "maxLength": 500 }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceIssueUrl": { "$ref": "#/definitions/httpsUrl" },
+        "testPlanUrl": { "$ref": "#/definitions/httpsUrl" },
+        "auditUrls": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/httpsUrl" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "track": { "const": "hook_publication" } } },
+      "then": {
+        "required": ["source"],
+        "properties": { "source": { "type": "object" } }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "hook_token_launch" } } },
+      "then": {
+        "required": ["source", "target"],
+        "properties": {
+          "source": { "type": "object" },
+          "target": {
+            "type": "object",
+            "required": ["chainId", "poolTopology", "liquidityPlan"]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "existing_token_pool" } } },
+      "then": {
+        "required": ["target"],
+        "properties": {
+          "target": {
+            "type": "object",
+            "required": [
+              "chainId",
+              "tokenAddress",
+              "poolTopology",
+              "currentPoolIds",
+              "liquidityPlan"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "launchpad_sdk" } } },
+      "then": {
+        "required": ["interface"],
+        "properties": {
+          "interface": {
+            "type": "object",
+            "required": ["apiOrSdk", "launchLifecycle", "authorityModel"]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "hook_generator" } } },
+      "then": {
+        "required": ["source", "interface"],
+        "properties": {
+          "source": { "type": "object" },
+          "interface": {
+            "type": "object",
+            "required": ["generatedArtifacts", "authorityModel"]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "track": { "const": "executor_adapter" } } },
+      "then": {
+        "required": ["target", "interface"],
+        "properties": {
+          "target": {
+            "type": "object",
+            "required": ["chainId", "poolTopology", "poolKeys"],
+            "properties": { "poolKeys": { "type": "array", "minItems": 2 } }
+          },
+          "interface": {
+            "type": "object",
+            "required": [
+              "executorInterface",
+              "authorityModel",
+              "rotationProcess",
+              "profitPolicy"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "httpsUrl": {
+      "type": "string",
+      "pattern": "^https://",
+      "maxLength": 1000
+    },
+    "address": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "bytes32": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{40}$"
+    },
+    "poolKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency0", "currency1", "fee", "tickSpacing", "hooks"],
+      "properties": {
+        "currency0": { "$ref": "#/definitions/address" },
+        "currency1": { "$ref": "#/definitions/address" },
+        "fee": { "type": "integer", "minimum": 0, "maximum": 16777215 },
+        "tickSpacing": { "type": "integer", "minimum": -8388608, "maximum": 8388607 },
+        "hooks": { "$ref": "#/definitions/address" }
+      }
+    }
+  }
+}

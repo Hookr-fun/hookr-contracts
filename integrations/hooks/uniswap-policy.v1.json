@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "hookr.uniswap-policy.v1",
+  "verifiedAt": "2026-08-26T16:00:00.000Z",
+  "hooklist": {
+    "repository": "Uniswap/hooklist",
+    "sourceCommit": "92f38fc5b2419bdd042f18eb8a8e12f0da921b0f",
+    "submitIssueUrl": "https://github.com/Uniswap/hooklist/issues/new?template=submit-hook.yml",
+    "apiIssueUrl": "https://api.github.com/repos/Uniswap/hooklist/issues",
+    "issueCreationObservation": {
+      "status": "restricted-for-public-viewer",
+      "observedAt": "2026-08-25T19:45:00.000Z",
+      "evidenceUrl": "https://github.com/Uniswap/hooklist/issues"
+    }
+  },
+  "deployments": {
+    "repository": "Uniswap/contracts",
+    "sourceCommit": "4cfc406c8e34da3ce04e60657a7825075b64fd22",
+    "chainFile": "deployments/json/4663.json",
+    "robinhood": {
+      "chainId": 4663,
+      "poolManager": "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+      "universalRouter": {
+        "deploymentRegistryAddress": "0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99",
+        "renderedDocsAddress": "0x8876789976decbfcbbbe364623c63652db8c0904",
+        "version": "2.1.1",
+        "permissionedPools": false,
+        "deploymentCommit": "023196a",
+        "addressStatus": "official-sources-conflict",
+        "releaseRule": "Pin the selected address, runtime code hash, constructor immutables, and fork evidence; never resolve this conflict by the label latest."
+      }
+    }
+  },
+  "routing": {
+    "guideUrl": "https://support.uniswap.org/hc/en-us/articles/48291859140621-Routing-for-hooked-pools",
+    "formUrl": "https://share.hsforms.com/15fMHwt6NTzuKuQdxw6nHwws8pgg",
+    "formDefinitionUrl": "https://forms.hsforms.com/embed/v3/form/47435488/e5f307c2-de8d-4f3b-8ab9-0771c3a9c7c3/json",
+    "submissionUrl": "https://api.hsforms.com/submissions/v3/integration/submit/47435488/e5f307c2-de8d-4f3b-8ab9-0771c3a9c7c3",
+    "portalId": "47435488",
+    "formGuid": "e5f307c2-de8d-4f3b-8ab9-0771c3a9c7c3",
+    "formDefinitionUpdatedAt": "1787276166594",
+    "communicationTypeId": 425314768,
+    "termsUrl": "https://support.uniswap.org/hc/en-us/articles/30935100859661-Uniswap-Labs-Terms-of-Service",
+    "privacyUrl": "https://support.uniswap.org/hc/en-us/articles/30934457771405-Uniswap-Labs-Privacy-Policy",
+    "processingConsentType": "IMPLICIT",
+    "processingConsentText": "I agree to allow Uniswap Labs to store and process my personal data.",
+    "communicationsConsentText": "By submitting, I agree to Uniswap Labs Terms of Service and Privacy Policy.",
+    "hookDetailValues": {
+      "delta": "My hook uses a delta flag",
+      "prefix": "My deployment address starts with 0x91",
+      "major": "I intend to deploy on pools with major token pairs (ex. ETH <> USDC)",
+      "none": "None of the above"
+    },
+    "requiredFields": [
+      "firstname",
+      "email",
+      "telegram_handle",
+      "hook_name",
+      "hook_description",
+      "hook_address",
+      "pool_address",
+      "hook_details",
+      "chains",
+      "link_to_source"
+    ],
+    "submittedFields": [
+      "firstname",
+      "lastname",
+      "email",
+      "telegram_handle",
+      "hook_name",
+      "hook_description",
+      "hook_address",
+      "pool_address",
+      "hook_details",
+      "chains",
+      "link_to_source",
+      "hook_website",
+      "audit_links"
+    ],
+    "manualReviewWhen": [
+      "address-prefix-0x91",
+      "beforeSwapReturnsDelta",
+      "afterSwapReturnsDelta",
+      "afterAddLiquidityReturnsDelta",
+      "afterRemoveLiquidityReturnsDelta",
+      "majorTokenPair"
+    ]
+  },
+  "chains": {
+    "arbitrum": { "chainId": 42161, "formLabel": "Arbitrum" },
+    "avalanche": { "chainId": 43114, "formLabel": "Avalanche" },
+    "base": { "chainId": 8453, "formLabel": "Base" },
+    "blast": { "chainId": 81457, "formLabel": "Blast" },
+    "bnb": { "chainId": 56, "formLabel": "BNB Chain" },
+    "celo": { "chainId": 42220, "formLabel": "Celo" },
+    "ethereum": { "chainId": 1, "formLabel": "Ethereum" },
+    "ink": { "chainId": 57073, "formLabel": "Ink" },
+    "linea": { "chainId": 59144, "formLabel": "Linea" },
+    "megaeth": { "chainId": 4326, "formLabel": "MegaETH" },
+    "monad": { "chainId": 143, "formLabel": "Monad" },
+    "optimism": { "chainId": 10, "formLabel": "Optimism" },
+    "polygon": { "chainId": 137, "formLabel": "Polygon" },
+    "robinhood": { "chainId": 4663, "formLabel": "Robinhood Chain" },
+    "soneium": { "chainId": 1868, "formLabel": "Soneium" },
+    "tempo": { "chainId": 4217, "formLabel": "Tempo" },
+    "unichain": { "chainId": 130, "formLabel": "Unichain" },
+    "worldchain": { "chainId": 480, "formLabel": "World Chain" },
+    "xlayer": { "chainId": 196, "formLabel": "X Layer" },
+    "zksync": { "chainId": 324, "formLabel": "zkSync" },
+    "zora": { "chainId": 7777777, "formLabel": "Zora" }
+  }
+}

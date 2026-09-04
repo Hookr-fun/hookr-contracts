@@ -1,20 +1,47 @@
 # Hookr contracts
 
-Foundry workspace for the Hookr generation-4 candidate. Solidity is pinned to 0.8.26 with
-optimizer, via-IR, Cancun, and no metadata bytecode hash. Generation 3 is the current live release;
-generation 4 is source-ready and fork-rehearsed, not deployed.
+Foundry workspace for Hookr's immutable contract lineages. Solidity is pinned to 0.8.26 with the
+optimizer, via-IR, Cancun, and no metadata bytecode hash. Generation 5 is the promoted write target
+on Robinhood Chain 4663; retained generations remain separate, immutable markets.
 
-## Components
+## Generation 5
 
-- `HookrLaunchpad.sol` — fixed-supply token launch through either the ten-tranche curve or an
-  immediate pool, sender-bound launch calldata, immutable per-pool configuration, locked full-range
-  POL, fee accounting, and blueprints.
-- `HookrHook.sol` — shared v4 hook implementing Anti-Snipe, Surge Fees, Auto Burn, LP Rewards, and
-  the deterministic Nth-buy Pot.
-- `HookrSwapRouter.sol` — live-pool router with bound recipient/hook data, deadline,
-  execution-time min/max, measured settlement, native refund, and callback/reentrancy guards.
-- `HookrToken.sol` — fixed 1 billion supply ERC-20 without owner mint, pause, blacklist, or token
-  transfer tax.
+`HookrLaunchpadV5` 5.0.1 supports three new-token paths:
+
+- zero-seed instant launch quoted in native ETH;
+- zero-seed instant launch quoted in HOOKR; and
+- bonded ETH launch through Uniswap's deployed Continuous Clearing Auction.
+
+The instant price is platform-fixed. A bonded launch discloses its floor, raise threshold, and
+reserve before the transaction. A failed raise refunds bids and opens no pool. Successful markets
+initialize a new Uniswap v4 `PoolKey` with locked launch liquidity.
+
+The current contract set is:
+
+- `HookrLaunchpadV5.sol` — launch preparation, intent replay protection, CCA integration,
+  blueprints, fee splits, immutable launch records, migration, and locked liquidity;
+- `HookrHook.sol` — the shared five-block v4 hook and creator/protocol accounting;
+- `HookrSwapRouter.sol` — bounded exact-input and exact-output settlement with recipient, deadline,
+  price limit, measured output, refund, callback, and reentrancy boundaries;
+- `HookrFlywheelBurner.sol` — owner-bounded collection and HOOKR buy-and-burn with a nonzero
+  execution floor;
+- `HookrToken.sol` — fixed one-billion supply without owner mint, pause, blacklist, or transfer tax;
+  and
+- `HookrLaunchpadLibV5.sol` — linked launchpad logic whose exact deployed library is preserved in
+  the V5 evidence packet.
+
+`HookrExistingTokenFactory` and `HookrAttachHook` are source candidates for a new-pool path. They
+are not part of the promoted V5 release and cannot retrofit an existing pool.
+
+## Hook blocks
+
+| Block | Behavior |
+| --- | --- |
+| Anti-Snipe | Finite opening guard with a buy cap and extra LP fee. |
+| Surge Fees | LP fee scales with trade size relative to in-range depth. |
+| Auto Burn | A configured share of actual buy output goes to the dead address. |
+| LP Rewards | A configured ETH-side share is donated to in-range liquidity. |
+| Nth-buy Pot | A deterministic scheduled pot advances at most once per pool per block. |
 
 The hook permission mask is `0x28cc`:
 
@@ -23,99 +50,70 @@ beforeInitialize | beforeAddLiquidity | beforeSwap | afterSwap |
 beforeSwapReturnsDelta | afterSwapReturnsDelta
 ```
 
-`beforeAddLiquidity` prevents outside positions from diluting guarded fee attribution only while a
-pool's finite anti-snipe window is active. The launchpad can seed its locked positions during that
-window, and permissionless LP additions resume at the exact guard boundary.
+The hook address and configuration are fixed by the pool. No owner can retune a live pool's blocks.
+Hook cuts apply to eligible exact-input buys. An ETH-paired V5 market also accrues the promoted
+flywheel fee; a HOOKR-paired market pays no protocol fee.
 
-The `burnTriggerWei` field and `buybackAndBurn` selector remain only for v2 ABI migration. Every new
-configuration must set the field to zero, and the legacy entrypoint always reverts.
+## Transaction and authority boundary
 
-Every generation-4 `LaunchArgs` includes a nonzero `expectedCreator`, and either launch path
-requires it to equal
-`msg.sender`. A copied approved calldata packet therefore cannot be launched by another account.
-Names, symbols, taglines, and image URIs are intentionally not globally unique: another creator can
-submit independently approved calldata with duplicate metadata, so interfaces must identify tokens
-by chain and contract address rather than metadata alone.
+Partner and agent flows use nonzero, creator-scoped intent IDs. A successful launch records the
+token under that creator and intent; an exact replay reverts. A failed transaction does not consume
+the intent. Ordinary manual launch entrypoints remain intentionally repeatable.
 
-Agent approval packets must use `launchWithIntent(args, intentId)` for the curve path or
-`launchInstantWithIntent(args, poolSupplyBps, intentId)` for the instant path. Both share one
-nonzero, `msg.sender`-scoped intent namespace; after success,
-`launchedByIntent(creator, intentId)` returns the deployed token. Reusing that exact creator/intent
-pair on either path reverts, while a failed launch rolls back the marker and can be retried. The
-ordinary non-intent entrypoints remain repeatable by design.
+The SDK and contracts keep these states separate:
+
+1. prepare exact calldata, value, recipients, bounds, and intent;
+2. simulate from the intended account against the current release;
+3. ask the user's wallet to sign the exact simulated request;
+4. wait for the canonical success receipt; and
+5. read back the intent, launch, pool, and runtime wiring.
+
+A source file, local simulation, signature request, broadcast hash, successful receipt, and release
+promotion prove different things. None substitutes for the next stage.
 
 ## Verification
 
+From this directory:
+
 ```bash
-./setup.sh
 forge fmt --check
 forge build --sizes
-forge test -vv
+forge test
 ```
 
-`setup.sh` initializes the pinned submodules and applies the one-line pragma widening inside the
-vendored v4-core checkout that `foundry.toml` documents (the pinned compiler is 0.8.28; upstream
-`PoolManager.sol` pins exactly 0.8.26, which trips an immutable-size codegen bug fixed in 0.8.27).
+The complete suite includes unit, fuzz, adversarial, invariant, all-32-hook-combination, V5 launch,
+CCA, flywheel, router, attachment-candidate, utility, leverage-research, and fork coverage. Release
+runs pin one recent Robinhood block and retain its number and hash with the tested commit.
 
-Important suites:
+From the repository root:
 
-- `Curve.t.sol` — curve/admin/view unit and fuzz behavior;
-- `RegressionLaunchpad.t.sol` — launchpad/hook validator equivalence and historical fixes;
-- `Regression.t.sol` — settlement, guard, pot, Auto Burn, and LP donation regressions;
-- `AdversarialAudit.t.sol` — atomic slot farming, recipient binding, JIT LP, payout recovery,
-  ownership, non-flushable pot accounting, and solvency;
-- `HookrSwapRouter.t.sol` — exact-input/output buy/sell settlement and failure boundaries;
-- `InstantLaunch.t.sol` and `InstantLaunchDefects.t.sol` — preview/launch identity, locked instant
-  liquidity, replay safety, price/float bounds, guard accounting, and adversarial regressions;
-- `Fork.t.sol` — candidate integration against the canonical Robinhood Chain PoolManager.
+```bash
+npm test
+npm run contracts:release-tooling
+```
 
-The release matrix must prove all 32 masks of the five behavior bits can launch, configure, and
-trade, including sell-out/graduation for the curve path and direct pool opening for the instant
-path. A separate all-five fork case must run with
-`ROBINHOOD_FORK_BLOCK` pinned to one freshly captured Robinhood block.
+Those tests authenticate the staged V5 evidence builders, canary wrapper, redaction boundary,
+runtime templates, receipt ordering, and release-promotion invariants.
 
 ## Release protocol
 
-1. Run the complete local and pinned-block fork suites; retain command, block number/hash, and SHA.
-   The public Robinhood RPC is pruned, so an archive-capable endpoint is required to replay an
-   older evidence block.
-2. Run a no-broadcast deployment simulation and record predicted addresses/runtime hashes. The
-   CREATE2 miner excludes candidates with existing code or a nonzero nonce.
-3. Review the exact deployer, chain ID 4663, CREATE2 salt/flags, fees, ownership, router, and five
-   seeded blueprints. The scripts also pin the reviewed PoolManager and deterministic CREATE2
-   deployer runtime code hashes.
-4. Only after explicit confirmation, broadcast the deployment from the expected user-controlled
-   deployer.
-5. Verify every receipt in order, then verify runtime hashes, `contractName()`/`contractVersion()`,
-   hook/PoolManager linkage, owner, permission bits, blueprint count/params, and router linkage.
-6. Present the canary transactions for confirmation. The first receipt consumes the script's fixed
-   nonzero generation-4 `CANARY_INTENT_ID` through `launchInstantWithIntent`; intent consumption,
-   token creation, pool opening, and locked liquidity are one atomic transaction. Verify
-   `launchedByIntent(deployer, intentId)` returns that exact token and the launch record has no curve
-   state. The later guarded router buy, token approval, and router sell are separate receipts.
-   Verify the instant event/record, liquidity, config, Auto Burn, surge/snipe fees, LP donation,
-   Nth-buy Pot, router bounds, and all emitted/postcondition values after the corresponding receipt.
-7. Promote only the current generation-4 manifest after those readbacks match; retain generation 3
-   in the read registry.
+[`RELEASE_V5.md`](RELEASE_V5.md) is the full operator runbook. In summary:
 
-The canary is address- and bound-driven: set `HOOKR_LAUNCHPAD_ADDRESS`, `HOOKR_HOOK_ADDRESS`,
-`HOOKR_SWAP_ROUTER_ADDRESS`, `HOOKR_LAUNCHPAD_RUNTIME_CODEHASH`, `HOOKR_HOOK_RUNTIME_CODEHASH`,
-`HOOKR_SWAP_ROUTER_RUNTIME_CODEHASH`, `CANARY_BUY_MIN_TOKENS_OUT`, and
-`CANARY_SELL_MIN_WEI_OUT` from the reviewed deployment/simulation packet. Runtime hashes and both
-swap bounds must be nonzero. The scripts use the fixed reviewed deployer address, so simulations
-need no secret. A live run must explicitly select the matching Foundry account or hardware wallet
-after review; never place a private key in argv or the repository.
+1. freeze source, dependencies, compiler settings, libraries, constructor inputs, and tested SHA;
+2. run local, adversarial, invariant, size, and pinned-block fork gates;
+3. simulate without broadcasting and review the exact deployer, chain, salts, values, ownership,
+   runtime hashes, and predicted addresses;
+4. obtain explicit human confirmation before any signing or broadcast stage;
+5. reconcile every receipt in order and re-read runtime identity, immutable wiring, permissions,
+   blueprints, fees, and ownership;
+6. run lane and flywheel canaries, including failure-path postconditions; and
+7. promote the release manifest only after the canonical evidence is final and complete.
 
-Never place a private key in a command line, repository, log, or report. A dry run does not
-authorize a broadcast, and a deployment broadcast does not authorize the canary. Forge scripts
-simulate the whole sequence atomically, but live broadcasts are multi-transaction: a later revert
-or failed readback cannot roll back an earlier mined transaction.
+Historical receipts and SHA-256 indexes live under `evidence/`. A retained artifact is evidence for
+the transaction it names, not authorization to replay it.
 
-## Release boundary
+## Security status
 
-Generation 3 remains the live, write-enabled deployment until generation 4 has its own real ordered
-receipts, runtime/linkage readbacks, instant canary, and promotion. Older token pools remain
-immutable and readable through the retained registry; a generation-4 promotion changes the current
-write target rather than rewriting historical identities. Historical v2 Foundry records are
-preserved and explicitly labeled in [`evidence/v2/`](evidence/v2/README.md). Never use a local
-`contracts/broadcast/**/run-latest.json` file or fork receipt as production evidence.
+This project has not received an independent audit. Passing tests, adversarial review, live canary
+receipts, and source verification are release evidence, not a substitute for one. Never place a
+private key in argv, an environment variable, this repository, a log, or a report.

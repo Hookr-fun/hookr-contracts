@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
@@ -11,9 +11,7 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -27,6 +25,9 @@ import {HookMiner} from "./utils/HookMiner.sol";
 ///  - whether the pool tokens the full-range position could not absorb are burned (the default)
 ///    or placed as token-only bands above the graduation price.
 contract FeeSplitAndTranchesTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -35,8 +36,6 @@ contract FeeSplitAndTranchesTest is Test {
 
     IPoolManager manager;
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     HookrSwapRouter router;
 
@@ -47,14 +46,14 @@ contract FeeSplitAndTranchesTest is Test {
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
         vm.deal(creator, 100 ether);
         vm.deal(trader, 100 ether);
     }
@@ -64,7 +63,7 @@ contract FeeSplitAndTranchesTest is Test {
         a.symbol = "SPLIT";
         a.expectedCreator = creator;
         a.targetRaiseWei = 0.01 ether;
-        a.custom = HookrLaunchpadLib.HookParams({
+        a.custom = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -76,12 +75,7 @@ contract FeeSplitAndTranchesTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
     }
 
@@ -91,7 +85,7 @@ contract FeeSplitAndTranchesTest is Test {
     {
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(a, bytes32(0));
+        token = pad.launch{value: fee}(a);
         vm.prank(creator);
         pad.buy{value: 0.02 ether}(token, 0);
         assertTrue(pad.getLaunch(token).graduated, "did not graduate");
@@ -128,11 +122,11 @@ contract FeeSplitAndTranchesTest is Test {
         (address token, PoolKey memory key,) = _launchAndGraduate(a);
         _churn(key);
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         uint256 creatorBefore = pad.creatorFeesWei(token);
         pad.collectPoolFees(token);
         uint256 creatorSide = pad.creatorFeesWei(token) - creatorBefore;
-        uint256 protocolSide = pad.protocolFeesByQuote(address(0)) - protocolBefore;
+        uint256 protocolSide = pad.protocolFeesWei() - protocolBefore;
 
         assertGt(creatorSide, 0, "no creator fees accrued");
         // Halves, with the odd wei going to the protocol exactly as before this feature.
@@ -146,11 +140,11 @@ contract FeeSplitAndTranchesTest is Test {
         (address token, PoolKey memory key,) = _launchAndGraduate(a);
         _churn(key);
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         uint256 creatorBefore = pad.creatorFeesWei(token);
         pad.collectPoolFees(token);
         uint256 creatorSide = pad.creatorFeesWei(token) - creatorBefore;
-        uint256 total = creatorSide + (pad.protocolFeesByQuote(address(0)) - protocolBefore);
+        uint256 total = creatorSide + (pad.protocolFeesWei() - protocolBefore);
 
         assertEq(creatorSide, (total * 8000) / 10_000, "creator share wrong");
     }
@@ -158,19 +152,19 @@ contract FeeSplitAndTranchesTest is Test {
     function test_splitCreditsEveryRecipientAndConservesTheWholeSide() public {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
         a.creatorFeeBps = 6000;
-        a.feeRecipients = new HookrLaunchpadLib.FeeRecipient[](3);
+        a.feeRecipients = new HookrLaunchpad.FeeRecipient[](3);
         // Deliberately indivisible shares so the rounding remainder is exercised.
-        a.feeRecipients[0] = HookrLaunchpadLib.FeeRecipient({to: alice, bps: 3333});
-        a.feeRecipients[1] = HookrLaunchpadLib.FeeRecipient({to: bob, bps: 3333});
-        a.feeRecipients[2] = HookrLaunchpadLib.FeeRecipient({to: creator, bps: 3334});
+        a.feeRecipients[0] = HookrLaunchpad.FeeRecipient({to: alice, bps: 3333});
+        a.feeRecipients[1] = HookrLaunchpad.FeeRecipient({to: bob, bps: 3333});
+        a.feeRecipients[2] = HookrLaunchpad.FeeRecipient({to: creator, bps: 3334});
 
         (address token, PoolKey memory key,) = _launchAndGraduate(a);
         _churn(key);
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         uint256 creatorBalanceBefore = pad.creatorFeesWei(token);
         pad.collectPoolFees(token);
-        uint256 protocolSide = pad.protocolFeesByQuote(address(0)) - protocolBefore;
+        uint256 protocolSide = pad.protocolFeesWei() - protocolBefore;
 
         uint256 toAlice = pad.splitFeesWei(token, alice);
         uint256 toBob = pad.splitFeesWei(token, bob);
@@ -201,25 +195,25 @@ contract FeeSplitAndTranchesTest is Test {
         a.creatorFeeBps = 8001; // over the cap
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadFeeSplit.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
         a.creatorFeeBps = 5000;
-        a.feeRecipients = new HookrLaunchpadLib.FeeRecipient[](2);
-        a.feeRecipients[0] = HookrLaunchpadLib.FeeRecipient({to: alice, bps: 5000});
-        a.feeRecipients[1] = HookrLaunchpadLib.FeeRecipient({to: bob, bps: 4000}); // sums to 9000
+        a.feeRecipients = new HookrLaunchpad.FeeRecipient[](2);
+        a.feeRecipients[0] = HookrLaunchpad.FeeRecipient({to: alice, bps: 5000});
+        a.feeRecipients[1] = HookrLaunchpad.FeeRecipient({to: bob, bps: 4000}); // sums to 9000
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadFeeSplit.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
-        a.feeRecipients[1] = HookrLaunchpadLib.FeeRecipient({to: alice, bps: 5000}); // duplicate
+        a.feeRecipients[1] = HookrLaunchpad.FeeRecipient({to: alice, bps: 5000}); // duplicate
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadFeeSplit.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
-        a.feeRecipients[1] = HookrLaunchpadLib.FeeRecipient({to: address(0), bps: 5000});
+        a.feeRecipients[1] = HookrLaunchpad.FeeRecipient({to: address(0), bps: 5000});
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadFeeSplit.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
     }
 
     // ------------------------------------------------------------------ LP tranches
@@ -234,10 +228,10 @@ contract FeeSplitAndTranchesTest is Test {
 
     function test_tranchesSeedTokenOnlyBandsAboveSpotAndBurnTheRemainder() public {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
+        a.lpTranches = new HookrLaunchpad.LpTranche[](2);
         // Two ascending, non-overlapping ladders above the graduation tick.
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
-        a.lpTranches[1] = HookrLaunchpadLib.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
+        a.lpTranches[1] = HookrLaunchpad.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
 
         uint256 padEthBefore = address(pad).balance;
         (address token,, PoolId id) = _launchAndGraduate(a);
@@ -267,9 +261,9 @@ contract FeeSplitAndTranchesTest is Test {
 
     function test_curveGraduatedEventReconcilesBaseBandsAndActualBurn() public {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
-        a.lpTranches[1] = HookrLaunchpadLib.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](2);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
+        a.lpTranches[1] = HookrLaunchpad.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
 
         vm.recordLogs();
         (address token,,) = _launchAndGraduate(a);
@@ -280,22 +274,22 @@ contract FeeSplitAndTranchesTest is Test {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
         a.targetRaiseWei = 0;
         a.creatorBuyWei = 1 ether;
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
-        a.lpTranches[1] = HookrLaunchpadLib.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](2);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 5000});
+        a.lpTranches[1] = HookrLaunchpad.LpTranche({startOffset: 6000, endOffset: 12_000, bps: 2500});
 
         uint256 value = pad.creationFeeWei() + a.creatorBuyWei;
         vm.recordLogs();
         vm.prank(creator);
-        address token = pad.launchInstant{value: value}(a, 5000, bytes32(0));
+        address token = pad.launchInstant{value: value}(a, 5000);
         _assertGraduationSupplyAccounting(vm.getRecordedLogs(), token, pad.SUPPLY());
     }
 
     function test_collectionIncludesTrancheFeesNotJustTheFullRangePosition() public {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
+        a.lpTranches = new HookrLaunchpad.LpTranche[](1);
         // A band starting just above spot, so an ordinary buy trades through it.
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 60, endOffset: 60_000, bps: 9000});
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 60, endOffset: 60_000, bps: 9000});
         (address token, PoolKey memory key, PoolId id) = _launchAndGraduate(a);
 
         // Buying is zeroForOne (ETH in, token out), which raises the token's price and so
@@ -306,9 +300,9 @@ contract FeeSplitAndTranchesTest is Test {
         int24 gradTick = V4PoolMath.getTickAtSqrtPrice(pad.getLaunch(token).sqrtPriceX96AtGraduation);
         assertLt(tickNow, gradTick, "price did not move into the band");
 
-        uint256 protocolBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
-        uint256 collected = pad.creatorFeesWei(token) + (pad.protocolFeesByQuote(address(0)) - protocolBefore);
+        uint256 collected = pad.creatorFeesWei(token) + (pad.protocolFeesWei() - protocolBefore);
         assertGt(collected, 0, "no fees collected across the ranges");
     }
 
@@ -316,35 +310,35 @@ contract FeeSplitAndTranchesTest is Test {
         HookrLaunchpad.LaunchArgs memory a = _baseArgs();
         uint256 fee = pad.creationFeeWei();
 
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
+        a.lpTranches = new HookrLaunchpad.LpTranche[](1);
         // Straddling spot would need ETH the raise has already committed.
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 0, endOffset: 600, bps: 5000});
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 0, endOffset: 600, bps: 5000});
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 600, bps: 5000}); // empty band
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 600, bps: 5000}); // empty band
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 1200, bps: 10_001}); // over 100%
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 1200, bps: 10_001}); // over 100%
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(a);
 
         HookrLaunchpad.LaunchArgs memory b = _baseArgs();
-        b.lpTranches = new HookrLaunchpadLib.LpTranche[](2);
-        b.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 4000});
-        b.lpTranches[1] = HookrLaunchpadLib.LpTranche({startOffset: 3000, endOffset: 9000, bps: 4000}); // overlaps
+        b.lpTranches = new HookrLaunchpad.LpTranche[](2);
+        b.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 4000});
+        b.lpTranches[1] = HookrLaunchpad.LpTranche({startOffset: 3000, endOffset: 9000, bps: 4000}); // overlaps
         vm.prank(creator);
         vm.expectRevert(HookrLaunchpad.BadLpPlan.selector);
-        pad.launch{value: fee}(a, bytes32(0));
+        pad.launch{value: fee}(b);
     }
 
     // ------------------------------------------------------------------ helpers
 
-    function _bandRange(int24 gradTick, HookrLaunchpadLib.LpTranche memory b)
+    function _bandRange(int24 gradTick, HookrLaunchpad.LpTranche memory b)
         internal
         pure
         returns (int24 lower, int24 upper)

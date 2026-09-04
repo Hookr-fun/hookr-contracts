@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
@@ -16,9 +16,7 @@ import {SqrtPriceMath} from "@uniswap/v4-core/src/libraries/SqrtPriceMath.sol";
 import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
 import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -55,6 +53,9 @@ contract ReenteringRefundPayer {
 /// @notice Robinhood fork integration tests for the production router candidate. Release runs
 ///         pin `ROBINHOOD_FORK_BLOCK`; local runs fall back to the endpoint's latest block.
 contract HookrSwapRouterTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -67,8 +68,6 @@ contract HookrSwapRouterTest is Test {
 
     IPoolManager manager;
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     HookrSwapRouter router;
     PoolSwapTest rawRouter;
@@ -81,25 +80,26 @@ contract HookrSwapRouterTest is Test {
     address bob = address(0xB0B);
 
     function setUp() public {
+        string memory rpc = vm.envOr("FORK_RPC_URL", string("robinhood"));
         uint256 requestedForkBlock = vm.envOr("ROBINHOOD_FORK_BLOCK", uint256(0));
         if (requestedForkBlock == 0) {
-            vm.createSelectFork("robinhood");
+            vm.createSelectFork(rpc);
         } else {
-            vm.createSelectFork("robinhood", requestedForkBlock);
+            vm.createSelectFork(rpc, requestedForkBlock);
         }
         selectedForkBlock = vm.getBlockNumber();
         emit log_named_uint("Robinhood fork block", selectedForkBlock);
         assertEq(block.chainid, 4663);
         if (requestedForkBlock != 0) assertEq(selectedForkBlock, requestedForkBlock);
         manager = ROBINHOOD_PM;
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
         rawRouter = new PoolSwapTest(manager);
         assertEq(vm.getBlockNumber(), selectedForkBlock, "local deployments changed fork block");
 
@@ -107,7 +107,7 @@ contract HookrSwapRouterTest is Test {
         vm.deal(alice, 10 ether);
         vm.deal(bob, 10 ether);
 
-        HookrLaunchpadLib.HookParams memory p = HookrLaunchpadLib.HookParams({
+        HookrLaunchpad.HookParams memory p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -119,12 +119,7 @@ contract HookrSwapRouterTest is Test {
             lpBps: 25,
             potBps: 50,
             potEveryNBuys: 2,
-            potMinBuyWei: 0.001 ether,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0.001 ether
         });
         HookrLaunchpad.LaunchArgs memory a;
         a.name = "Router Fish";
@@ -134,7 +129,7 @@ contract HookrSwapRouterTest is Test {
         a.custom = p;
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = HookrToken(pad.launch{value: fee}(a, bytes32(0)));
+        token = HookrToken(pad.launch{value: fee}(a));
         vm.prank(alice);
         pad.buy{value: 0.02 ether}(address(token), 0);
         assertTrue(pad.getLaunch(address(token)).graduated);
@@ -171,7 +166,7 @@ contract HookrSwapRouterTest is Test {
     }
 
     function _graduateBurnOnly() internal returns (HookrToken burnToken, PoolKey memory burnKey) {
-        HookrLaunchpadLib.HookParams memory p = HookrLaunchpadLib.HookParams({
+        HookrLaunchpad.HookParams memory p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -183,12 +178,7 @@ contract HookrSwapRouterTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
         HookrLaunchpad.LaunchArgs memory a;
         a.name = "Partial Fill Fish";
@@ -198,7 +188,7 @@ contract HookrSwapRouterTest is Test {
         a.custom = p;
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        burnToken = HookrToken(pad.launch{value: fee}(a, bytes32(0)));
+        burnToken = HookrToken(pad.launch{value: fee}(a));
         vm.prank(alice);
         pad.buy{value: 0.02 ether}(address(burnToken), 0);
         burnKey = PoolKey({
@@ -214,7 +204,7 @@ contract HookrSwapRouterTest is Test {
         internal
         returns (HookrToken feeToken, PoolKey memory feeKey)
     {
-        HookrLaunchpadLib.HookParams memory p = HookrLaunchpadLib.HookParams({
+        HookrLaunchpad.HookParams memory p = HookrLaunchpad.HookParams({
             guardBlocks: 0,
             maxBuyBps: 0,
             snipeTaxPips: 0,
@@ -226,12 +216,7 @@ contract HookrSwapRouterTest is Test {
             lpBps: 0,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
         HookrLaunchpad.LaunchArgs memory a;
         a.name = name;
@@ -241,7 +226,7 @@ contract HookrSwapRouterTest is Test {
         a.custom = p;
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        feeToken = HookrToken(pad.launch{value: fee}(a, bytes32(0)));
+        feeToken = HookrToken(pad.launch{value: fee}(a));
         vm.prank(alice);
         pad.buy{value: 0.02 ether}(address(feeToken), 0);
         assertTrue(pad.getLaunch(address(feeToken)).graduated);
@@ -484,12 +469,9 @@ contract HookrSwapRouterTest is Test {
         vm.expectPartialRevert(HookrSwapRouter.InvalidNativeValue.selector);
         router.exactInput{value: p.amountIn - 1}(p);
 
-        // An ERC-20 quote is a LEGITIMATE pool shape now, so a non-native currency0 is no longer
-        // rejected by the router; this unknown pair simply has no initialized pool and fails
-        // closed at the PoolManager.
         p.key.currency0 = Currency.wrap(address(token));
         vm.prank(bob);
-        vm.expectPartialRevert(bytes4(keccak256(bytes("PoolNotInitialized()"))));
+        vm.expectRevert(HookrSwapRouter.InvalidPoolKey.selector);
         router.exactInput(p);
 
         p = _buyParams(0.001 ether, 1, alice);

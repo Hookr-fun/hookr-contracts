@@ -1,0 +1,24 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-hook-token-launch",
+  "track": "hook_token_launch",
+  "project": {
+    "name": "Example hook token"
+  },
+  "source": {
+    "repository": "https://github.com/example/hook-token",
+    "pinnedCommit": "2222222222222222222222222222222222222222",
+    "contracts": ["src/ExampleHook.sol", "src/ExampleToken.sol"],
+    "compiler": "Solidity 0.8.28",
+    "dependencyLock": "foundry.lock"
+  },
+  "target": {
+    "chainId": 8453,
+    "poolTopology": "single_pool",
+    "liquidityPlan": "Initialize one new immutable PoolKey and seed it only after the deployment receipt and runtime wiring are verified."
+  },
+  "requirements": [
+    "Return one launch packet with separate source, deployment, pool, liquidity, and listing receipts."
+  ]
+}

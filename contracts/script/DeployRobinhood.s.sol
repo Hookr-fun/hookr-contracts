@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 
@@ -30,6 +28,9 @@ import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 ///      addresses, but `scripts/promote-release-manifest.mjs` verifies the receipt list by index
 ///      and must be kept in step.
 contract DeployRobinhood is Script {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     IPoolManager constant PM = IPoolManager(0x8366a39CC670B4001A1121B8F6A443A643e40951);
     address constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address constant EXPECTED_DEPLOYER = 0x5a52D4B820Ae7F02880d270562950918ACb14aA2;
@@ -64,23 +65,21 @@ contract DeployRobinhood is Script {
         vm.startBroadcast(deployer);
 
         // 1. launchpad
-        // The blueprint registry deploys before the launchpad (constructor dependency). It is
-        // append-only; the house gate below seeds ids 1..5 from the same reviewed sender.
-        HookrBlueprints blueprints = new HookrBlueprints(EXPECTED_DEPLOYER);
-        HookrLaunchpad pad = new HookrLaunchpad(PM, blueprints);
+        HookrLaunchpad pad = new HookrLaunchpad(PM);
 
         // 2. mine + deploy the hook
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad)));
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = _mine(CREATE2_DEPLOYER, creation);
-        HookrHook hook = new HookrHook{salt: salt}(PM, address(pad));
+        HookrHook hook = new HookrHook{salt: salt}(PM, address(pad), FLYWHEEL_RECIPIENT);
         require(address(hook) == predicted, "mined address mismatch");
 
         // 3. production live-pool router (curve-graduated and instant pools share this boundary)
-        HookrSwapRouter router = new HookrSwapRouter(PM, hook);
+        HookrSwapRouter router = new HookrSwapRouter(PM, hook, address(0));
 
         // 4. wire + house blueprints
         pad.setHook(hook);
-        _seedBlueprints(blueprints);
+        _seedBlueprints(pad);
 
         vm.stopBroadcast();
 
@@ -99,8 +98,8 @@ contract DeployRobinhood is Script {
         require(address(router.poolManager()) == address(PM), "router PM wrong");
         require(address(router.hook()) == address(hook), "router hook wrong");
         require(pad.owner() == deployer, "owner wrong");
-        require(blueprints.blueprintsCount() == 6, "blueprints missing"); // sentinel + 5
-        require(blueprints.getBlueprint(2).params.guardBlocks == 100, "sniper slayer params wrong");
+        require(pad.blueprintsCount() == 6, "blueprints missing"); // sentinel + 5
+        require(pad.getBlueprint(2).params.guardBlocks == 100, "sniper slayer params wrong");
 
         // EIP-170. `forge test` does not enforce the deployed-code limit, so a contract that grows
         // past 24,576 bytes passes the entire suite and only reverts when the real CREATE runs.
@@ -170,11 +169,11 @@ contract DeployRobinhood is Script {
         revert("no salt");
     }
 
-    function _seedBlueprints(HookrBlueprints blueprints) internal {
+    function _seedBlueprints(HookrLaunchpad pad) internal {
         // 1: NTH-BUY POT — every 500th qualifying buy takes the whole deterministic pot
-        blueprints.saveBlueprint(
+        pad.saveBlueprint(
             "Nth-buy Pot",
-            HookrLaunchpadLib.HookParams({
+            HookrLaunchpad.HookParams({
                 guardBlocks: 0,
                 maxBuyBps: 0,
                 snipeTaxPips: 0,
@@ -186,19 +185,14 @@ contract DeployRobinhood is Script {
                 lpBps: 0,
                 potBps: 50, // 0.5% of buys to the pot
                 potEveryNBuys: 500, // every 500th qualifying buy
-                potMinBuyWei: 0.01 ether,
-                buybackBps: 0,
-                buybackDrawdownBps: 0,
-                buybackCooldownBlocks: 0,
-                buybackMinSpendWei: 0,
-                buybackMaxSpendWei: 0
+                potMinBuyWei: 0.01 ether
             }),
             500 // 5% of hook cuts to the author
         );
         // 2: SNIPER SLAYER — guard window + wallet cap + snipe tax
-        blueprints.saveBlueprint(
+        pad.saveBlueprint(
             "Sniper Slayer",
-            HookrLaunchpadLib.HookParams({
+            HookrLaunchpad.HookParams({
                 guardBlocks: 100,
                 maxBuyBps: 50, // 0.5% supply per swap
                 snipeTaxPips: 400_000, // +40% during the guard
@@ -210,19 +204,14 @@ contract DeployRobinhood is Script {
                 lpBps: 0,
                 potBps: 0,
                 potEveryNBuys: 0,
-                potMinBuyWei: 0,
-                buybackBps: 0,
-                buybackDrawdownBps: 0,
-                buybackCooldownBlocks: 0,
-                buybackMinSpendWei: 0,
-                buybackMaxSpendWei: 0
+                potMinBuyWei: 0
             }),
             0 // guard/tax behavior creates no native hook cut, so no royalty can accrue
         );
         // 3: AUTO BURN — token output is burned inline; no ETH cut exists to pay a royalty
-        blueprints.saveBlueprint(
+        pad.saveBlueprint(
             "Auto Burn",
-            HookrLaunchpadLib.HookParams({
+            HookrLaunchpad.HookParams({
                 guardBlocks: 0,
                 maxBuyBps: 0,
                 snipeTaxPips: 0,
@@ -234,19 +223,14 @@ contract DeployRobinhood is Script {
                 lpBps: 0,
                 potBps: 0,
                 potEveryNBuys: 0,
-                potMinBuyWei: 0,
-                buybackBps: 0,
-                buybackDrawdownBps: 0,
-                buybackCooldownBlocks: 0,
-                buybackMinSpendWei: 0,
-                buybackMaxSpendWei: 0
+                potMinBuyWei: 0
             }),
             0
         );
         // 4: SURGE FEES — fee scales with trade size vs pool depth
-        blueprints.saveBlueprint(
+        pad.saveBlueprint(
             "Surge Fees",
-            HookrLaunchpadLib.HookParams({
+            HookrLaunchpad.HookParams({
                 guardBlocks: 0,
                 maxBuyBps: 0,
                 snipeTaxPips: 0,
@@ -258,19 +242,14 @@ contract DeployRobinhood is Script {
                 lpBps: 0,
                 potBps: 0,
                 potEveryNBuys: 0,
-                potMinBuyWei: 0,
-                buybackBps: 0,
-                buybackDrawdownBps: 0,
-                buybackCooldownBlocks: 0,
-                buybackMinSpendWei: 0,
-                buybackMaxSpendWei: 0
+                potMinBuyWei: 0
             }),
             0 // surge changes the LP fee only; it creates no native hook cut
         );
         // 5: LP LOYALTY — fee share donated to in-range LPs
-        blueprints.saveBlueprint(
+        pad.saveBlueprint(
             "LP Loyalty",
-            HookrLaunchpadLib.HookParams({
+            HookrLaunchpad.HookParams({
                 guardBlocks: 0,
                 maxBuyBps: 0,
                 snipeTaxPips: 0,
@@ -282,12 +261,7 @@ contract DeployRobinhood is Script {
                 lpBps: 25, // 0.25% of buys donated to LPs
                 potBps: 0,
                 potEveryNBuys: 0,
-                potMinBuyWei: 0,
-                buybackBps: 0,
-                buybackDrawdownBps: 0,
-                buybackCooldownBlocks: 0,
-                buybackMinSpendWei: 0,
-                buybackMaxSpendWei: 0
+                potMinBuyWei: 0
             }),
             400
         );

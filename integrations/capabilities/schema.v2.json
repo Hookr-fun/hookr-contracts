@@ -1,0 +1,486 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hookr.fun/schemas/integration-capabilities.v2.json",
+  "title": "Hookr integration capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "updatedAt", "release", "capabilities"],
+  "properties": {
+    "schemaVersion": { "const": "hookr.integration-capabilities.v2" },
+    "updatedAt": { "type": "string", "format": "date" },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chainId", "generation", "publicSourceStatus"],
+      "properties": {
+        "chainId": { "const": 4663 },
+        "generation": { "const": 5 },
+        "publicSourceStatus": { "enum": ["v5-sync-required", "current"] }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fiveBlockComposer", "partnerSdk", "externalHooks", "existingTokenPool", "v6IntegrationModel", "arbRecapture"],
+      "properties": {
+        "fiveBlockComposer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "appliesTo", "hookBlocks"],
+          "properties": {
+            "availability": { "const": "live" },
+            "appliesTo": { "const": "New Hookr V5 launches" },
+            "hookBlocks": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 5,
+              "maxItems": 5,
+              "prefixItems": [
+                { "const": "anti-snipe" },
+                { "const": "surge-fees" },
+                { "const": "auto-burn" },
+                { "const": "lp-rewards" },
+                { "const": "nth-buy-pot" }
+              ],
+              "items": false
+            }
+          }
+        },
+        "partnerSdk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "package", "version", "generation", "tracks", "note"],
+          "properties": {
+            "availability": { "const": "release-candidate" },
+            "package": { "const": "@hookr/sdk" },
+            "version": { "const": "0.1.0-rc.1" },
+            "generation": { "const": 5 },
+            "tracks": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "enum": ["launchpad_sdk", "hook_generator"] }
+            },
+            "note": { "type": "string", "minLength": 20 }
+          }
+        },
+        "externalHooks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "tracks", "note"],
+          "properties": {
+            "availability": { "const": "technical-review" },
+            "tracks": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "enum": ["hook_publication", "hook_token_launch"] }
+            },
+            "note": { "type": "string", "minLength": 20 }
+          }
+        },
+        "existingTokenPool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "tracks", "note"],
+          "properties": {
+            "availability": { "const": "new-release-required" },
+            "tracks": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": { "const": "existing_token_pool" }
+            },
+            "note": { "type": "string", "minLength": 20 }
+          }
+        },
+        "v6IntegrationModel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availability", "production", "sdkTransactionApi", "poolKeyRoot", "paths", "existingDeployedHookAsNativeBlock", "monetization"],
+          "properties": {
+            "availability": { "const": "source-review" },
+            "production": { "const": false },
+            "sdkTransactionApi": { "const": false },
+            "poolKeyRoot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["rootHookSlots", "checkoutSelection"],
+              "properties": {
+                "rootHookSlots": { "const": 1 },
+                "checkoutSelection": { "const": "one-root-profile" }
+              }
+            },
+            "paths": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["nativeRootBlocks", "typedSubordinateExecutor", "exclusiveExternalRoot", "existingToken", "launchpadAdapter"],
+              "properties": {
+                "nativeRootBlocks": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["requiresNewImmutableHookrGeneration", "composition"],
+                  "properties": {
+                    "requiresNewImmutableHookrGeneration": { "const": true },
+                    "composition": { "const": "reviewed-schema-only" }
+                  }
+                },
+                "typedSubordinateExecutor": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["optional", "binding"],
+                  "properties": {
+                    "optional": { "const": true },
+                    "binding": { "const": "exact-versioned-profile" }
+                  }
+                },
+                "exclusiveExternalRoot": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["composesWithNativeBlocks", "requiredPolicyBindings"],
+                  "properties": {
+                    "composesWithNativeBlocks": { "const": false },
+                    "requiredPolicyBindings": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "enum": ["purpose-built-adapter", "router-policy", "quoter-policy"]
+                      }
+                    }
+                  }
+                },
+                "existingToken": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["poolSemantics", "existingPoolsChanged"],
+                  "properties": {
+                    "poolSemantics": { "const": "new-pool-key" },
+                    "existingPoolsChanged": { "const": false }
+                  }
+                },
+                "launchpadAdapter": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["binding", "exactFields"],
+                  "properties": {
+                    "binding": { "const": "atomic" },
+                    "exactFields": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "minItems": 8,
+                      "maxItems": 8,
+                      "items": {
+                        "enum": ["profile", "config", "caller", "creator", "beneficiary", "funding", "deadline", "nonce"]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "existingDeployedHookAsNativeBlock": { "const": "unsupported" },
+            "monetization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["availability", "feePolicyIdentity", "recipientAccounting"],
+              "properties": {
+                "availability": { "const": "explicit-versioned-policy-only" },
+                "feePolicyIdentity": { "const": "versioned-feePolicyHash" },
+                "recipientAccounting": { "const": "explicit" }
+              }
+            }
+          }
+        },
+        "arbRecapture": {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "allOf": [
+            { "$ref": "#/$defs/capability" },
+            {
+              "type": "object",
+              "required": ["name", "availability", "tracks", "production", "routeSigning", "activationStatus", "selection", "integrationProfile", "feePolicy", "v6Sdk", "existingTokenAttach", "triggerPoolLpDelivery", "routingAndScanner", "appliesTo", "behavior", "compatibleHookBlocks", "conditionalHookBlocks", "incompatibleHookBlocks", "boundaries"],
+              "properties": {
+                "name": { "const": "WTH Arb Recapture" },
+                "availability": { "const": "source-review" },
+                "tracks": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": { "enum": ["executor_adapter", "hook_token_launch", "existing_token_pool"] }
+                },
+                "production": { "const": false },
+                "routeSigning": { "const": false },
+                "activationStatus": { "const": "inactive" },
+                "selection": { "const": "optional" },
+                "integrationProfile": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["candidateGeneration", "sourceBoundary", "sourceCheckpointStatus", "sourceCheckpointSha", "profileLabel", "profileLabelStatus", "serviceIdentity", "integrationIdPreimage", "integrationId", "feePolicyIdPreimage", "feePolicyId", "binding"],
+                  "properties": {
+                    "candidateGeneration": { "const": "v6.1" },
+                    "sourceBoundary": { "const": "separate-versioned-release-required" },
+                    "sourceCheckpointStatus": { "const": "clean-v61-source-checkpoint" },
+                    "sourceCheckpointSha": { "const": "5168888ed69cc738492368203197ee72a009a964" },
+                    "profileLabel": { "const": "WTH" },
+                    "profileLabelStatus": { "const": "source-label" },
+                    "serviceIdentity": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["status", "productionRecipient", "externalAbiAcceptance"],
+                      "properties": {
+                        "status": { "const": "unverified" },
+                        "productionRecipient": { "type": "null" },
+                        "externalAbiAcceptance": { "const": "unaccepted" }
+                      }
+                    },
+                    "integrationIdPreimage": { "const": "hookr.integration.wth-arb.v2" },
+                    "integrationId": { "const": "0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680" },
+                    "feePolicyIdPreimage": { "const": "hookr.fee-policy.wth-arb.v2:hookr=1000,wth=1000,configurable-creator-trader-trigger-pool-sum=8000" },
+                    "feePolicyId": { "const": "0x656d4d246973da37dc2020b1c4494018646a8033d212c09dc3bb82a4b0898ba7" },
+                    "binding": { "const": "release-required" }
+                  }
+                },
+                "feePolicy": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["basis", "generation", "fixedProtocolShares", "configurablePoolShares", "recipientIdentity", "externalRoundingAcceptance", "externalRecipientSemanticsAcceptance"],
+                  "properties": {
+                    "basis": { "const": "gross-realized-quote-profit" },
+                    "generation": { "const": "v2" },
+                    "fixedProtocolShares": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["wthBps", "hookrBps"],
+                      "properties": {
+                        "wthBps": { "const": 1000 },
+                        "hookrBps": { "const": 1000 }
+                      }
+                    },
+                    "configurablePoolShares": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["sumBps", "abiStruct", "abiFields", "bpsFields", "lockedAt", "defaults", "semantics"],
+                      "properties": {
+                        "sumBps": { "const": 8000 },
+                        "abiStruct": { "const": "ProfitSplit" },
+                        "abiFields": {
+                          "type": "array",
+                          "uniqueItems": true,
+                          "minItems": 4,
+                          "maxItems": 4,
+                          "prefixItems": [
+                            { "const": "creator" },
+                            { "const": "traderBps" },
+                            { "const": "creatorBps" },
+                            { "const": "triggerPoolBps" }
+                          ],
+                          "items": false
+                        },
+                        "bpsFields": {
+                          "type": "array",
+                          "uniqueItems": true,
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "enum": ["traderBps", "creatorBps", "triggerPoolBps"]
+                          }
+                        },
+                        "lockedAt": { "const": "pool-configuration" },
+                        "defaults": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": ["traderBps", "creatorBps", "triggerPoolBps"],
+                          "properties": {
+                            "traderBps": { "const": 2000 },
+                            "creatorBps": { "const": 4000 },
+                            "triggerPoolBps": { "const": 2000 }
+                          }
+                        },
+                        "semantics": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": ["creator", "traderBps", "triggerPoolBps"],
+                          "properties": {
+                            "creator": { "const": "pool-configured-creator-or-authorized-attacher" },
+                            "traderBps": { "const": "authenticated-rebate-recipient-never-tx-origin" },
+                            "triggerPoolBps": { "const": "pool-id-scoped-lp-escrow-not-position-distribution" }
+                          }
+                        }
+                      }
+                    },
+                    "recipientIdentity": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["hookr", "wth"],
+                      "properties": {
+                        "hookr": { "const": "hookr.eth-resolved-address-pinned-at-release" },
+                        "wth": { "const": "whatthehook.eth-resolved-address-pinned-at-release" }
+                      }
+                    },
+                    "externalRoundingAcceptance": { "const": "unverified" },
+                    "externalRecipientSemanticsAcceptance": { "const": "unverified-no-tx-origin" }
+                  }
+                },
+                "v6Sdk": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["availability", "transactionApi", "reason"],
+                  "properties": {
+                    "availability": { "const": "held" },
+                    "transactionApi": { "const": false },
+                    "reason": { "type": "string", "minLength": 20 }
+                  }
+                },
+                "existingTokenAttach": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["poolSemantics", "existingPoolsChanged", "creatorBeneficiary", "admission"],
+                  "properties": {
+                    "poolSemantics": { "const": "new-pool-key" },
+                    "existingPoolsChanged": { "const": false },
+                    "creatorBeneficiary": { "const": "authorized-attacher" },
+                    "admission": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["scope", "requiredDecimals", "initialFactoryBalanceDelta", "laterMutableTransferSemantics", "unsupportedLaterBehaviors"],
+                      "properties": {
+                        "scope": { "const": "initial-pull-only" },
+                        "requiredDecimals": { "const": 18 },
+                        "initialFactoryBalanceDelta": { "const": "exact-requested-amount" },
+                        "laterMutableTransferSemantics": { "const": "unsupported" },
+                        "unsupportedLaterBehaviors": {
+                          "type": "array",
+                          "uniqueItems": true,
+                          "minItems": 6,
+                          "items": {
+                            "enum": ["transfer-tax", "rebase", "pause-or-freeze", "blacklist", "callback-or-reentrancy", "code-loss"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "triggerPoolLpDelivery": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status", "distributed", "claimableByLps", "distributorStatus", "note"],
+                  "properties": {
+                    "status": { "const": "adapter-escrow" },
+                    "distributed": { "const": false },
+                    "claimableByLps": { "const": false },
+                    "distributorStatus": { "const": "absent" },
+                    "note": { "type": "string", "minLength": 40 }
+                  }
+                },
+                "routingAndScanner": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["canonicalRouter", "genericEmptyData", "quoter", "robinhoodUniversalRouter", "scannerEvidence"],
+                  "properties": {
+                    "canonicalRouter": { "const": "required-for-authenticated-gated-pot-and-wth-routes" },
+                    "genericEmptyData": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["ungatedExactInputBuy", "exactInputExit", "gatedBuy", "potQualifyingBuy", "exactOutputExit"],
+                      "properties": {
+                        "ungatedExactInputBuy": { "const": "candidate-source-supported" },
+                        "exactInputExit": { "const": "candidate-source-supported" },
+                        "gatedBuy": { "const": "unsupported" },
+                        "potQualifyingBuy": { "const": "unsupported" },
+                        "exactOutputExit": { "const": "conditional-unverified" }
+                      }
+                    },
+                    "quoter": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["simulationActor", "executableOnlyWhenBoundToActiveWallet"],
+                      "properties": {
+                        "simulationActor": { "const": "caller-supplied" },
+                        "executableOnlyWhenBoundToActiveWallet": { "const": true }
+                      }
+                    },
+                    "robinhoodUniversalRouter": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["status", "officialSourceState", "exactForkMatrix"],
+                      "properties": {
+                        "status": { "const": "unverified" },
+                        "officialSourceState": { "const": "conflicting-addresses" },
+                        "exactForkMatrix": { "const": false }
+                      }
+                    },
+                    "scannerEvidence": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["authoritative", "v5Token", "blockaidStatus", "successfulSellTransaction", "conclusion"],
+                      "properties": {
+                        "authoritative": { "const": false },
+                        "v5Token": { "const": "0x0093005884142Fb305A3991DCD24e55Bfebf1570" },
+                        "blockaidStatus": { "const": "warning-observed" },
+                        "successfulSellTransaction": { "const": "0xac74066b69caaf84df9a9f86a118bc09a977ae315e712047dcf895bb76dfcd9c" },
+                        "conclusion": { "const": "sellability-proved-for-one-route-not-scanner-clearance" }
+                      }
+                    }
+                  }
+                },
+                "appliesTo": { "type": "string", "minLength": 20 },
+                "behavior": { "type": "string", "minLength": 20 },
+                "compatibleHookBlocks": {
+                  "const": ["surge-fees", "auto-burn", "nth-buy-pot"]
+                },
+                "conditionalHookBlocks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["block", "duringGuard", "afterGuard", "note"],
+                    "properties": {
+                      "block": { "const": "anti-snipe" },
+                      "duringGuard": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["outerBuyCorrection", "outerSellCorrection", "outerSellRequirement"],
+                        "properties": {
+                          "outerBuyCorrection": { "const": "supported" },
+                          "outerSellCorrection": { "const": "fail-open" },
+                          "outerSellRequirement": { "const": "exact-output-target-buy" }
+                        }
+                      },
+                      "afterGuard": { "const": "supported" },
+                      "note": { "type": "string", "minLength": 80 }
+                    }
+                  }
+                },
+                "incompatibleHookBlocks": {
+                  "const": ["lp-rewards"]
+                },
+                "boundaries": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 10 }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["availability"],
+      "properties": {
+        "availability": {
+          "enum": ["live", "release-candidate", "technical-review", "new-release-required", "source-review"]
+        }
+      }
+    }
+  }
+}

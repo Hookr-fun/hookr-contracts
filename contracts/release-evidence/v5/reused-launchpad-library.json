@@ -1,0 +1,31 @@
+{
+  "kind": "reused-library-evidence-v1",
+  "chainId": 4663,
+  "library": "HookrLaunchpadLibV5",
+  "address": "0x0bAc7790885B4AaC65b04A522372eA35AFA88aEA",
+  "sourceCommit": "34770365825945c7ad0b33b2592509ecf5f49428",
+  "sourceArtifact": "contracts/broadcast/DeployRobinhoodV5.s.sol/4663/run-1787263839227.json",
+  "sourceArtifactSha256": "30cc701004005ed9f7469c89ff1b589893319fb44e6033d5d01fa5d84306588c",
+  "sourceArtifactShape": {
+    "transactions": 12,
+    "receipts": 0,
+    "pending": 2
+  },
+  "transactionIndex": 0,
+  "transactionHash": "0xcf88cadd877424b9c96b5c9bde8d9496cd4c7ec544cd655caef4f0ad982e4307",
+  "calldataHash": "0xfcf0838d3f9053960d2e79a3d1bfc73508078730da662b3fece1d9113f2c24fc",
+  "receipt": {
+    "transactionHash": "0xcf88cadd877424b9c96b5c9bde8d9496cd4c7ec544cd655caef4f0ad982e4307",
+    "blockNumber": "0x27d5784",
+    "blockHash": "0xcb05eb8318ee86f383877e541227373b41645f562fe08794ecba0d58fa94a33f",
+    "transactionIndex": "0x3",
+    "status": "0x1"
+  },
+  "excludedPendingTransactions": [
+    {
+      "transactionHash": "0xaff27daac60fec312c69a15ba56c8636e647303f736935f8216c7bba981e1b6e",
+      "contractAddress": "0xF6Cc818323380663Ba391B76C2ACefcE2870D75e",
+      "reason": "orphan HookrFlywheelBurner from the interrupted attempt; unwired, empty, and not referenced by the release"
+    }
+  ]
+}

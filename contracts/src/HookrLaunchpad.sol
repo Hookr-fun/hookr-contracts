@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
@@ -11,10 +11,8 @@ import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 
 import {HookrToken} from "./HookrToken.sol";
-import {HookrBlueprints} from "./HookrBlueprints.sol";
 import {HookrHook} from "./HookrHook.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
-import {V4PoolMath} from "./libraries/V4PoolMath.sol";
 import {HookrLaunchpadLib} from "./libraries/HookrLaunchpadLib.sol";
 
 /// @title HookrLaunchpad
@@ -52,6 +50,9 @@ contract HookrLaunchpad is IUnlockCallback {
     uint256 public constant PRICE_DEN = 10;
     uint256 public constant CURVE_FEE_BPS = 100; // 1%
     uint256 internal constant BPS = 10_000;
+    /// @dev Blueprint id 0 is the custom sentinel. Deployment seeds reviewed house blueprints
+    ///      1..5 in later transactions, so those ids stay owner-only until all five exist.
+    uint256 internal constant FIRST_PUBLIC_BLUEPRINT_ID = 6;
     uint96 public constant MIN_TARGET = 0.0001 ether;
     uint96 public constant MAX_TARGET = 1000 ether;
     uint96 public constant MIN_POT_BUY_WEI = 0.001 ether;
@@ -101,7 +102,6 @@ contract HookrLaunchpad is IUnlockCallback {
     uint96 public constant MIN_OPEN_PRICE_WEI = 1e6;
 
     IPoolManager public immutable poolManager;
-    HookrBlueprints public immutable blueprints;
     address public owner;
     address public pendingOwner; // two-step handover; see proposeOwner/acceptOwnership
     HookrHook public hook; // set once by owner after CREATE2 mining
@@ -109,14 +109,64 @@ contract HookrLaunchpad is IUnlockCallback {
 
     // ---------------------------------------------------------------- types
 
+    /// @notice Creator-facing hook configuration — mirrors the builder blocks.
+    struct HookParams {
+        // ANTI-SNIPE
+        uint32 guardBlocks; // 0 = block disabled
+        uint16 maxBuyBps; // max buy per swap during guard, in bps of total supply (0 = uncapped)
+        uint24 snipeTaxPips; // extra LP fee during guard
+        // FEES (base always applies; maxFee > base enables surge)
+        uint24 baseFeePips;
+        uint24 maxFeePips; // 0 means "no surge block stacked" and normalizes to baseFeePips
+        uint16 surgeSens; // 1-10
+        // AUTO BURN (legacy field names retained in the ABI)
+        uint16 burnBps;
+        uint96 burnTriggerWei; // deprecated v2 field; custom configs MUST set this to zero
+        // LP REWARDS
+        uint16 lpBps;
+        // JACKPOT
+        uint16 potBps;
+        uint32 potEveryNBuys; // every Nth qualifying buy wins the pot (deterministic, not random)
+        uint96 potMinBuyWei;
+    }
+
+    struct Blueprint {
+        address author;
+        uint16 royaltyBps; // share of native LP/pot cuts routed to the author
+        uint32 uses;
+        uint40 savedAtBlock;
+        string name;
+        HookParams params;
+    }
+
+    /// @notice A share of the creator side of pool fees. `bps` values must sum to exactly BPS.
+    /// @dev Splitting happens at collection, so a recipient's balance is credited even if the
+    ///      creator never calls anything; nobody can redirect an already-credited balance.
+    struct FeeRecipient {
+        address to;
+        uint16 bps;
+    }
+
+    /// @notice One token-only liquidity band sitting above the graduation *price*.
+    /// @dev The pool is ETH/token with ETH as currency0, so its price is tokens-per-ETH: a
+    ///      HIGHER token price is a LOWER tick. A band that only ever sells tokens therefore
+    ///      lives strictly BELOW the graduation tick, and both offsets are expressed as ticks
+    ///      below it — `startOffset` nearest the launch price, `endOffset` furthest above it.
+    ///      Bands are funded from the pool tokens the full-range position could not absorb —
+    ///      tokens that are otherwise burned — so tranching never touches the ETH raise or the
+    ///      base position's economics.
+    struct LpTranche {
+        int24 startOffset; // ticks below the graduation tick where the band begins
+        int24 endOffset; // ticks below the graduation tick where it ends; > startOffset
+        uint16 bps; // share of the leftover token allocation
+    }
+
     struct Launch {
         address token;
         address creator;
-        address quoteToken; // address(0) means native ETH
         uint40 launchBlock;
         uint32 blueprintId; // 0 = custom stack
         bool graduated;
-        bool attached; // true = an existing ERC-20 attached to a fresh hooked pool (no curve ever)
         uint96 basePriceWei; // p0: wei per whole token in tranche 0
         uint96 targetWei; // exact curve proceeds at full sale
         uint96 reserveWei; // ETH currently backing the curve
@@ -124,26 +174,26 @@ contract HookrLaunchpad is IUnlockCallback {
         uint40 graduatedAtBlock;
         uint160 sqrtPriceX96AtGraduation;
         PoolId poolId;
-        HookrLaunchpadLib.HookParams hookParams;
+        HookParams hookParams;
     }
 
     mapping(address => Launch) internal launches;
     address[] public allTokens;
+    Blueprint[] internal blueprints;
 
     /// @notice Successful intent-bound launches, namespaced by the transaction sender.
     /// @dev A nonzero token address is both the replay marker and the launch postcondition.
     mapping(address creator => mapping(bytes32 intentId => address token)) public launchedByIntent;
 
-    // fee accruals (pull payments). Native fees are stored under the address(0) key so every
-    // market path shares ONE accounting lane regardless of quote currency.
-    mapping(address => uint256) public protocolFeesByQuote;
+    // fee accruals (pull payments)
+    uint256 public protocolFeesWei;
     mapping(address => uint256) public creatorFeesWei; // token => accrued creator fees
     /// token => creator's share of pool fees in bps. 0 means DEFAULT_CREATOR_FEE_BPS.
     mapping(address => uint16) public creatorFeeBpsOf;
     /// token => split of the creator side. Empty means the whole creator side goes to the creator.
-    mapping(address => HookrLaunchpadLib.FeeRecipient[]) internal feeRecipientsOf;
+    mapping(address => FeeRecipient[]) internal feeRecipientsOf;
     /// token => extra token-only bands seeded above the graduation price.
-    mapping(address => HookrLaunchpadLib.LpTranche[]) internal lpTranchesOf;
+    mapping(address => LpTranche[]) internal lpTranchesOf;
     /// token => recipient => claimable wei from the split above.
     mapping(address => mapping(address => uint256)) public splitFeesWei;
     mapping(address => address) public creatorPayout; // token => payout address (0 = the creator)
@@ -158,15 +208,14 @@ contract HookrLaunchpad is IUnlockCallback {
 
     // ---------------------------------------------------------------- events
 
-    /// @notice Display metadata (tagline/logoURI) is deliberately NOT in this event: it is
-    ///         permissionless, non-unique display data read from `getLaunch` by the UI. Identity
-    ///         resolves by chain + token address, never by metadata.
     event TokenLaunched(
         address indexed token,
         address indexed creator,
         uint32 indexed blueprintId,
         string name,
         string symbol,
+        string tagline,
+        string logoURI,
         uint96 targetWei,
         uint96 basePriceWei
     );
@@ -200,6 +249,7 @@ contract HookrLaunchpad is IUnlockCallback {
     event InstantLaunched(
         address indexed token, PoolId indexed poolId, uint16 poolSupplyBps, uint96 openPriceWei, uint256 ethInPool
     );
+    event BlueprintSaved(uint32 indexed id, address indexed author, string name, uint16 royaltyBps);
     event PoolFeesCollected(address indexed token, uint256 ethAmount, uint256 tokensBurned);
     event LpTrancheSeeded(
         address indexed token, uint256 indexed index, int24 tickLower, int24 tickUpper, uint256 tokensUsed
@@ -213,20 +263,6 @@ contract HookrLaunchpad is IUnlockCallback {
     event OwnerProposed(address pendingOwner);
     event OwnerSet(address owner);
     event LaunchIntentConsumed(address indexed creator, bytes32 indexed intentId, address indexed token);
-
-    /// @notice An existing ERC-20 was attached to a fresh hooked Uniswap v4 pool. `Graduated` is
-    ///         emitted alongside it in the same transaction, so indexers that already follow the
-    ///         graduation path need no change; this event is what tells them the base token was
-    ///         NOT minted by this launchpad and no curve ever existed. Both seed amounts are the
-    ///         amounts the locked position actually consumed.
-    event MarketAttached(
-        address indexed token,
-        address indexed creator,
-        PoolId indexed poolId,
-        uint160 sqrtPriceX96,
-        uint256 quoteSeeded,
-        uint256 tokensSeeded
-    );
 
     // ---------------------------------------------------------------- errors
 
@@ -256,16 +292,12 @@ contract HookrLaunchpad is IUnlockCallback {
     error ZeroAmount();
     error CurveSoldOut();
     error EthTransferFailed();
-    error UnexpectedNativeValue();
-    error TransferFailed();
     error NotPoolManager();
     error BadCallback();
     error NothingToClaim();
     error FeeTooHigh();
-    error BadAttachArgs();
-    error AttachSeedOutOfRange();
-    error AttachPriceUnrepresentable();
-    error TokenAlreadyListed();
+    error RoyaltyTooHigh();
+    error HouseBlueprintsPending();
 
     modifier nonReentrant() {
         if (locked) revert Reentrancy();
@@ -279,13 +311,11 @@ contract HookrLaunchpad is IUnlockCallback {
         _;
     }
 
-    constructor(IPoolManager poolManager_, HookrBlueprints blueprintRegistry_) {
+    constructor(IPoolManager poolManager_) {
         poolManager = poolManager_;
-        // The registry is a separate deployment for the launchpad's EIP-170 budget. It is
-        // append-only and carries no authority over the launchpad; the launchpad only reads
-        // resolved params + royalty routing from it at launch time.
-        blueprints = blueprintRegistry_;
         owner = msg.sender;
+        // Blueprint id 0 is the "custom stack" sentinel.
+        blueprints.push();
     }
 
     /// @notice Stable deployment identity for post-deploy readbacks and agent health checks.
@@ -336,15 +366,56 @@ contract HookrLaunchpad is IUnlockCallback {
         emit OwnerSet(msg.sender);
     }
 
-    /// @notice Withdraw accrued protocol fees. `quoteToken == address(0)` selects the native
-    ///         balance; anything else selects that ERC-20's accrued bucket. Owner-only.
-    function withdrawProtocolFees(address to, address quoteToken) external onlyOwner nonReentrant {
+    function withdrawProtocolFees(address to) external onlyOwner nonReentrant {
         if (to == address(0)) revert ZeroAddress();
-        uint256 amount = protocolFeesByQuote[quoteToken];
+        uint256 amount = protocolFeesWei;
         if (amount == 0) revert NothingToClaim();
-        delete protocolFeesByQuote[quoteToken];
-        _sendQuote(quoteToken, to, amount);
+        protocolFeesWei = 0;
+        _sendEth(to, amount);
         emit ProtocolFeesWithdrawn(to, amount);
+    }
+
+    // ---------------------------------------------------------------- blueprints
+
+    function saveBlueprint(string calldata name, HookParams calldata params, uint16 royaltyBps)
+        external
+        returns (uint32 id)
+    {
+        // The launchpad CREATE and five blueprint saves cannot be one transaction in the release
+        // script. Reserve the reviewed house ids so a public mempool transaction cannot take one
+        // between deployment and seeding. Once ids 1..5 exist, blueprint authoring is permissionless.
+        if (blueprints.length < FIRST_PUBLIC_BLUEPRINT_ID && msg.sender != owner) {
+            revert HouseBlueprintsPending();
+        }
+        if (bytes(name).length == 0 || bytes(name).length > 48) revert BadLaunchArgs();
+        if (royaltyBps > 1000) revert RoyaltyTooHigh();
+        _validateHookParams(params);
+        // Auto Burn, anti-snipe, and surge fees do not create a native hook cut. Reject a
+        // royalty that could never accrue instead of letting a blueprint advertise phantom
+        // economics. LP and pot cuts are the only revenue-bearing Hookr blocks in v3.
+        if (royaltyBps > 0 && uint256(params.lpBps) + params.potBps == 0) {
+            revert BadHookParams();
+        }
+        id = uint32(blueprints.length);
+        blueprints.push(
+            Blueprint({
+                author: msg.sender,
+                royaltyBps: royaltyBps,
+                uses: 0,
+                savedAtBlock: uint40(block.number),
+                name: name,
+                params: params
+            })
+        );
+        emit BlueprintSaved(id, msg.sender, name, royaltyBps);
+    }
+
+    function blueprintsCount() external view returns (uint256) {
+        return blueprints.length;
+    }
+
+    function getBlueprint(uint32 id) external view returns (Blueprint memory) {
+        return blueprints[id];
     }
 
     // ---------------------------------------------------------------- launch
@@ -355,222 +426,105 @@ contract HookrLaunchpad is IUnlockCallback {
         string tagline;
         string logoURI;
         address expectedCreator; // binds approved calldata to the transaction sender
-        address quoteToken; // optional; 0 means native ETH
         uint96 targetRaiseWei;
         uint32 blueprintId; // 0 = use `custom`
-        HookrLaunchpadLib.HookParams custom;
+        HookParams custom;
         uint256 creatorBuyWei; // optional first buy, included in msg.value after the creation fee
         uint256 minTokensOut; // slippage guard for the creator buy
         uint16 creatorFeeBps; // 0 = DEFAULT_CREATOR_FEE_BPS; capped at MAX_CREATOR_FEE_BPS
-        HookrLaunchpadLib.FeeRecipient[] feeRecipients; // empty = the whole creator side goes to the creator
-        HookrLaunchpadLib.LpTranche[] lpTranches; // empty = full range only; leftover pool tokens burn as before
+        FeeRecipient[] feeRecipients; // empty = the whole creator side goes to the creator
+        LpTranche[] lpTranches; // empty = full range only; leftover pool tokens burn as before
     }
 
     /// @notice Launches through the ordinary permissionless path.
-    ///
-    ///         Pass a nonzero `intentId` to launch EXACTLY ONCE for that creator-scoped
-    ///         identifier: a successful launch records its token in `launchedByIntent`, and an
-    ///         exact replay reverts before another token or fee can be created. Failed
-    ///         transactions do not consume the intent. This is the door agent approval packets
-    ///         use, so copied or repeated calldata cannot launch twice for one creator.
-    ///
-    ///         Pass `intentId == bytes32(0)` for an ordinary repeatable manual launch; identical
-    ///         calls then remain intentionally repeatable by design.
+    /// @dev Identical calls remain repeatable by design; agent approval packets should use
+    ///      `launchWithIntent` for contract-enforced replay protection.
+    function launch(LaunchArgs calldata args) external payable nonReentrant returns (address token) {
+        token = _launch(args);
+    }
+
+    /// @notice Launches exactly once for a creator-scoped, nonzero intent identifier.
     /// @dev The mapping stores the resulting token rather than a boolean so agents can reconcile
     ///      a mined receipt against an onchain postcondition. Every revert rolls the marker back.
-    function launch(LaunchArgs calldata args, bytes32 intentId) external payable nonReentrant returns (address token) {
-        if (intentId != 0) _checkIntent(intentId);
+    function launchWithIntent(LaunchArgs calldata args, bytes32 intentId)
+        external
+        payable
+        nonReentrant
+        returns (address token)
+    {
+        _checkIntent(intentId);
         token = _launch(args);
-        if (intentId != 0) _recordIntent(intentId, token);
+        _recordIntent(intentId, token);
     }
 
     /// @notice Launch straight into a live Uniswap v4 pool. No bonding curve, no graduation step:
     ///         the pool exists and trades in this transaction, and its liquidity is the same
     ///         locked, launchpad-owned full-range position graduation would have produced.
     ///
-    ///         The opening price is never typed in: the creator commits `creatorBuyWei` and picks
-    ///         what share of supply seeds the pool, so the price falls out as their ratio and the
-    ///         choice they are really making is an opening fully-diluted valuation bounded to
-    ///         [1x, 5x] the committed ETH by MIN_POOL_SUPPLY_BPS. Supply not placed in the pool
-    ///         burns or ladders into the configured token-only bands; the creator gets no
-    ///         allocation, exactly as on the curve path.
+    /// @param args The same `LaunchArgs` the curve path takes. `creatorBuyWei` is the ETH that
+    ///        seeds the pool. `targetRaiseWei` and `minTokensOut` describe a curve that does not
+    ///        exist here and MUST be zero, so neither is silently ignored.
+    /// @param poolSupplyBps The share of the fixed supply placed in the pool, in bps.
     ///
-    ///         Same `intentId` contract as `launch`: nonzero means exactly once per creator-scoped
-    ///         identifier -- a re-broadcast instant launch would otherwise lock a second tranche
-    ///         of ETH into a second pool, permanently, with no removal path by construction --
-    ///         and zero means an ordinary repeatable manual launch.
-    function launchInstant(LaunchArgs calldata args, uint16 poolSupplyBps, bytes32 intentId)
+    /// @dev THIS IS THE PRICE CONTROL, and it is the whole design. The creator does not type a
+    ///      price, a tick, or a sqrt price — they say how much ETH they are committing and how
+    ///      much of the supply is tradeable, and the opening price falls out as
+    ///      `creatorBuyWei / (SUPPLY * poolSupplyBps / BPS)`. Equivalently, and this is what the
+    ///      creator is really choosing:
+    ///
+    ///          opening fully-diluted valuation = creatorBuyWei * BPS / poolSupplyBps
+    ///
+    ///      Two properties follow, and they are why this shape is hard to misuse:
+    ///        - Every unit of price is backed by ETH the contract is holding right now. There is
+    ///          no way to express a valuation and then not fund it, which is precisely the failure
+    ///          a "creator types a price" parameterization invites — one misplaced zero there is a
+    ///          10x mispricing seeded against real liquidity and arbitraged in the same block.
+    ///        - `poolSupplyBps` is bounded to [MIN_POOL_SUPPLY_BPS, BPS], so the valuation is
+    ///          bounded to [1x, 5x] the committed ETH. Both degenerate ends — a vanishing share
+    ///          at an enormous price, and a price so low it stops being representable — are
+    ///          unreachable rather than merely discouraged.
+    ///
+    ///      Supply not placed in the pool is burned to DEAD, or laddered into the configured
+    ///      token-only bands. The launchpad hands the creator no ALLOCATION on this path, exactly
+    ///      as on the curve path.
+    ///
+    ///      WHAT THAT DOES NOT MEAN. The pool is open in this same transaction, so the creator can
+    ///      buy from it like anyone else, in the launch transaction, before anyone has seen the
+    ///      token exists. That is not a bug to be apologised for, it is the shape of opening a
+    ///      pool: whoever opens it trades first. The AMM reserves determine the execution price;
+    ///      the anti-snipe guard is the launch-specific cap and tax on that first-block behavior.
+    ///      On this path it is doing more work than on the curve path because there is no curve
+    ///      phase in front of it. Configure it accordingly — a guard whose cap is a large share
+    ///      of a thin float is decoration. See `HookrHook.beforeSwap`, where the
+    ///      cap is accumulated per pool per block precisely so a loop of capped buys inside one
+    ///      transaction cannot spend it repeatedly, and `collectPoolFees`, where fees earned
+    ///      inside the guard window are withheld from the creator's share so the tax cannot be
+    ///      rebated to the creator who paid it.
+    function launchInstant(LaunchArgs calldata args, uint16 poolSupplyBps)
         external
         payable
         nonReentrant
         returns (address token)
     {
-        if (intentId != 0) _checkIntent(intentId);
         token = _launchInstant(args, poolSupplyBps);
-        if (intentId != 0) _recordIntent(intentId, token);
     }
 
-    // ---------------------------------------------------------------- attach: existing-token markets
-
-    /// @notice Attach an EXISTING ERC-20 to a fresh hooked Uniswap v4 pool — a programmable
-    ///         market for a token this launchpad never minted.
-    ///
-    ///         A pool's hook is fixed at creation, so "attach" always means a NEW pool with new
-    ///         liquidity, seeded here from the backer's own balances in the same transaction. It
-    ///         never means editing some earlier pool, and it can never touch liquidity that any
-    ///         other venue already holds.
-    ///
-    ///         The opening price is DERIVED, exactly as on every other launch path: the backer
-    ///         commits both sides and the pool price is the funded ratio of the two raw amounts,
-    ///         so ANY decimal pairing works — no 18-decimal assumption exists on this path.
-    ///         There is no curve, no graduation step, and no leftover allocation to band or burn:
-    ///         every pulled token goes into the one locked full-range position, and sub-ppm
-    ///         rounding residue on EITHER side is refunded to the backer. The position is
-    ///         launchpad-owned and locked by construction, identical to graduation, so fee
-    ///         collection splits exactly as on native launches.
-    ///
-    ///         `quoteToken` may be address(0) (native ETH) or any ERC-20 with code; when it is an
-    ///         ERC-20 both it and the base token must approve this contract before attaching.
-    ///         Hook parameters that are denominated in quote units (`potMinBuyWei`, and the
-    ///         quote-side cap a configured guard derives from `maxBuyBps`) are enforced against
-    ///         RAW units of the chosen quote currency.
-    struct AttachArgs {
-        address token; // the existing ERC-20 (pool currency1); must have code
-        address quoteToken; // pool currency0; address(0) = native ETH; an ERC-20 quote must sort BELOW `token`
-        uint256 quoteSeedRaw; // raw quote units committed to the pool
-        uint256 tokenSeedRaw; // raw base-token units committed to the pool
-        address expectedCreator; // binds approved calldata to the transaction sender
-        uint32 blueprintId; // 0 = use `custom`
-        HookrLaunchpadLib.HookParams custom;
-        uint16 creatorFeeBps; // 0 = DEFAULT_CREATOR_FEE_BPS; capped at MAX_CREATOR_FEE_BPS
-        HookrLaunchpadLib.FeeRecipient[] feeRecipients; // empty = the whole creator side goes to the creator
-    }
-
-    function attachMarket(AttachArgs calldata args, bytes32 intentId)
+    /// @notice `launchInstant`, launched exactly once per creator-scoped intent identifier.
+    /// @dev An instant launch needs replay protection MORE than a curve launch, not less. A
+    ///      re-broadcast curve launch mints a duplicate token whose ETH is still on a curve the
+    ///      creator can sell back down; a re-broadcast instant launch also locks a second tranche
+    ///      of their ETH into a second pool, permanently, with no removal path by construction.
+    ///      It shares the curve path's `launchedByIntent` namespace deliberately: one intent
+    ///      identifier means one token from this creator, whichever path consumed it.
+    function launchInstantWithIntent(LaunchArgs calldata args, uint16 poolSupplyBps, bytes32 intentId)
         external
         payable
         nonReentrant
         returns (address token)
     {
-        if (intentId != 0) _checkIntent(intentId);
-        token = _attach(args);
-        if (intentId != 0) _recordIntent(intentId, token);
-    }
-
-    function _attach(AttachArgs calldata args) internal returns (address token) {
-        token = args.token;
-        if (args.expectedCreator == address(0) || msg.sender != args.expectedCreator) {
-            revert UnexpectedCreator(args.expectedCreator, msg.sender);
-        }
-        if (address(hook) == address(0)) revert HookNotSet();
-        if (token == address(0) || token.code.length == 0) revert BadAttachArgs();
-        if (token == args.quoteToken) revert BadAttachArgs();
-        if (token == address(this) || token == address(hook) || token == address(poolManager)) {
-            revert BadAttachArgs();
-        }
-        if (args.quoteToken != address(0) && args.quoteToken.code.length == 0) revert BadAttachArgs();
-        // A pool's hook assumes quote == currency0 and base == currency1 (zeroForOne == buy).
-        // Native ETH always sorts first; an ERC-20 quote must therefore sort BEFORE the base
-        // token or the market's direction semantics invert. Refuse rather than silently flip.
-        if (args.quoteToken != address(0) && args.quoteToken >= token) revert BadAttachArgs();
-        if (args.tokenSeedRaw == 0 || args.quoteSeedRaw == 0) revert BadAttachArgs();
-        // One token, one market record: a second attach of the same pair would collide with an
-        // already-configured poolId anyway (`HookrHook.configurePool` reverts), but refusing HERE
-        // keeps the ledger honest about why.
-        if (launches[token].token != address(0)) revert TokenAlreadyListed();
-
-        uint256 expectedNativePayment =
-            uint256(creationFeeWei) + (args.quoteToken == address(0) ? args.quoteSeedRaw : 0);
-        if (msg.value != expectedNativePayment) revert InsufficientPayment();
-        _validateFeeSplit(args.creatorFeeBps, args.feeRecipients);
-
-        HookrLaunchpadLib.HookParams memory params = _resolveParams(args.blueprintId, args.custom);
-
-        (uint160 sqrtPriceX96, uint8 err) =
-            HookrLaunchpadLib.attachPlan(args.quoteSeedRaw, args.tokenSeedRaw, TICK_SPACING);
-        if (err == HookrLaunchpadLib.ATTACH_BAD_SEED) revert AttachSeedOutOfRange();
-        if (err != HookrLaunchpadLib.ATTACH_PLAN_OK) revert AttachPriceUnrepresentable();
-
-        Launch storage l = launches[token];
-        l.token = token;
-        l.creator = msg.sender;
-        l.quoteToken = args.quoteToken;
-        l.launchBlock = uint40(block.number);
-        l.blueprintId = args.blueprintId;
-        // Born graduated: there is no curve to run, and `soldTokens` is pinned at CURVE_SUPPLY so
-        // the curve buy/sell entries fail closed forever even if some future refactor drops the
-        // `graduated` check.
-        l.graduated = true;
-        l.attached = true;
-        l.graduatedAtBlock = uint40(block.number);
-        l.soldTokens = uint128(CURVE_SUPPLY);
-        // reserveWei/basePriceWei/targetWei stay at their zero defaults: there is no curve, and
-        // no 18-decimal assumption holds for an arbitrary existing token -- the pool's
-        // `sqrtPriceX96AtGraduation` is the authoritative price and `MarketAttached` carries the
-        // funded seed amounts.
-        l.hookParams = params;
-        l.sqrtPriceX96AtGraduation = sqrtPriceX96;
-        if (args.creatorFeeBps != 0) creatorFeeBpsOf[token] = args.creatorFeeBps;
-        for (uint256 i; i < args.feeRecipients.length; ++i) {
-            feeRecipientsOf[token].push(args.feeRecipients[i]);
-        }
-        allTokens.push(token);
-
-        protocolFeesByQuote[address(0)] += creationFeeWei;
-
-        // Pull the market's liquidity from its backer before anything else moves. Any failure
-        // here reverts the whole transaction, so nothing below can run against funds not held.
-        _safeTransferFrom(token, msg.sender, address(this), args.tokenSeedRaw);
-        if (args.quoteToken != address(0)) {
-            _safeTransferFrom(args.quoteToken, msg.sender, address(this), args.quoteSeedRaw);
-        }
-
-        // The guard cap is denominated against what the pool ACTUALLY holds, in raw units:
-        // a `maxBuyBps` share of the committed float at the committed backing ratio. Exactly the
-        // semantics `_buildPoolConfig` gives the instant path ("the cap is a share of the float"),
-        // reached without assuming either currency has 18 decimals.
-        uint256 maxBuyWeiCap = 0;
-        if (params.maxBuyBps != 0) {
-            maxBuyWeiCap =
-                V4PoolMath.mulDiv((args.tokenSeedRaw * params.maxBuyBps) / BPS, args.quoteSeedRaw, args.tokenSeedRaw);
-            if (maxBuyWeiCap > type(uint96).max) maxBuyWeiCap = type(uint96).max;
-        }
-
-        PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(args.quoteToken),
-            currency1: Currency.wrap(token),
-            fee: DYNAMIC_FEE_FLAG,
-            tickSpacing: TICK_SPACING,
-            hooks: IHooks(address(hook))
-        });
-        (uint256 quoteUsed, uint256 tokensUsed, PoolId poolId) = HookrLaunchpadLib.openPoolSimple(
-            poolManager,
-            hook,
-            key,
-            _poolConfigWithGuardCap(params, args.blueprintId, uint96(maxBuyWeiCap)),
-            sqrtPriceX96,
-            token,
-            args.quoteSeedRaw,
-            args.tokenSeedRaw
-        );
-        l.graduated = true;
-        l.graduatedAtBlock = uint40(block.number);
-        l.sqrtPriceX96AtGraduation = sqrtPriceX96;
-        l.poolId = poolId;
-        l.reserveWei = 0;
-
-        // Residue refunds + receipt linked out for EIP-170; see HookrLaunchpadLib.settleAttach.
-        HookrLaunchpadLib.settleAttach(
-            token,
-            msg.sender,
-            args.quoteToken,
-            l.poolId,
-            sqrtPriceX96,
-            args.quoteSeedRaw,
-            quoteUsed,
-            args.tokenSeedRaw,
-            tokensUsed
-        );
+        _checkIntent(intentId);
+        token = _launchInstant(args, poolSupplyBps);
+        _recordIntent(intentId, token);
     }
 
     function _checkIntent(bytes32 intentId) internal view {
@@ -605,9 +559,9 @@ contract HookrLaunchpad is IUnlockCallback {
         // ignore them: a creator who passes a raise target has misunderstood which path they are on.
         if (args.targetRaiseWei != 0 || args.minTokensOut != 0) revert BadLaunchArgs();
 
-        uint256 quoteIn = args.creatorBuyWei;
+        uint256 ethIn = args.creatorBuyWei;
         (uint256 tokensForPool, uint96 openPriceWei, uint160 sqrtPriceX96,, uint8 err) =
-            HookrLaunchpadLib.instantPlan(quoteIn, poolSupplyBps, SUPPLY, TICK_SPACING);
+            HookrLaunchpadLib.instantPlan(ethIn, poolSupplyBps, SUPPLY, TICK_SPACING);
         // One plan, three named refusals: a dust or absurd deposit, a share of supply outside the
         // band that keeps the opening valuation sane, and a price that is too coarse, not
         // representable, or outside what a full-range position can actually hold.
@@ -618,35 +572,21 @@ contract HookrLaunchpad is IUnlockCallback {
         Launch storage l;
         // `basePriceWei` is the opening price and `targetWei` the ETH raised — the same meanings
         // both fields carry on the curve path, reached without a curve.
-        // casting to 'uint96' is safe: a plan with `err == PLAN_OK` has already bounded `quoteIn`
+        // casting to 'uint96' is safe: a plan with `err == PLAN_OK` has already bounded `ethIn`
         // to MAX_TARGET, which is itself a uint96.
         // forge-lint: disable-next-line(unsafe-typecast)
-        (token, l) = _create(args, openPriceWei, uint96(quoteIn));
-
-        if (l.quoteToken != address(0) && quoteIn > 0) {
-            _safeTransferFrom(l.quoteToken, msg.sender, address(this), quoteIn);
-        }
+        (token, l) = _create(args, openPriceWei, uint96(ethIn));
 
         // The cap basis is `tokensForPool`, NOT `SUPPLY`: here the creator picks the float, so a
         // supply-denominated cap would silently mean something different at every float — and
         // weakest exactly where the pool is thinnest.
-        (uint256 quoteUsed,) = _openPool(
-            token,
-            l,
-            _buildPoolConfig(l.hookParams, l.blueprintId, openPriceWei, tokensForPool),
-            sqrtPriceX96,
-            quoteIn,
-            tokensForPool,
-            SUPPLY
-        );
-        // Sub-ppm rounding residue on the quote side. Unlike a graduation reserve this is the
+        uint256 ethUsed = _openPool(token, l, openPriceWei, sqrtPriceX96, ethIn, tokensForPool, SUPPLY, tokensForPool);
+        // Sub-ppm rounding residue on the ETH side. Unlike a graduation reserve this is the
         // creator's own deposit and was never anyone else's fee, so it goes back to them rather
-        // than to protocol fees.
-        if (quoteIn > quoteUsed) {
-            _sendQuote(l.quoteToken, msg.sender, quoteIn - quoteUsed);
-        }
+        // than to `protocolFeesWei`.
+        if (ethIn > ethUsed) _sendEth(msg.sender, ethIn - ethUsed);
 
-        emit InstantLaunched(token, l.poolId, poolSupplyBps, openPriceWei, quoteUsed);
+        emit InstantLaunched(token, l.poolId, poolSupplyBps, openPriceWei, ethUsed);
     }
 
     /// @dev Everything both launch paths do before their prices diverge: validate, mint the fixed
@@ -664,24 +604,25 @@ contract HookrLaunchpad is IUnlockCallback {
         if (bytes(args.symbol).length == 0 || bytes(args.symbol).length > 12) revert BadLaunchArgs();
         if (bytes(args.tagline).length > 160) revert BadLaunchArgs();
         if (bytes(args.logoURI).length > 300) revert BadLaunchArgs();
-        uint256 expectedNativePayment =
-            uint256(creationFeeWei) + (args.quoteToken == address(0) ? args.creatorBuyWei : 0);
-        if (msg.value != expectedNativePayment) revert InsufficientPayment();
+        if (msg.value != uint256(creationFeeWei) + args.creatorBuyWei) revert InsufficientPayment();
         _validateDistribution(args);
 
-        HookrLaunchpadLib.HookParams memory params = _resolveParams(args.blueprintId, args.custom);
+        HookParams memory params;
+        if (args.blueprintId == 0) {
+            params = args.custom;
+            _validateHookParams(params);
+        } else {
+            Blueprint storage bp = blueprints[args.blueprintId];
+            if (bp.author == address(0)) revert BadLaunchArgs();
+            params = bp.params;
+            bp.uses += 1;
+        }
 
         token = HookrLaunchpadLib.deployToken(args.name, args.symbol, args.tagline, args.logoURI, msg.sender, SUPPLY);
-        if (args.quoteToken != address(0)) {
-            if (args.quoteToken == token || args.quoteToken.code.length == 0) {
-                revert BadLaunchArgs();
-            }
-        }
 
         l = launches[token];
         l.token = token;
         l.creator = msg.sender;
-        l.quoteToken = args.quoteToken;
         l.launchBlock = uint40(block.number);
         l.blueprintId = args.blueprintId;
         l.basePriceWei = basePriceWei;
@@ -698,9 +639,19 @@ contract HookrLaunchpad is IUnlockCallback {
         }
         allTokens.push(token);
 
-        protocolFeesByQuote[address(0)] += creationFeeWei;
+        protocolFeesWei += creationFeeWei;
 
-        emit TokenLaunched(token, msg.sender, args.blueprintId, args.name, args.symbol, targetWei, basePriceWei);
+        emit TokenLaunched(
+            token,
+            msg.sender,
+            args.blueprintId,
+            args.name,
+            args.symbol,
+            args.tagline,
+            args.logoURI,
+            targetWei,
+            basePriceWei
+        );
     }
 
     /// @notice Exactly what `launchInstant` would do with these inputs, and `err == 0` iff it
@@ -722,7 +673,7 @@ contract HookrLaunchpad is IUnlockCallback {
     function buy(address token, uint256 minTokensOut) external payable nonReentrant {
         Launch storage l = _launchOf(token);
         if (l.graduated) revert AlreadyGraduated();
-        if (l.quoteToken != address(0) && msg.value != 0) revert UnexpectedNativeValue();
+        if (msg.value == 0) revert ZeroAmount();
         _executeBuy(token, l, msg.value, minTokensOut);
     }
 
@@ -742,7 +693,7 @@ contract HookrLaunchpad is IUnlockCallback {
 
         // Pull tokens back onto the curve, then pay out (state already updated).
         HookrToken(token).transferFrom(msg.sender, address(this), tokenAmount);
-        _sendQuote(l.quoteToken, msg.sender, payout);
+        _sendEth(msg.sender, payout);
 
         emit CurveSell(token, msg.sender, tokenAmount, payout, l.reserveWei, l.soldTokens);
     }
@@ -750,37 +701,35 @@ contract HookrLaunchpad is IUnlockCallback {
     function _executeBuy(address token, Launch storage l, uint256 valueWei, uint256 minTokensOut) internal {
         if (l.soldTokens >= CURVE_SUPPLY) revert CurveSoldOut();
 
-        if (l.quoteToken != address(0) && valueWei > 0) {
-            _safeTransferFrom(l.quoteToken, msg.sender, address(this), valueWei);
-        }
-
         // Reserve up to 1% for the curve fee; the walk decides how much ETH the curve can absorb.
         uint256 maxNet = (valueWei * (BPS - CURVE_FEE_BPS)) / BPS;
         (uint256 tokensOut, uint256 ethUsed, uint128 newSold) = _walkUp(l, maxNet);
         if (tokensOut == 0 || tokensOut < minTokensOut) revert SlippageExceeded();
 
         uint256 fee = (ethUsed * CURVE_FEE_BPS) / BPS;
-        uint96 newReserveWei = uint96(uint256(l.reserveWei) + ethUsed);
         l.soldTokens = newSold;
-        l.reserveWei = newReserveWei;
+        l.reserveWei = uint96(uint256(l.reserveWei) + ethUsed);
         _splitCurveFee(token, fee);
 
-        // Payout + receipt linked out for EIP-170; see HookrLaunchpadLib.settleCurveBuy.
-        HookrLaunchpadLib.settleCurveBuy(
-            token, msg.sender, l.quoteToken, tokensOut, valueWei, ethUsed, fee, newReserveWei, newSold
-        );
+        HookrToken(token).transfer(msg.sender, tokensOut);
+
+        uint256 refund = valueWei - ethUsed - fee;
+        if (refund > 0) _sendEth(msg.sender, refund);
+
+        emit CurveBuy(token, msg.sender, ethUsed, tokensOut, l.reserveWei, l.soldTokens);
 
         if (newSold >= CURVE_SUPPLY) {
-            _graduateAndOpen(token, l);
+            _graduate(token, l);
         }
     }
 
     function _splitCurveFee(address token, uint256 fee) internal {
         uint256 half = fee / 2;
         creatorFeesWei[token] += half;
-        // Native fees are stored under the address(0) key like any other quote currency.
-        protocolFeesByQuote[launches[token].quoteToken] += fee - half;
+        protocolFeesWei += fee - half;
     }
+
+    // ---------------------------------------------------------------- curve math
 
     /// @dev Storage-reading shims over the linked curve math. The launch's `soldTokens` and
     ///      `basePriceWei` are the only state the walk ever consumed.
@@ -802,113 +751,160 @@ contract HookrLaunchpad is IUnlockCallback {
         return HookrLaunchpadLib.walkDown(l.soldTokens, l.basePriceWei, tokenAmount);
     }
 
-    // ---------------------------------------------------------------- curve math
-
     // ---------------------------------------------------------------- graduation
 
-    /// @notice Curve sold out: convert the reserve + remaining supply into the pool, continuing
-    ///         exactly where the curve ended. Single caller: the sold-out branch of
-    ///         `_executeBuy`. Kept as its own internal so the big open sequence exists once.
-    function _graduateAndOpen(address token, Launch storage l) internal {
-        // Price + float plan linked out for EIP-170; see HookrLaunchpadLib.graduatePlan. The pool
-        // price continues exactly where the curve ended.
-        (uint256 pFinal, uint160 sqrtPriceX96, uint256 tokensForPool) =
-            HookrLaunchpadLib.graduatePlan(l.basePriceWei, l.reserveWei, SUPPLY - CURVE_SUPPLY);
+    function _graduate(address token, Launch storage l) internal {
+        uint256 pFinal = HookrLaunchpadLib.tranchePrice(l.basePriceWei, TRANCHES - 1);
         uint256 reserve = l.reserveWei;
+
+        // Pool price continues exactly where the curve ended.
+        uint160 sqrtPriceX96 = _sqrtPriceX96ForPrice(pFinal);
+
+        uint256 available = SUPPLY - CURVE_SUPPLY;
+        uint256 tokensForPool = (reserve * 1e18) / pFinal;
+        if (tokensForPool > available) tokensForPool = available;
 
         // `SUPPLY` as the cap basis is the live constant, deliberately unchanged: every deployed
         // pool was configured with it and graduation always places a near-fixed share of supply,
         // so the setting already means what a creator reads it to mean on this path.
-        (uint256 ethUsed,) = _openPool(
-            token,
-            l,
-            _buildPoolConfig(l.hookParams, l.blueprintId, pFinal, SUPPLY),
-            sqrtPriceX96,
-            reserve,
-            tokensForPool,
-            SUPPLY - CURVE_SUPPLY
-        );
+        uint256 ethUsed = _openPool(token, l, pFinal, sqrtPriceX96, reserve, tokensForPool, available, SUPPLY);
         if (reserve > ethUsed) {
-            protocolFeesByQuote[l.quoteToken] += reserve - ethUsed;
+            protocolFeesWei += reserve - ethUsed;
         }
     }
 
     /// @notice Opens the pool a launch ends in, and seeds the ONE position it will ever have.
-    /// @dev Shared verbatim by graduation, `launchInstant`, and existing-token attach; the three
-    ///      paths differ only in how they arrive at a price, at the config, and at the amounts,
-    ///      never in what happens to the liquidity.
+    /// @dev Shared verbatim by graduation and by `launchInstant`; the two paths differ only in how
+    ///      they arrive at a price and at the amounts, never in what happens to the liquidity.
     ///
     ///      LOCKED BY CONSTRUCTION. The only `modifyLiquidity` this contract can ever reach are
     ///      the three encoded here and in `collectPoolFees`: `CB_GRADUATE` and `CB_TRANCHE` mint
     ///      positive liquidity, `CB_COLLECT` passes a delta of exactly zero. There is no fourth,
     ///      and no function on this contract — owner-gated or otherwise — takes a negative
-    ///      liquidity delta. Adding the instant and attach paths added no new PoolManager
-    ///      interaction at all.
+    ///      liquidity delta. Adding the instant path added no new PoolManager interaction at all.
     ///
-    /// @param cfg The exact pool behavior, already built by the caller: `_buildPoolConfig` on the
-    ///        two native paths, `_poolConfigWithGuardCap` on attach (whose cap is decimals-free).
-    /// @param tokensAvailable Every token this contract holds for the launch. Whatever the
+    /// @param openPriceWei Wei per whole token at open; the hook's config is derived from it.
+    /// @param tokensAvailable Every token this contract still holds for the launch. Whatever the
     ///        position does not absorb funds the optional token-only bands, and the rest burns.
-    ///        Attach always passes exactly what it placed, so nothing it pulled can ever burn.
-    /// @return quoteUsed The quote currency the position actually took.
-    /// @return tokensUsed The base token the position actually took.
+    /// @param capTokens What the anti-snipe `maxBuyBps` is a share of. Graduation passes `SUPPLY`,
+    ///        which is what it has always passed and what the live pools were configured with; the
+    ///        instant path passes the tokens it is actually placing. See `_buildPoolConfig`.
+    /// @return ethUsed The native currency the position actually took.
     function _openPool(
         address token,
         Launch storage l,
-        HookrHook.PoolConfig memory cfg,
+        uint256 openPriceWei,
         uint160 sqrtPriceX96,
-        uint256 quoteForPool,
+        uint256 ethForPool,
         uint256 tokensForPool,
-        uint256 tokensAvailable
-    ) internal returns (uint256 quoteUsed, uint256 tokensUsed) {
+        uint256 tokensAvailable,
+        uint256 capTokens
+    ) internal returns (uint256 ethUsed) {
         PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(l.quoteToken),
+            currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(token),
             fee: DYNAMIC_FEE_FLAG,
             tickSpacing: TICK_SPACING,
             hooks: IHooks(address(hook))
         });
+        PoolId poolId = key.toId();
 
-        // Configure, initialize, seed the locked full-range position, place the optional bands,
-        // and burn the remainder. Linked out for EIP-170; it runs by DELEGATECALL, so the
-        // launchpad is still the initializer, the callback target, and the position's owner --
-        // and every event still carries the launchpad as its emitter.
-        HookrLaunchpadLib.LpTranche[] memory bands = lpTranchesOf[token];
-        PoolId poolId;
-        (quoteUsed, tokensUsed, poolId) = HookrLaunchpadLib.openPool(
-            poolManager, hook, key, cfg, sqrtPriceX96, token, quoteForPool, tokensForPool, tokensAvailable, bands
+        // Configure, initialize, and seed the locked full-range position. Linked out for EIP-170;
+        // it runs by DELEGATECALL, so the launchpad is still the initializer, the callback target,
+        // and the position's owner.
+        uint256 tokensUsed;
+        (ethUsed, tokensUsed) = HookrLaunchpadLib.openPool(
+            poolManager,
+            hook,
+            key,
+            _buildPoolConfig(l.hookParams, l.blueprintId, openPriceWei, capTokens),
+            sqrtPriceX96,
+            ethForPool,
+            tokensForPool
         );
+
+        // Whatever the full-range position could not absorb funds the optional token-only
+        // bands above spot; anything still unallocated burns exactly as it always has.
+        uint256 tokensLeft = tokensAvailable - tokensUsed;
+        uint256 tokensBurned;
+        if (tokensLeft > 0) {
+            uint256 seeded = _seedTranches(token, key, tokensLeft);
+            tokensBurned = tokensLeft - seeded;
+            if (tokensBurned > 0) {
+                HookrToken(token).transfer(DEAD, tokensBurned);
+            }
+        }
 
         l.graduated = true;
         l.graduatedAtBlock = uint40(block.number);
         l.sqrtPriceX96AtGraduation = sqrtPriceX96;
         l.poolId = poolId;
         l.reserveWei = 0;
+
+        emit Graduated(token, poolId, sqrtPriceX96, ethUsed, tokensUsed, tokensBurned);
     }
 
-    /// @notice The exact `PoolConfig` the two native launch paths hand the hook. The 1e18
-    ///         division is their 18-decimal token assumption; attach derives its cap from raw
-    ///         amounts instead and calls `_poolConfigWithGuardCap` directly.
-    function _buildPoolConfig(
-        HookrLaunchpadLib.HookParams memory p,
-        uint32 blueprintId,
-        uint256 pFinal,
-        uint256 capTokens
-    ) internal view returns (HookrHook.PoolConfig memory cfg) {
-        uint256 maxBuyWei = 0;
-        if (p.maxBuyBps != 0) {
-            maxBuyWei = (((capTokens * p.maxBuyBps) / BPS) * pFinal) / 1e18;
-            if (maxBuyWei > type(uint96).max) maxBuyWei = type(uint96).max;
+    /// @notice Places each configured band as a token-only position above the graduation tick.
+    /// @dev Returns the tokens actually consumed. A band that rounds to zero liquidity, or one
+    ///      the pool rejects, is skipped rather than reverting the graduation: the launch has
+    ///      already sold out, and stranding it over an optional band would be far worse than
+    ///      burning that slice. Skipped tokens fall through to the burn.
+    function _seedTranches(address token, PoolKey memory key, uint256 tokensLeft) internal returns (uint256 seeded) {
+        LpTranche[] storage bands = lpTranchesOf[token];
+        uint256 n = bands.length;
+        if (n == 0) return 0;
+
+        (, int24 currentTick,,) = StateLibrary.getSlot0(poolManager, key.toId());
+
+        for (uint256 i; i < n; ++i) {
+            LpTranche storage b = bands[i];
+            uint256 amount = (tokensLeft * b.bps) / BPS;
+            if (amount == 0) continue;
+
+            // Higher token price == lower tick, so the band is placed below spot. Alignment can
+            // collapse a thin band, a far-out band can exceed the usable range, and only a band
+            // strictly below spot is token-only — `ok` is false for each, and the slice burns
+            // instead of reverting the graduation.
+            (bool ok, int24 lower, int24 upper) =
+                HookrLaunchpadLib.trancheRange(currentTick, key.tickSpacing, b.startOffset, b.endOffset);
+            if (!ok) continue;
+
+            uint256 used = HookrLaunchpadLib.seedBand(poolManager, key, lower, upper, amount);
+            if (used > 0) {
+                seeded += used;
+                emit LpTrancheSeeded(token, i, lower, upper, used);
+            }
         }
-        // casting to 'uint96' is safe: clamped on the line above.
-        // forge-lint: disable-next-line(unsafe-typecast)
-        return _poolConfigWithGuardCap(p, blueprintId, uint96(maxBuyWei));
     }
 
-    /// @dev Everything `_buildPoolConfig` does except derive `maxBuyWei`, which arrives already
-    ///      computed so attach can express the guard cap in raw quote units of ANY currency pair.
-    ///      Royalty lookup is the only storage read; the struct build is linked out for EIP-170.
-    function _poolConfigWithGuardCap(HookrLaunchpadLib.HookParams memory p, uint32 blueprintId, uint96 maxBuyWei)
+    /// @notice The exact `PoolConfig` a launch will hand the hook for these params. Lets the UI
+    ///         — and the regression suite — check up front that anything `_validateHookParams`
+    ///         accepts is also something `HookrHook.configurePool` accepts.
+    /// @param capTokens What `maxBuyBps` is a share OF. Pass `SUPPLY()` for the curve path and the
+    ///        pool's token count for the instant path; see `_buildPoolConfig`.
+    function previewPoolConfig(HookParams calldata p, uint32 blueprintId, uint256 pFinal, uint256 capTokens)
+        external
+        view
+        returns (HookrHook.PoolConfig memory)
+    {
+        return _buildPoolConfig(p, blueprintId, pFinal, capTokens);
+    }
+
+    /// @param capTokens The token count `maxBuyBps` is denominated against.
+    /// @dev WHY THIS IS A PARAMETER. What the guard is really bounding is how far one buy can move
+    ///      the price, and that depends on the buy relative to the pool's DEPTH, not to the total
+    ///      supply. On the curve path the two track each other: graduation always places roughly
+    ///      the same ~19-20% of supply, so `SUPPLY` is a fixed multiple of the float and
+    ///      `maxBuyBps = 100` reliably buys ~5% of the pool's ETH. That constant is live on chain
+    ///      and stays exactly as it is.
+    ///
+    ///      The instant path breaks the coupling: the creator chooses the float. Denominated
+    ///      against SUPPLY, the cap reduces to `ethIn * maxBuyBps / poolSupplyBps`, so the cap as a
+    ///      fraction of pool depth scales as 1/float — at a 20% float `maxBuyBps = 100` authorises
+    ///      5% of the pool's ETH, and at the 1% float the old floor allowed it authorised 100% of
+    ///      it, a ~4x price move in a single swap, from a setting the creator was told meant "1%".
+    ///      Passing the tokens ACTUALLY PLACED makes the setting mean the same thing on both paths.
+    function _buildPoolConfig(HookParams memory p, uint32 blueprintId, uint256 pFinal, uint256 capTokens)
         internal
         view
         returns (HookrHook.PoolConfig memory cfg)
@@ -916,9 +912,45 @@ contract HookrLaunchpad is IUnlockCallback {
         uint16 royaltyBps;
         address royaltyTo;
         if (blueprintId != 0) {
-            (royaltyBps, royaltyTo) = blueprints.feeSplitOf(blueprintId);
+            Blueprint storage bp = blueprints[blueprintId];
+            royaltyBps = bp.royaltyBps;
+            royaltyTo = bp.author;
         }
-        return HookrLaunchpadLib.poolConfigWithGuardCap(p, royaltyBps, royaltyTo, maxBuyWei);
+        uint256 maxBuyWei = 0;
+        if (p.maxBuyBps != 0) {
+            maxBuyWei = (((capTokens * p.maxBuyBps) / BPS) * pFinal) / 1e18;
+            if (maxBuyWei > type(uint96).max) maxBuyWei = type(uint96).max;
+        }
+        cfg = HookrHook.PoolConfig({
+            initialized: false, // hook sets this
+            guardEndBlock: p.guardBlocks == 0 ? 0 : uint40(block.number + p.guardBlocks),
+            baseFeePips: p.baseFeePips,
+            // The builder emits maxFeePips == 0 whenever no surge block is stacked. The hook
+            // reads that literally and rejects maxFee < baseFee, so it must be normalized HERE,
+            // to the exact value _validateHookParams already checked, or graduation bricks.
+            maxFeePips: _normalizedMaxFeePips(p),
+            snipeTaxPips: p.snipeTaxPips,
+            surgeSens: p.surgeSens,
+            burnBps: p.burnBps,
+            lpBps: p.lpBps,
+            potBps: p.potBps,
+            royaltyBps: royaltyBps,
+            potEveryNBuys: p.potEveryNBuys,
+            maxBuyWei: uint96(maxBuyWei),
+            potMinBuyWei: p.potMinBuyWei,
+            burnTriggerWei: p.burnTriggerWei,
+            royaltyTo: royaltyTo,
+            token: address(0), // hook sets this
+            flywheelFeePips: 0 // the flywheel begins at generation 5; v4 pools never pay it
+        });
+    }
+
+    function _sqrtPriceX96ForPrice(uint256 pFinal) internal pure returns (uint160) {
+        // sqrtPriceX96 = sqrt((1e18 << 192) / pFinal). The bound check stays here so
+        // `TargetOutOfRange` keeps being raised by this contract.
+        uint256 root = HookrLaunchpadLib.sqrtPriceX96ForPrice(pFinal);
+        if (root > type(uint160).max) revert TargetOutOfRange();
+        return uint160(root);
     }
 
     // ---------------------------------------------------------------- locked-POL fee collection
@@ -930,34 +962,49 @@ contract HookrLaunchpad is IUnlockCallback {
         if (!l.graduated) revert NotGraduated();
 
         PoolKey memory key = PoolKey({
-            currency0: Currency.wrap(l.quoteToken),
+            currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(token),
             fee: DYNAMIC_FEE_FLAG,
             tickSpacing: TICK_SPACING,
             hooks: IHooks(address(hook))
         });
-        // Full-range position plus every seeded band, poked range by range. Linked out for
-        // EIP-170; see HookrLaunchpadLib.collectAllBands for the skip rules.
-        (uint256 quoteAmount, uint256 tokenAmount) = HookrLaunchpadLib.collectAllBands(
-            poolManager, key, l.poolId, lpTranchesOf[token], l.sqrtPriceX96AtGraduation
-        );
+        (uint256 ethAmount, uint256 tokenAmount) = HookrLaunchpadLib.collectRange(poolManager, key, 0, 0);
 
-        if (quoteAmount > 0) {
-            address quoteToken = l.quoteToken;
+        // Each tranche is its own position, so its fees have to be poked separately — collecting
+        // only the full-range position would silently leave tranche fees in the pool forever.
+        LpTranche[] storage bands = lpTranchesOf[token];
+        for (uint256 i; i < bands.length; ++i) {
+            (bool ok, int24 lower, int24 upper) = _seededTrancheRange(token, key, i);
+            if (!ok) continue;
+            // A valid stored plan can still seed zero liquidity: for example an instant launch
+            // that places all supply in the full-range position may leave only rounding dust, and
+            // a small tranche bps then rounds to zero. PoolManager rejects a zero-delta poke of a
+            // position that was never minted, which used to make this token's *entire* fee
+            // collection path revert forever. Read the launchpad-owned position first and skip
+            // only truly absent bands; seeded positions are never removable by this contract.
+            bytes32 positionId = keccak256(abi.encodePacked(address(this), lower, upper, bytes32(0)));
+            if (StateLibrary.getPositionLiquidity(poolManager, l.poolId, positionId) == 0) continue;
+            (uint256 bandEth, uint256 bandTokens) =
+                HookrLaunchpadLib.collectRange(poolManager, key, uint256(uint24(lower)), uint256(uint24(upper)));
+            ethAmount += bandEth;
+            tokenAmount += bandTokens;
+        }
+
+        if (ethAmount > 0) {
             // Fees the position earned while the anti-snipe guard was live are PROTOCOL-ONLY.
             // The snipe tax is charged as an LP fee, and the hook blocks outside LP additions for
             // the finite guard window so the launchpad's locked positions own that fee growth.
             // Without this withholding the tax flows back to the creator at `creatorFeeBps` — and
             // the creator is a party who can pay it, in the launch transaction on the instant path.
             // `guardFeesWithheldWei` is the high-water mark so the same wei is never withheld twice.
-            (uint256 withheld, uint256 creatorSide) = HookrLaunchpadLib.splitCollectionFees(
-                quoteAmount, hook.guardLpEarnedWei(l.poolId), guardFeesWithheldWei[token], _creatorFeeBps(token)
-            );
+            uint256 owed = hook.guardLpEarnedWei(l.poolId) - guardFeesWithheldWei[token];
+            uint256 withheld = owed > ethAmount ? ethAmount : owed;
             if (withheld > 0) guardFeesWithheldWei[token] += withheld;
-            protocolFeesByQuote[quoteToken] += quoteAmount - creatorSide;
+            uint256 creatorSide = ((ethAmount - withheld) * _creatorFeeBps(token)) / BPS;
+            protocolFeesWei += ethAmount - creatorSide;
             _creditCreatorSide(token, creatorSide);
         }
-        emit PoolFeesCollected(token, quoteAmount, tokenAmount);
+        emit PoolFeesCollected(token, ethAmount, tokenAmount);
     }
 
     /// @notice The creator's configured share of pool fees, in bps. Unset means the default.
@@ -971,7 +1018,7 @@ contract HookrLaunchpad is IUnlockCallback {
     ///      credited amounts equals `amount` exactly — fees can never be stranded by rounding.
     function _creditCreatorSide(address token, uint256 amount) internal {
         if (amount == 0) return;
-        HookrLaunchpadLib.FeeRecipient[] storage recipients = feeRecipientsOf[token];
+        FeeRecipient[] storage recipients = feeRecipientsOf[token];
         uint256 n = recipients.length;
         if (n == 0) {
             creatorFeesWei[token] += amount;
@@ -988,24 +1035,38 @@ contract HookrLaunchpad is IUnlockCallback {
         }
     }
 
+    /// @notice The on-chain range of a seeded band, recomputed from the graduation tick.
+    /// @dev Mirrors the alignment and skip rules `_seedTranches` applied, so collection pokes
+    ///      exactly the ranges that were actually created and never an empty one.
+    function _seededTrancheRange(address token, PoolKey memory key, uint256 index)
+        internal
+        view
+        returns (bool ok, int24 lower, int24 upper)
+    {
+        LpTranche storage b = lpTranchesOf[token][index];
+        // Same geometry `_seedTranches` applied, against the graduation tick rather than spot.
+        return HookrLaunchpadLib.trancheRangeAtSqrtPrice(
+            launches[token].sqrtPriceX96AtGraduation, key.tickSpacing, b.startOffset, b.endOffset
+        );
+    }
+
     /// @notice Claim fees credited to a split recipient. Anyone may push a recipient's own
     ///         balance to them; the destination is always the recipient recorded at launch.
     function claimSplitFees(address token, address recipient) external nonReentrant {
-        Launch storage l = _launchOf(token);
         uint256 amount = splitFeesWei[token][recipient];
         if (amount == 0) revert NothingToClaim();
         splitFeesWei[token][recipient] = 0;
-        _sendQuote(l.quoteToken, recipient, amount);
+        _sendEth(recipient, amount);
         emit CreatorFeesClaimed(token, recipient, amount);
     }
 
     /// @notice Read the configured split for a launch.
-    function getFeeRecipients(address token) external view returns (HookrLaunchpadLib.FeeRecipient[] memory) {
+    function getFeeRecipients(address token) external view returns (FeeRecipient[] memory) {
         return feeRecipientsOf[token];
     }
 
     /// @notice Read the configured LP bands for a launch.
-    function getLpTranches(address token) external view returns (HookrLaunchpadLib.LpTranche[] memory) {
+    function getLpTranches(address token) external view returns (LpTranche[] memory) {
         return lpTranchesOf[token];
     }
 
@@ -1028,12 +1089,12 @@ contract HookrLaunchpad is IUnlockCallback {
 
     /// @notice Claim accrued creator-side fees (curve fees + collected pool fees) for a token.
     function claimCreatorFees(address token) external nonReentrant {
-        Launch storage l = _launchOf(token);
+        _launchOf(token);
         uint256 amount = creatorFeesWei[token];
         if (amount == 0) revert NothingToClaim();
         creatorFeesWei[token] = 0;
         address to = creatorPayoutOf(token);
-        _sendQuote(l.quoteToken, to, amount);
+        _sendEth(to, amount);
         emit CreatorFeesClaimed(token, to, amount);
     }
 
@@ -1059,55 +1120,146 @@ contract HookrLaunchpad is IUnlockCallback {
             return abi.encode(oweT);
         }
 
-        (, PoolKey memory key, uint160 sqrtPriceX96, uint256 amount0, uint256 amount1) =
+        (, PoolKey memory key, uint160 sqrtPriceX96, uint256 ethAmt, uint256 tokenAmt) =
             abi.decode(data, (uint8, PoolKey, uint160, uint256, uint256));
 
-        // The mechanics of both remaining actions are linked out for EIP-170 and run by
-        // DELEGATECALL; the launchpad stays the unlock callback target and the position owner.
-        if (action == CB_GRADUATE) {
-            (uint256 oweCurrency0, uint256 oweCurrency1) =
-                HookrLaunchpadLib.graduateFullRange(poolManager, key, sqrtPriceX96, amount0, amount1);
-            return abi.encode(oweCurrency0, oweCurrency1);
+        (int24 tickLower, int24 tickUpper) = HookrLaunchpadLib.usableTickRange(key.tickSpacing);
+        if (action == CB_COLLECT && (ethAmt != 0 || tokenAmt != 0)) {
+            // Collection over a tranche range: the bounds ride in the two amount slots.
+            tickLower = int24(uint24(ethAmt));
+            tickUpper = int24(uint24(tokenAmt));
         }
+
+        if (action == CB_GRADUATE) {
+            uint128 liquidity =
+                HookrLaunchpadLib.liquidityForAmountsInRange(tickLower, tickUpper, sqrtPriceX96, ethAmt, tokenAmt);
+
+            (BalanceDelta callerDelta,) = poolManager.modifyLiquidity(
+                key,
+                ModifyLiquidityParams({
+                    tickLower: tickLower,
+                    tickUpper: tickUpper,
+                    liquidityDelta: int256(uint256(liquidity)),
+                    salt: bytes32(0)
+                }),
+                ""
+            );
+
+            uint256 oweEth = callerDelta.amount0() < 0 ? uint256(uint128(-callerDelta.amount0())) : 0;
+            uint256 oweTokens = callerDelta.amount1() < 0 ? uint256(uint128(-callerDelta.amount1())) : 0;
+
+            if (oweEth > 0) {
+                poolManager.settle{value: oweEth}();
+            }
+            if (oweTokens > 0) {
+                poolManager.sync(key.currency1);
+                HookrToken(Currency.unwrap(key.currency1)).transfer(address(poolManager), oweTokens);
+                poolManager.settle();
+            }
+            return abi.encode(oweEth, oweTokens);
+        }
+
         if (action == CB_COLLECT) {
-            (uint256 token0Owed, uint256 token1Owed) =
-                HookrLaunchpadLib.collectPosition(poolManager, key, amount0, amount1);
-            return abi.encode(token0Owed, token1Owed);
+            // Zero-delta liquidity change surfaces the accrued fees as positive deltas.
+            (BalanceDelta callerDelta,) = poolManager.modifyLiquidity(
+                key,
+                ModifyLiquidityParams({
+                    tickLower: tickLower, tickUpper: tickUpper, liquidityDelta: 0, salt: bytes32(0)
+                }),
+                ""
+            );
+            uint256 ethOwed = callerDelta.amount0() > 0 ? uint256(uint128(callerDelta.amount0())) : 0;
+            uint256 tokensOwed = callerDelta.amount1() > 0 ? uint256(uint128(callerDelta.amount1())) : 0;
+            if (ethOwed > 0) {
+                poolManager.take(Currency.wrap(address(0)), address(this), ethOwed);
+            }
+            if (tokensOwed > 0) {
+                // Burn the token side directly.
+                poolManager.take(key.currency1, DEAD, tokensOwed);
+            }
+            return abi.encode(ethOwed, tokensOwed);
         }
 
         revert BadCallback();
+        // silence unused-var warnings in the compiler for branches above
+        // (sqrtPriceX96/ethAmt/tokenAmt are unused in CB_COLLECT)
     }
 
     // ---------------------------------------------------------------- validation
-    // The validator bodies are linked out for EIP-170 and run by DELEGATECALL; the launchpad
-    // keeps only the call stubs. Custom-error selectors are name-derived, so reverts raised in
-    // the library carry exactly the selectors these entrypoints have always surfaced.
 
+    /// @notice `maxFeePips == 0` is the builder's "surge block not stacked" encoding, not a real
+    ///         zero ceiling. Every read of the field — validation and graduation alike — goes
+    ///         through here so the launchpad can never accept a stack the hook would reject.
+    function _normalizedMaxFeePips(HookParams memory p) internal pure returns (uint24) {
+        return p.maxFeePips == 0 ? p.baseFeePips : p.maxFeePips;
+    }
+
+    /// @dev Mirrors HookrHook.configurePool's checks against the NORMALIZED params, so anything
+    ///      accepted here is guaranteed to configure cleanly at graduation.
+    /// @notice Rejects a fee split or LP plan the collection path could not honour exactly.
+    /// @dev Runs before any state is written so a bad plan reverts the whole launch.
     function _validateDistribution(LaunchArgs calldata args) internal pure {
-        HookrLaunchpadLib.validateFeeSplit(args.creatorFeeBps, args.feeRecipients);
-        HookrLaunchpadLib.validateLpPlan(args.lpTranches);
-    }
+        if (args.creatorFeeBps > MAX_CREATOR_FEE_BPS) revert BadFeeSplit();
 
-    function _validateFeeSplit(uint16 creatorFeeBps, HookrLaunchpadLib.FeeRecipient[] calldata recipients)
-        internal
-        pure
-    {
-        HookrLaunchpadLib.validateFeeSplit(creatorFeeBps, recipients);
-    }
-
-    /// @notice Blueprint resolution for every market path. Id 0 means "use the caller's custom
-    ///         stack" (validated here); anything else is validated at SAVE time by the registry,
-    ///     which also bumps its use counter. Unknown ids revert inside the registry.
-    function _resolveParams(uint32 blueprintId, HookrLaunchpadLib.HookParams calldata custom)
-        internal
-        returns (HookrLaunchpadLib.HookParams memory params)
-    {
-        if (blueprintId == 0) {
-            params = custom;
-            HookrLaunchpadLib.validateHookParams(params);
-        } else {
-            (,, params) = blueprints.resolveForLaunch(blueprintId);
+        uint256 n = args.feeRecipients.length;
+        if (n > MAX_FEE_RECIPIENTS) revert BadFeeSplit();
+        if (n > 0) {
+            uint256 sum;
+            for (uint256 i; i < n; ++i) {
+                FeeRecipient calldata r = args.feeRecipients[i];
+                if (r.to == address(0) || r.bps == 0) revert BadFeeSplit();
+                // Duplicates would still pay out correctly, but they make the split unreadable
+                // on chain and hide a mistaken split from whoever reviews the launch.
+                for (uint256 j; j < i; ++j) {
+                    if (args.feeRecipients[j].to == r.to) revert BadFeeSplit();
+                }
+                sum += r.bps;
+            }
+            // Exact, not "at most": anything else would silently strand fees in the contract.
+            if (sum != BPS) revert BadFeeSplit();
         }
+
+        uint256 t = args.lpTranches.length;
+        if (t > MAX_LP_TRANCHES) revert BadLpPlan();
+        if (t > 0) {
+            uint256 sum;
+            int24 previousUpper = 0;
+            for (uint256 i; i < t; ++i) {
+                LpTranche calldata b = args.lpTranches[i];
+                if (b.bps == 0) revert BadLpPlan();
+                // Strictly below the graduation tick keeps every band token-only: a band
+                // straddling spot would need ETH the raise has already committed elsewhere.
+                if (b.startOffset < MIN_TRANCHE_OFFSET) revert BadLpPlan();
+                if (b.endOffset <= b.startOffset) revert BadLpPlan();
+                // Bounded from above as well as below. Unbounded, a single band could be placed
+                // where its liquidity no longer fits uint128 — which reverted inside the unlock
+                // and so bricked graduation permanently instead of being skipped. `bandLiquidity`
+                // is what makes that unreachable now; this is what stops a creator wandering into
+                // the skip and silently burning the ladder they thought they had configured.
+                if (b.endOffset > MAX_TRANCHE_OFFSET) revert BadLpPlan();
+                // Ascending in price and non-overlapping, so the bands read as a ladder and a
+                // mistake cannot quietly stack two positions on the same range.
+                if (i > 0 && b.startOffset < previousUpper) revert BadLpPlan();
+                previousUpper = b.endOffset;
+                sum += b.bps;
+            }
+            // At most the whole leftover: any unallocated remainder still burns.
+            if (sum > BPS) revert BadLpPlan();
+        }
+    }
+
+    function _validateHookParams(HookParams memory p) internal pure {
+        uint24 maxFeePips = _normalizedMaxFeePips(p);
+        if (p.baseFeePips > 500_000 || maxFeePips > 500_000) revert BadHookParams();
+        if (maxFeePips < p.baseFeePips) revert BadHookParams();
+        if (uint256(p.baseFeePips) + p.snipeTaxPips > 500_000) revert BadHookParams();
+        if (uint256(p.burnBps) + p.lpBps + p.potBps > 1000) revert BadHookParams();
+        if (p.burnTriggerWei != 0) revert BadHookParams();
+        if (p.potBps > 0 && (p.potEveryNBuys < 2 || p.potEveryNBuys > 100_000)) revert BadHookParams();
+        if (p.surgeSens > 10) revert BadHookParams();
+        if (p.guardBlocks > 100_000) revert BadHookParams();
+        if (p.maxBuyBps > BPS) revert BadHookParams();
+        if (p.potBps > 0 && p.potMinBuyWei < MIN_POT_BUY_WEI) revert BadHookParams();
     }
 
     // ---------------------------------------------------------------- views
@@ -1163,17 +1315,8 @@ contract HookrLaunchpad is IUnlockCallback {
 
     // ---------------------------------------------------------------- internal
 
-    function _sendQuote(address quoteToken, address to, uint256 amount) internal {
-        if (amount == 0) return;
-        if (quoteToken == address(0)) {
-            (bool ok,) = to.call{value: amount}("");
-            if (!ok) revert EthTransferFailed();
-        } else {
-            HookrLaunchpadLib.safeTransfer(quoteToken, to, amount);
-        }
-    }
-
-    function _safeTransferFrom(address token, address from, address to, uint256 amount) internal {
-        HookrLaunchpadLib.safeTransferFrom(token, from, to, amount);
+    function _sendEth(address to, uint256 amount) internal {
+        (bool ok,) = to.call{value: amount}("");
+        if (!ok) revert EthTransferFailed();
     }
 }

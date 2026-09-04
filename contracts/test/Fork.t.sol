@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -12,9 +12,7 @@ import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrToken} from "../src/HookrToken.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
@@ -24,6 +22,9 @@ import {BlueprintSeeds} from "./utils/BlueprintSeeds.sol";
 ///         This suite is the release gate: graduation, hook behavior, and fee plumbing must all
 ///         work against the real deployed v4 core before anything is broadcast.
 contract ForkTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     IPoolManager constant PM = IPoolManager(0x8366a39CC670B4001A1121B8F6A443A643e40951);
@@ -32,8 +33,6 @@ contract ForkTest is Test {
     address constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     PoolSwapTest router;
     uint256 public selectedForkBlock;
@@ -43,23 +42,24 @@ contract ForkTest is Test {
     address bob = address(0xB0B);
 
     function setUp() public {
+        string memory rpc = vm.envOr("FORK_RPC_URL", string("robinhood"));
         uint256 requestedForkBlock = vm.envOr("ROBINHOOD_FORK_BLOCK", uint256(0));
         if (requestedForkBlock == 0) {
-            vm.createSelectFork("robinhood");
+            vm.createSelectFork(rpc);
         } else {
-            vm.createSelectFork("robinhood", requestedForkBlock);
+            vm.createSelectFork(rpc, requestedForkBlock);
         }
         selectedForkBlock = vm.getBlockNumber();
         emit log_named_uint("Robinhood fork block", selectedForkBlock);
         assertEq(block.chainid, 4663);
         if (requestedForkBlock != 0) assertEq(selectedForkBlock, requestedForkBlock);
 
-        pad = new HookrLaunchpad(PM, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        BlueprintSeeds.seed(pad.blueprints());
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad)));
+        pad = new HookrLaunchpad(PM);
+        BlueprintSeeds.seed(pad);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(PM, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(PM, address(pad));
+        hook = new HookrHook{salt: salt}(PM, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted, "mined address must match");
         pad.setHook(hook);
 
@@ -73,8 +73,8 @@ contract ForkTest is Test {
 
     // ------------------------------------------------------------ helpers
 
-    function _params() internal pure returns (HookrLaunchpadLib.HookParams memory p) {
-        p = HookrLaunchpadLib.HookParams({
+    function _params() internal pure returns (HookrLaunchpad.HookParams memory p) {
+        p = HookrLaunchpad.HookParams({
             guardBlocks: 10,
             maxBuyBps: 100, // 1% of supply per swap during guard
             snipeTaxPips: 400_000, // +40%
@@ -86,12 +86,7 @@ contract ForkTest is Test {
             lpBps: 25,
             potBps: 50,
             potEveryNBuys: 2, // every 2nd qualifying buy takes the pot: test-friendly
-            potMinBuyWei: 0.001 ether,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0.001 ether
         });
     }
 
@@ -108,7 +103,7 @@ contract ForkTest is Test {
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(a, bytes32(0));
+        token = pad.launch{value: fee}(a);
 
         // Alice buys out the whole curve (target + fees + headroom); refund handles the excess.
         vm.prank(alice);
@@ -151,7 +146,7 @@ contract ForkTest is Test {
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launch{value: fee + a.creatorBuyWei}(a, bytes32(0));
+        address token = pad.launch{value: fee + a.creatorBuyWei}(a);
         HookrLaunchpad.Launch memory l = pad.getLaunch(token);
         assertTrue(l.graduated, "creator buy did not graduate atomically");
         assertEq(l.soldTokens, pad.CURVE_SUPPLY());
@@ -180,30 +175,30 @@ contract ForkTest is Test {
         bytes32 intentId = keccak256("fork-atomic-agent-intent");
 
         uint256 tokensBefore = pad.tokensCount();
-        uint256 protocolFeesBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protocolFeesBefore = pad.protocolFeesWei();
         uint256 payment = pad.creationFeeWei() + a.creatorBuyWei;
         vm.expectRevert(HookrLaunchpad.SlippageExceeded.selector);
         vm.prank(creator);
-        pad.launch{value: payment}(a, intentId);
+        pad.launchWithIntent{value: payment}(a, intentId);
         assertEq(pad.tokensCount(), tokensBefore, "failed creator buy left a launch");
-        assertEq(pad.protocolFeesByQuote(address(0)), protocolFeesBefore, "failed creator buy retained creation fee");
+        assertEq(pad.protocolFeesWei(), protocolFeesBefore, "failed creator buy retained creation fee");
         assertEq(pad.launchedByIntent(creator, intentId), address(0), "failed launch consumed intent");
 
         a.minTokensOut = pad.CURVE_SUPPLY();
         vm.prank(creator);
-        address token = pad.launch{value: payment}(a, intentId);
+        address token = pad.launchWithIntent{value: payment}(a, intentId);
         assertTrue(pad.getLaunch(token).graduated, "same-intent retry did not graduate");
         assertEq(pad.launchedByIntent(creator, intentId), token, "intent token postcondition mismatch");
 
         uint256 tokensAfter = pad.tokensCount();
-        uint256 protocolFeesAfter = pad.protocolFeesByQuote(address(0));
+        uint256 protocolFeesAfter = pad.protocolFeesWei();
         vm.expectRevert(
             abi.encodeWithSelector(HookrLaunchpad.LaunchIntentAlreadyUsed.selector, creator, intentId, token)
         );
         vm.prank(creator);
-        pad.launch{value: payment}(a, intentId);
+        pad.launchWithIntent{value: payment}(a, intentId);
         assertEq(pad.tokensCount(), tokensAfter, "replayed intent deployed another token");
-        assertEq(pad.protocolFeesByQuote(address(0)), protocolFeesAfter, "replayed intent accrued fees");
+        assertEq(pad.protocolFeesWei(), protocolFeesAfter, "replayed intent accrued fees");
     }
 
     function test_graduation_createsLivePool_withLockedLiquidity() public {
@@ -405,10 +400,10 @@ contract ForkTest is Test {
         vm.stopPrank();
 
         uint256 creatorBefore = pad.creatorFeesWei(token);
-        uint256 protoBefore = pad.protocolFeesByQuote(address(0));
+        uint256 protoBefore = pad.protocolFeesWei();
         pad.collectPoolFees(token);
         assertGt(pad.creatorFeesWei(token), creatorBefore, "creator share of LP fees");
-        assertGt(pad.protocolFeesByQuote(address(0)), protoBefore, "protocol share of LP fees");
+        assertGt(pad.protocolFeesWei(), protoBefore, "protocol share of LP fees");
 
         // creator can claim
         uint256 amount = pad.creatorFeesWei(token);
@@ -420,9 +415,9 @@ contract ForkTest is Test {
     // ------------------------------------------------------------ blueprint royalties
 
     function test_blueprintLaunch_routesRoyalties() public {
-        HookrLaunchpadLib.HookParams memory p = _params();
+        HookrLaunchpad.HookParams memory p = _params();
         vm.prank(bob); // bob authors the blueprint
-        uint32 id = bpReg.saveBlueprint("Kraken Stack", p, 500); // 5% of hook cuts
+        uint32 id = pad.saveBlueprint("Kraken Stack", p, 500); // 5% of hook cuts
 
         HookrLaunchpad.LaunchArgs memory a;
         a.name = "Feesh";
@@ -435,7 +430,7 @@ contract ForkTest is Test {
 
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launch{value: fee}(a, bytes32(0));
+        address token = pad.launch{value: fee}(a);
         vm.prank(alice);
         pad.buy{value: 0.02 ether}(token, 0);
         assertTrue(pad.getLaunch(token).graduated);

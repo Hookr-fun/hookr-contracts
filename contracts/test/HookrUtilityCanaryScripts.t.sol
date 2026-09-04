@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
@@ -11,7 +11,6 @@ import {CanaryHookrUtilitiesLock} from "../script/CanaryHookrUtilitiesLock.s.sol
 import {DeployHookrUtilities} from "../script/DeployHookrUtilities.s.sol";
 import {HookrLaunchBoostV1} from "../src/HookrLaunchBoostV1.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrLockRewardsV1} from "../src/HookrLockRewardsV1.sol";
 import {IHookrLockRewardsV1} from "../src/interfaces/IHookrLockRewardsV1.sol";
 import {IHookrUtilityToken} from "../src/libraries/HookrTokenTransfer.sol";
@@ -79,7 +78,7 @@ contract CanonicalV4CoreMock {
         launch.graduatedAtBlock = 123;
         launch.sqrtPriceX96AtGraduation = OPEN_SQRT_PRICE_X96;
         launch.poolId = PoolId.wrap(bytes32(uint256(1)));
-        launch.hookParams = HookrLaunchpadLib.HookParams({
+        launch.hookParams = HookrLaunchpad.HookParams({
             guardBlocks: 200,
             maxBuyBps: 1000,
             snipeTaxPips: 200_000,
@@ -91,12 +90,7 @@ contract CanonicalV4CoreMock {
             lpBps: 25,
             potBps: 50,
             potEveryNBuys: 10,
-            potMinBuyWei: 0.001 ether,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0.001 ether
         });
     }
 }

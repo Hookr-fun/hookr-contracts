@@ -1,9 +1,16 @@
 # Leveraged Hooks — source audit record
 
 Seven adversarial passes over `contracts/src/Leverage*.sol`, on branch
-`nodes/leveraged-hooks-impl`. This file exists so the next reviewer starts from what is
-already known rather than rediscovering it — including the things that were reported,
-investigated, and turned out **not** to be defects.
+`nodes/leveraged-hooks-impl`, plus a later dedicated ACCOUNTING pass (below). This file exists
+so the next reviewer starts from what is already known rather than rediscovering it — including
+the things that were reported, investigated, and turned out **not** to be defects.
+
+**Accounting pass (2026-08-13), one HIGH found, reproduced, fixed, regressed:** `openPosition`'s
+cash guard counted the borrower's own `msg.value` as lendable, so a borrow could be funded out of
+the `claimable` escrow (keeper bonuses / liquidated-trader residuals), breaking
+`balance >= totalClaimable` and DoS-ing `claim()`. See the `ESCROW` entry under Fixed. Two
+info-level rounding items were also confirmed and left as-is (see finding 4). The
+`test/LeverageAccounting.t.sol` conservation suite was added the same pass.
 
 **Status: not deployable, but converging.** All five of the original criticals now have a
 fix and a passing regression: the oracle, per-position marking, per-block liquidation stacking
@@ -36,7 +43,7 @@ never the right tool here: **every critical found in this system was a valuation
 reachability bug**, where the ledger agreed with itself perfectly while describing a market
 that did not exist.
 
-**Finder consensus is not evidence.** Four independent finders reported
+**Finder consensus is not evidence.** Four independent finder agents reported
 `LeverageFactory.pendingToken` as a security hole. It is genuinely never assigned — and it
 is the left operand of `&&` inside a revert condition, so a dead-true term makes the guard
 *stricter*, never looser. Only the verify phase caught that.
@@ -46,7 +53,7 @@ refuted once every claim had to carry a running PoC. In the fifth, three of thre
 fixes were broken by their own adversaries. Any finding in this system should be treated as
 a hypothesis until a test exhibits it.
 
-### Traps that have each cost hours
+### Traps that have each cost an agent hours
 
 - **`vm.warp(block.timestamp + dt)` inside a loop does not advance.** Under `via_ir` the
   optimiser hoists `block.timestamp`, so every iteration warps to the same instant. This has
@@ -225,8 +232,26 @@ pool starts thin by construction.
 - **Utilisation ceiling measured pre-borrow** — lands at 92.86% against a 90% cap; only bites
   the next caller.
 - **Self-liquidation** pays the borrower the 5% bonus and retires 5% less debt. NAV is
-  bit-identical either way, so the reported "extra LP loss" mechanism is wrong; the leak is
-  the borrower's own menu. Preferred fix is to zero the bonus, not revert.
+  bit-identical whoever calls `liquidate`, so the reported "self-liquidation is *extra* LP loss"
+  mechanism is wrong; self-liq is NAV-neutral vs a keeper doing it, and the missing
+  `trader != msg.sender` guard is not itself a leak.
+  **The real item, re-confirmed by the pre-deploy stress pass and sharper than the line above:**
+  on a FULL underwater liquidation (`proceeds < owed`, so the whole position clears and
+  `_bookShortfall` runs — the partial-seize branch retires only `repaid` and books no bad debt),
+  `bonus = proceeds·liqBonusBps/BPS` is carved from `net` before repayment
+  (`LeverageMarket.liquidate`), so the `owed − net` booked as bad debt is larger than the true
+  deficit by exactly `bonus`, and `bonus → claimable` drops `navQuote` by the same amount. The LP
+  eats that bonus, keeper or self. The size is `liqBonusBps` of the seized proceeds — the shipped
+  rehearsal config sets 5%, but `liqBonusBps` is a per-market creator choice the constructor caps
+  at **2000 bps = 20%** (`LeverageMarket.sol` `if (cfg.liqBonusBps > 2_000) revert BadConfig`), so
+  a validly-configured market can bear up to 20% of underwater proceeds. Bounded and LOW (worst on
+  thin launch pools and high-bonus configs), and an explicit **accept-or-fix**, not a blocker: the
+  preferred fix (skip/zero the bonus when `repaid < owed`) removes the LP leak but also removes the
+  keeper's incentive to clear a position exactly when it is underwater — so a naive zero can leave
+  bad debt unliquidated. Whoever deploys should either accept the bounded leak or land the
+  solvency-gated bonus WITH an adversary checking the incentive side, not patch it blind.
+  `test/LeverageBonusLeak.t.sol` pins the magnitude by A/B (same decline, `liqBonusBps` 500 vs 0):
+  the with-bonus market books **exactly `bonus` more bad debt** and the LP redeems strictly less.
 - **`_seizeCap` loosens exactly when it should bind.** It is a twenty-fifth of the pool's
   *token* side — but a decline is caused by tokens being sold *into* the pool, so the crash
   that makes a position liquidatable also inflates the quantity the cap is a fraction of.
@@ -241,14 +266,59 @@ pool starts thin by construction.
   `navQuote` cannot see it, so it surfaces as an unexplained NAV jump on the next unwind).
 - **Surge-fee exemption is granted to every market swap**, not only liquidations: measured
   outsider 6000 pips vs market path 3000 pips.
+- **Exact-OUTPUT swaps dodge the depth-scaled surge entirely** — a confirmed, statically-provable
+  gap, kept low on purpose. `LeverageHook` gates the surge behind `params.amountSpecified < 0`
+  (`beforeSwap`), so an exact-output order (v4 encodes it as a positive amountSpecified) returns
+  `BASE_FEE_PIPS` regardless of size. This is the resolution of S1 in `LEVERAGED_HOOKS_BLOCKERS.md`
+  wearing its downside: the surge
+  formula casts `-amountSpecified`, which reverts on exact-output, so the fix was to compute surge
+  for exact-input only rather than carry the guard. The consequence is purely vault swap-fee
+  revenue — the surge feeds no risk, NAV, or solvency term, the market is the exclusive LP so no
+  third-party LP is harmed, and AMM price impact (the real brake on large trades) is unaffected. A
+  trader who restructures a large buy as exact-output pays base fee; ordinary exact-input market
+  orders still surge. Fix if the revenue matters (estimate the input inside `beforeSwap`, or surge
+  on the settled delta in `afterSwap`); it is not a deployment blocker.
 - **~17 tests assert nothing about what they are named for** — see Test suite health.
+- **`repay` leaves 1 scaled-debt unit of dust on a full repayment** (INFO, accounting pass).
+  `scaled = floor(owed·WAD/index)` can be one unit below `pos.scaledDebt` once `index > WAD`, so a
+  borrower who pays their whole reported `owed` keeps a residual scaled unit that re-grows with the
+  index; `debtOf` reports it truthfully (never a false zero) and only `closePosition`/full
+  liquidation clears it. Ledger stays self-consistent; direction favours the market; single-digit
+  wei. Left as-is.
+- **`openPosition` books scaled debt rounding DOWN** (INFO, accounting pass). `scaled =
+  floor(borrow·WAD/index)` at the one conversion site whose floor favours the BORROWER (debtOf then
+  reads back ≤ borrow), against `LeverageMath`'s stated "debt rounds up" convention. 1–2 wei per
+  open, gated one-position-per-address; every other debt site already rounds toward the market.
+  Left as-is; would use `mulDivRoundingUp` for symmetry.
 
 ---
 
 ## Fixed
 
+`ESCROW` (accounting pass, 2026-08-13) — **`openPosition` could fund a borrow out of the
+`claimable` escrow.** The cash guard was `if (borrow > idleQuote())`, but `openPosition` is
+`payable`, so `msg.value` is already in `address(this).balance` when `idleQuote() = balance −
+totalClaimable` is read — inflating it by `msg.value`. The two capacity checks immediately below
+strip `msg.value` (and say why in their comment); this one did not, so a borrow of up to
+`msg.value` past the market's own free cash settled out of ETH owed to keepers and liquidated
+traders. Result: `balance < totalClaimable`, `claim()` reverts, the keeper-bonus that funds the
+liquidation incentive is stranded, and the deficit is invisible to `navQuote` (idleQuote clamps to
+0). Three of four accounting-audit finders independently reported it; two verifiers confirmed it
+wei-exact; **reproduced** end-to-end (decline → liquidation creates a 0.00076-ETH keeper bonus →
+pool recovers → a tuned 2x open drops balance to 0.00057 ETH below the 0.00076 escrow → `claim()`
+reverts). The raidable amount per open is bounded by `totalClaimable` (the market cannot lend more
+than its balance), so it scales with accumulated unclaimed bonuses/residuals. Fix: one line,
+`if (borrow + msg.value > idleQuote())` — bound the borrow against the balance held BEFORE the
+call, exactly as the sibling checks do. Regression `test_openCannotRaidTheClaimableEscrow`
+(`test/LeverageAccounting.t.sol`), verified to FAIL against the old guard (the open succeeds and
+`balance < totalClaimable`) and PASS with the fix. Two pre-existing capacity tests
+(`test_openRefusedPastCapacity`, `test_ownEquityIsNotCountedAsAvailableCredit`) had to be given
+ample idle so the now-stricter cash guard is not the binding refusal — both still assert
+`OverCapacity`.
+
 `973d38e` — `_execUnwind` slippage floor (later removed, see below); `claimable` reserved out
-of `idleQuote()` via `totalClaimable` plus a borrow bounded by owned cash; `seedLiquidity`
+of `idleQuote()` via `totalClaimable` plus a borrow bounded by owned cash (the ESCROW entry above
+is an off-by-`msg.value` in exactly this bound); `seedLiquidity`
 made genuinely one-shot; router residue no longer spendable via `settle{value:}`;
 `openPosition` refuses to merge into an existing position; `formatWad` round-up carry;
 `previewDeposit` VIRTUAL_SHARES; `previewRedeem` modelling the unwind; invariant suite
@@ -393,15 +463,29 @@ capital sitting in the market rather than withdrawing it back out, so it measure
 genuinely-lower-utilisation market (correctly zero-fee) rather than the round-trip the bug
 name describes. Trust the list below over any running total.
 
-**Still weak, not yet repaired:**
+**Still weak: none outstanding.** The three that were listed here are now repaired, each
+verified to fail with its specific fix ablated and pass with it:
 
-- `test_liquidationRefusesRatherThanSeizingIntoNoDepth` asserts `tokenSide > 0` on a market the
-  guard does not apply to — the negation of the property. Reaching `tokenSide == 0` needs the
-  price at the range edge, which no fixture here produces.
-- `test_anAccruedReserveCannotLockEveryRedemption` never approaches the state it names —
-  reserve 0.0125 ETH against ~50 ETH idle.
-- `test_ringRateLimitsWithinASingleBlock` (`LeverageHook.t.sol`) passes because the pool is
-  *already* stale before the loop runs, not because the rate limiter worked.
+- `test_liquidationRefusesRatherThanSeizingIntoNoDepth` no longer asserts `tokenSide > 0` on the
+  untouched market. It confirms the audit's own finding first — even a 2,000,000 ETH push into a
+  ~50 ETH pool only thins the token side to ~1.3e15 wei, never to zero — then proves the
+  reachable half of the same guard: on a liquidatable position whose pool has been pushed thin,
+  `_seizeCap`'s depth bound makes `liquidate` take only a sliver it can clear and leave the
+  position open. Fails `SlippageTooHigh()` with the `baseline / 25` bound ablated to
+  `return collateral` — the exact "floor it cannot clear" the guard avoids.
+- `test_anAccruedReserveCannotLockEveryRedemption` now fills the book with many small,
+  individually-healthy positions (re-warming the ring between each) to hold utilisation above
+  85%, then compounds a decade of interest. Asserts the `accrue()` clamp binds: reserve is
+  pinned to `idle/2`. Fails without the clamp, where the reserve books ~23.5 ETH against ~1 ETH
+  of idle — cover 23× the cash behind it, the finding's own shape. (The redemption *freeze*
+  itself remains unreachable in this harness because the large founding pool position dominates
+  NAV, exactly as recorded under finding 1; the test proves the mechanism that prevents it, not
+  the freeze.)
+- `test_ringRateLimitsWithinASingleBlock` (`LeverageHook.t.sol`) now builds real covered history
+  first, then fires more than `MAX_WALK` swaps in one timestamp. Asserts the average is
+  unmoved and the ring stays covered. Fails with the `MIN_SPACING_SEC` slot guard in
+  `LeverageOracleLib.write` ablated — that many same-block writes flush the walk's reach and the
+  ring falsely reports stale.
 
 Recurring shapes to grep for:
 

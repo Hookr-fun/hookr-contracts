@@ -1,0 +1,17 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-launchpad-adapter",
+  "track": "launchpad_sdk",
+  "project": {
+    "name": "Example launchpad"
+  },
+  "interface": {
+    "apiOrSdk": "https://docs.example.com/launch-sdk",
+    "launchLifecycle": "Preview immutable launch terms, request an authorized launch, wait for its receipt, and expose a replay-safe status callback.",
+    "authorityModel": "The partner can request only reviewed launch parameters; Hookr keeps deployer and operator permissions outside the adapter."
+  },
+  "requirements": [
+    "Return a versioned adapter whose preview and execution payload encode the same terms."
+  ]
+}

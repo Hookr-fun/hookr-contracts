@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -12,9 +12,7 @@ import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {PoolModifyLiquidityTest} from "@uniswap/v4-core/src/test/PoolModifyLiquidityTest.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -23,6 +21,9 @@ import {HookMiner} from "./utils/HookMiner.sol";
 /// @notice Adversarial regression for guard-fee accounting when an exact-input buy is only
 ///         partially filled at its caller-selected price limit.
 contract GuardPartialFillAuditTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 internal constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -31,8 +32,6 @@ contract GuardPartialFillAuditTest is Test {
 
     IPoolManager internal manager;
     HookrLaunchpad internal pad;
-
-    HookrBlueprints bpReg;
     HookrHook internal hook;
     HookrSwapRouter internal router;
     PoolModifyLiquidityTest internal lpRouter;
@@ -43,14 +42,14 @@ contract GuardPartialFillAuditTest is Test {
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
         lpRouter = new PoolModifyLiquidityTest(manager);
         vm.deal(creator, 10 ether);
         vm.deal(trader, 100 ether);
@@ -65,7 +64,7 @@ contract GuardPartialFillAuditTest is Test {
         internal
         returns (address token, PoolKey memory key, PoolId id)
     {
-        HookrLaunchpadLib.HookParams memory params = HookrLaunchpadLib.HookParams({
+        HookrLaunchpad.HookParams memory params = HookrLaunchpad.HookParams({
             guardBlocks: 10,
             maxBuyBps: maxBuyBps,
             snipeTaxPips: snipeTaxPips,
@@ -77,12 +76,7 @@ contract GuardPartialFillAuditTest is Test {
             lpBps: lpBps,
             potBps: 0,
             potEveryNBuys: 0,
-            potMinBuyWei: 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: 0
         });
         HookrLaunchpad.LaunchArgs memory args;
         args.name = "Partial Guard";
@@ -93,7 +87,7 @@ contract GuardPartialFillAuditTest is Test {
 
         uint256 value = pad.creationFeeWei() + args.creatorBuyWei;
         vm.prank(creator);
-        token = pad.launchInstant{value: value}(args, 5000, bytes32(0));
+        token = pad.launchInstant{value: value}(args, 5000);
         key = PoolKey({
             currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(token),

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -10,9 +10,7 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {HookrSwapRouter} from "../src/HookrSwapRouter.sol";
 import {HookrToken} from "../src/HookrToken.sol";
@@ -21,6 +19,9 @@ import {HookMiner} from "./utils/HookMiner.sol";
 /// @notice Deterministic 2^5 composition gate against a locally deployed canonical PoolManager.
 ///         Bits are SNIPE | SURGE | AUTO_BURN | LP_REWARDS | DETERMINISTIC_POT.
 contract HookCombinationMatrixTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
@@ -35,8 +36,6 @@ contract HookCombinationMatrixTest is Test {
 
     IPoolManager manager;
     HookrLaunchpad pad;
-
-    HookrBlueprints bpReg;
     HookrHook hook;
     HookrSwapRouter router;
     address creator = address(0xC0FFEE);
@@ -44,26 +43,26 @@ contract HookCombinationMatrixTest is Test {
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (address predicted, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         assertEq(address(hook), predicted);
         pad.setHook(hook);
-        router = new HookrSwapRouter(manager, hook);
+        router = new HookrSwapRouter(manager, hook, address(0));
 
         vm.deal(creator, 100 ether);
         vm.deal(trader, 100 ether);
     }
 
-    function _params(uint8 mask, uint32 potEveryN) internal pure returns (HookrLaunchpadLib.HookParams memory p) {
+    function _params(uint8 mask, uint32 potEveryN) internal pure returns (HookrLaunchpad.HookParams memory p) {
         bool snipe = mask & SNIPE != 0;
         bool surge = mask & SURGE != 0;
         bool burn = mask & BURN != 0;
         bool lp = mask & LP != 0;
         bool pot = mask & POT != 0;
-        p = HookrLaunchpadLib.HookParams({
+        p = HookrLaunchpad.HookParams({
             guardBlocks: snipe ? 100 : 0,
             maxBuyBps: snipe ? 50 : 0,
             snipeTaxPips: snipe ? 400_000 : 0,
@@ -75,12 +74,7 @@ contract HookCombinationMatrixTest is Test {
             lpBps: lp ? 25 : 0,
             potBps: pot ? 50 : 0,
             potEveryNBuys: pot ? potEveryN : 0,
-            potMinBuyWei: pot ? 0.001 ether : 0,
-            buybackBps: 0,
-            buybackDrawdownBps: 0,
-            buybackCooldownBlocks: 0,
-            buybackMinSpendWei: 0,
-            buybackMaxSpendWei: 0
+            potMinBuyWei: pot ? 0.001 ether : 0
         });
     }
 
@@ -93,7 +87,7 @@ contract HookCombinationMatrixTest is Test {
         a.custom = _params(mask, potEveryN);
         uint256 fee = pad.creationFeeWei();
         vm.prank(creator);
-        token = pad.launch{value: fee}(a, bytes32(0));
+        token = pad.launch{value: fee}(a);
         vm.prank(creator);
         pad.buy{value: 0.02 ether}(token, 0);
         HookrLaunchpad.Launch memory launch = pad.getLaunch(token);
@@ -126,8 +120,8 @@ contract HookCombinationMatrixTest is Test {
             uint16 potBps,,
             uint32 potEveryNBuys,,
             uint96 potMinBuyWei,
-            uint96 burnTriggerWei,,,,,,, // buyback block + royaltyTo
-            address configuredToken
+            uint96 burnTriggerWei,,
+            address configuredToken,
         ) = hook.poolConfig(id);
         assertTrue(initialized);
         assertEq(configuredToken, token);

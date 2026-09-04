@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
@@ -86,4 +86,37 @@ interface ILeverageHook {
 
     /// @notice The market that owns a pool, or address(0).
     function marketOf(PoolId id) external view returns (address);
+}
+
+/// @notice What the HOOK needs from the market, and nothing else.
+///
+///         Deliberately its own interface rather than a method on a fat `ILeverageMarket`: the
+///         hook is the one contract in the system that runs inside somebody else's swap, so the
+///         surface it can reach into the market with is the surface an incoming trader can
+///         reach by trading. One function, one caller, one direction.
+interface ILeverageQueue {
+    /// @notice Liquidates one position INTO THE POOL, ahead of the swap that is about to
+    ///         execute. Called from `beforeSwap`, inside the caller's own `unlock`.
+    /// @param trader The position to take.
+    /// @param projectedPriceWad The quote-per-token price the incoming swap would leave behind
+    ///        if it executed against the pool as it stands right now.
+    /// @return tokensSold Collateral sold into the pool ahead of the incoming swap.
+    /// @dev Reverts rather than returning zero when the position may not be taken. The hook
+    ///      relies on that: see `LeverageHook._drainQueue` for why one refusal ends the pass.
+    function liquidateAhead(address trader, uint256 projectedPriceWad) external returns (uint256 tokensSold);
+
+    /// @notice Interest index the book's bucket keys are normalised by.
+    function borrowIndex() external view returns (uint256);
+
+    /// @notice Occupied-octave mask over the credit book.
+    function bookOct() external view returns (uint256);
+
+    /// @notice Occupied-mantissa mask within one octave.
+    function bookSub(uint256 octave) external view returns (uint256);
+
+    /// @notice First position filed in a bucket, or address(0).
+    function bucketHead(uint256 bucket) external view returns (address);
+
+    /// @notice The next position in the same bucket, or address(0).
+    function bucketNext(address trader) external view returns (address);
 }

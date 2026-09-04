@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
@@ -10,9 +10,7 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
 
-import {HookrBlueprints} from "../src/HookrBlueprints.sol";
 import {HookrLaunchpad} from "../src/HookrLaunchpad.sol";
-import {HookrLaunchpadLib} from "../src/libraries/HookrLaunchpadLib.sol";
 import {HookrHook} from "../src/HookrHook.sol";
 import {V4PoolMath} from "../src/libraries/V4PoolMath.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
@@ -20,25 +18,26 @@ import {BlueprintSeeds} from "./utils/BlueprintSeeds.sol";
 
 /// @notice A stored tranche is not proof that a position was minted.
 contract CoreInvariantSecondOpinionTest is Test {
+    /// @dev The hook's flywheel recipient. address(0) = flywheel dormant (pre-flywheel semantics).
+    address constant FLYWHEEL_RECIPIENT = address(0);
+
     using StateLibrary for IPoolManager;
 
     uint160 internal constant HOOK_FLAGS = uint160((1 << 13) | (1 << 11) | (1 << 7) | (1 << 6) | (1 << 3) | (1 << 2));
 
     IPoolManager internal manager;
     HookrLaunchpad internal pad;
-
-    HookrBlueprints bpReg;
     HookrHook internal hook;
     address internal creator = address(0xC0FFEE);
 
     function setUp() public {
         manager = IPoolManager(address(new PoolManager(address(this))));
-        pad = new HookrLaunchpad(manager, new HookrBlueprints(address(this)));
-        bpReg = pad.blueprints();
-        BlueprintSeeds.seed(pad.blueprints());
-        bytes memory creation = abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad)));
+        pad = new HookrLaunchpad(manager);
+        BlueprintSeeds.seed(pad);
+        bytes memory creation =
+            abi.encodePacked(type(HookrHook).creationCode, abi.encode(manager, address(pad), FLYWHEEL_RECIPIENT));
         (, bytes32 salt) = HookMiner.find(address(this), HOOK_FLAGS, creation);
-        hook = new HookrHook{salt: salt}(manager, address(pad));
+        hook = new HookrHook{salt: salt}(manager, address(pad), FLYWHEEL_RECIPIENT);
         pad.setHook(hook);
         vm.deal(creator, 1 ether);
     }
@@ -51,12 +50,12 @@ contract CoreInvariantSecondOpinionTest is Test {
         a.expectedCreator = creator;
         a.creatorBuyWei = ethIn;
         a.custom.baseFeePips = 3000;
-        a.lpTranches = new HookrLaunchpadLib.LpTranche[](1);
-        a.lpTranches[0] = HookrLaunchpadLib.LpTranche({startOffset: 600, endOffset: 6000, bps: 1});
+        a.lpTranches = new HookrLaunchpad.LpTranche[](1);
+        a.lpTranches[0] = HookrLaunchpad.LpTranche({startOffset: 600, endOffset: 6000, bps: 1});
 
         uint256 creationFee = pad.creationFeeWei();
         vm.prank(creator);
-        address token = pad.launchInstant{value: creationFee + ethIn}(a, 10_000, bytes32(0));
+        address token = pad.launchInstant{value: creationFee + ethIn}(a, 10_000);
 
         PoolKey memory key = PoolKey({
             currency0: Currency.wrap(address(0)),

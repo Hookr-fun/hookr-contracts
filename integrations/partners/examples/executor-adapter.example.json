@@ -1,0 +1,40 @@
+{
+  "$schema": "../schema.v1.json",
+  "schemaVersion": "hookr.partner-integration.v1",
+  "slug": "example-dual-pool-executor",
+  "track": "executor_adapter",
+  "project": {
+    "name": "Example dual-pool executor",
+    "website": "https://example.com/executor"
+  },
+  "target": {
+    "chainId": 4663,
+    "poolTopology": "dual_pool",
+    "poolKeys": [
+      {
+        "currency0": "0x1111111111111111111111111111111111111111",
+        "currency1": "0x2222222222222222222222222222222222222222",
+        "fee": 3000,
+        "tickSpacing": 60,
+        "hooks": "0x3333333333333333333333333333333333333333"
+      },
+      {
+        "currency0": "0x1111111111111111111111111111111111111111",
+        "currency1": "0x4444444444444444444444444444444444444444",
+        "fee": 3000,
+        "tickSpacing": 60,
+        "hooks": "0x5555555555555555555555555555555555555555"
+      }
+    ]
+  },
+  "interface": {
+    "executorInterface": "https://example.com/executor/IExecutor.sol",
+    "authorityModel": "Only the reviewed hook address may call the executor; an explicit owner rotates that hook after a delayed onchain update.",
+    "rotationProcess": "The current owner proposes a new hook, waits through the configured delay, executes the change, and publishes the receipt.",
+    "profitPolicy": "Each successful call settles the declared creator and treasury shares before returning; a failed leg reverts the whole operation."
+  },
+  "requirements": [
+    "Fork the target chain and exercise the exact production caller authorization.",
+    "Assert authorization, both swaps, profit accounting, and postcondition readback separately."
+  ]
+}

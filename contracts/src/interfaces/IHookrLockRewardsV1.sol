@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 interface IHookrLockRewardsV1 {
     function checkpoint(uint32 maxEpochs) external returns (uint32 processedThroughEpoch);
