@@ -154,7 +154,7 @@ The last four rows predate the rest and carry the metadata of a build that embed
 
 ## Refilling the Addresses
 
-`scripts/sync-from-release.mjs` writes the address cells above, `deployments/robinhood-4663.v2.json` and the hooklist entry from a deployment record:
+`scripts/sync-from-release.mjs` writes the address cells above and `deployments/robinhood-4663.v2.json` from a deployment record:
 
 ```sh
 node scripts/sync-from-release.mjs --journal /path/to/journal.json --root .

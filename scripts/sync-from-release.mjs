@@ -7,7 +7,7 @@
  *
  *   1. docs/reference/deployments.md      -- the `pending deployment` cells
  *   2. deployments/robinhood-4663.v2.json -- addresses, hashes, identifiers
- *   3. hooklist/robinhood-4663.template.json -- hook.address only
+ *   3. hooklist/robinhood-4663.template.json -- hook.address only, when the file is present
  *
  * It never invents a value. A journal step that is missing leaves its
  * placeholder untouched and is listed in the report. An address already
@@ -46,7 +46,7 @@
  * chainId does not match the package's.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -236,7 +236,9 @@ function main() {
   const hooklistPath = join(root, "hooklist", "robinhood-4663.template.json");
 
   const deployments = readJson(deploymentsPath);
-  const hooklist = readJson(hooklistPath);
+  // The hooklist entry is optional: the published package carries the docs and the
+  // deployments record, and the entry itself lives in Uniswap's hooklist once listed.
+  const hooklist = existsSync(hooklistPath) ? readJson(hooklistPath) : null;
   let markdown = readFileSync(docPath, "utf8");
   const explorer = deployments.explorer;
 
@@ -317,7 +319,7 @@ function main() {
   }
 
   const rootHookAddress = stepAddress(steps, "rootHook");
-  if (rootHookAddress) {
+  if (rootHookAddress && hooklist) {
     const current = hooklist.hook.address;
     if (current && !current.startsWith("<") && !args.force) {
       report.skipped.push(`hooklist hook.address (already ${current})`);
@@ -335,7 +337,7 @@ function main() {
     console.log("dry run, nothing written\n");
   } else {
     writeFileSync(deploymentsPath, `${JSON.stringify(deployments, null, 2)}\n`);
-    writeFileSync(hooklistPath, `${JSON.stringify(hooklist, null, 2)}\n`);
+    if (hooklist) writeFileSync(hooklistPath, `${JSON.stringify(hooklist, null, 2)}\n`);
     writeFileSync(docPath, markdown);
   }
 

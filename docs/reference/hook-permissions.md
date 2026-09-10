@@ -91,4 +91,4 @@ Fees are in pips: 3,000 pips is 0.30%, and `MAX_TOTAL_FEE_PIPS = 500_000` is 50%
 
 ## Hooklist Entry
 
-`hooklist/robinhood-4663.template.json` carries this flag set in the shape Uniswap's hooklist expects, with the root hook's live address filled in. The audit URL is a placeholder until a report exists because no audit report exists.
+The hooklist entry carries this flag set in the shape Uniswap's hooklist expects, with the root hook's live address filled in. It names no audit report, because none exists.

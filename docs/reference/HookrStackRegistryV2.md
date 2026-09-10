@@ -2,9 +2,9 @@
 
 Source: [`src/HookrStackRegistryV2.sol`](../../src/HookrStackRegistryV2.sol)
 
-Registry for immutable per-pool stacks admitted under one sealed shared-root profile
+Registry for immutable per-pool stacks admitted under sealed shared-root profiles
 
-Every pool runs on the sealed root profile. The registry requires stable root profiles, keeps the per-market kernel-instance lane switched off, and reverts every function belonging to that lane, except `kernelInstanceFactoryFor`, which returns the zero address.
+Every pool runs on a sealed root profile. The registry requires stable root profiles, keeps the per-market kernel-instance lane switched off, and reverts every function belonging to that lane, except `kernelInstanceFactoryFor`, which returns the zero address.
 
 ## Identity
 

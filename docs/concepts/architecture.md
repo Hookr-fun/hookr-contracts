@@ -14,7 +14,7 @@ Thirteen addresses make up the release: one root hook, the accounting kernel it 
 
 **`HookrModuleCatalogV1`** admits module implementations. A registration pins the implementation address, its runtime code hash, its config schema hash and the structural maxima it may ever request. Registration is permanent; there is no updater.
 
-**`HookrStackRegistryV2`** admits pools. It seals one root profile listing the kernel, the allowed modules and the trusted router and quoter integrations, then freezes one stack per `PoolId` inside that envelope. Every pool runs on the sealed profile; there is no per-market hook instance.
+**`HookrStackRegistryV2`** admits pools. It seals root profiles, each listing a kernel, the allowed modules and the trusted router and quoter integrations, then freezes one stack per `PoolId` inside that envelope. Every pool runs on a sealed profile; there is no per-market hook instance.
 
 **`HookrMarketCoordinatorV5`** is the only address the registry accepts stacks from. It opens both lanes, holds the founding position for the new-token lane, resolves the protocol share for the creator, and exposes the treasury address the admission library checks against.
 

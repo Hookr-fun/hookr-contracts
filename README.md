@@ -101,7 +101,7 @@ The contracts are live on Robinhood Chain, chain id 4663. The root hook is [`0xb
 
 [Deployments](./docs/reference/deployments.md) carries one row per contract in deployment order, the linked libraries, the wiring read back from the chain, and the registry identifiers. `deployments/robinhood-4663.v2.json` carries the same set as machine-readable JSON, with each contract's runtime code hash and size and its deployment transaction.
 
-`scripts/sync-from-release.mjs` writes both, and the Uniswap hooklist entry, from a deployment record:
+`scripts/sync-from-release.mjs` writes both from a deployment record:
 
 ```sh
 node scripts/sync-from-release.mjs --journal /path/to/journal.json --root .
