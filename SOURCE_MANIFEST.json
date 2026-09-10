@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "scope": "Byte-for-byte export of the Solidity sources behind the Hookr contracts on chain 4663: every deployed contract, plus the interfaces, types and libraries they import transitively.",
+  "source_repository": "https://github.com/Hookr-fun/hookr.git",
+  "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+  "hash_algorithm": "sha256",
+  "generated_by": "node check-source-manifest.mjs --write",
+  "files": [
+    {
+      "path": "src/HookrKernelQuoterV1.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrKernelQuoterV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "49ff6eb280eb9b639052a679ab2132acef0998b19d06d044cec1472924637c86"
+    },
+    {
+      "path": "src/HookrKernelRouterV3.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrKernelRouterV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "d25fc92c4fc84836a5dc389665e29a7060d8e01ac82bc40d74f8490fd002677b"
+    },
+    {
+      "path": "src/HookrMarketCoordinatorV3.sol",
+      "role": "compiled-into-a-deployed-contract",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrMarketCoordinatorV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "10736d49884e916dc85d5f72ee6b3f5be0e76c66d3eb3292645d3d58207bde1c"
+    },
+    {
+      "path": "src/HookrMarketCoordinatorV5.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrMarketCoordinatorV5.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "47db587a51fbecd8cf36d7f2c4609d9e5d01b506586a6c4713dcc85b5b0b72de"
+    },
+    {
+      "path": "src/HookrModularHookV6.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrModularHookV6.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "600e24a5dd9c488ca665d23c5703911f1d1d5eb26f809b8972c2c176d3511ad0"
+    },
+    {
+      "path": "src/HookrModuleCatalogV1.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrModuleCatalogV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "61c9a24a42535957dc42ca0d8fad5ecdf26620fb535c3dbff44c1d28cb2b0040"
+    },
+    {
+      "path": "src/HookrNativeMechanicsBlockV2.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrNativeMechanicsBlockV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "2e44e8bf5a0e48df26f956369aeb87d7d6ce37e30b44dc3a5ec71f311fb47f5c"
+    },
+    {
+      "path": "src/HookrReleaseCreate2FactoryV1.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrReleaseCreate2FactoryV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "e8eaede3b30595a3dc3b8d2135f9b7d75e81d216521d7e5f601d7f436d4a904b"
+    },
+    {
+      "path": "src/HookrStackRegistryV1.sol",
+      "role": "compiled-into-a-deployed-contract",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrStackRegistryV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "3230bdb932cae9e206bf76ebd51b4110aedadad2cf5d87d2537c494ab63c6850"
+    },
+    {
+      "path": "src/HookrStackRegistryV2.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrStackRegistryV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "266982714fc575ad732a28d5c83038813e546c7866f25b16af83eeb60d74ffa9"
+    },
+    {
+      "path": "src/HookrSwapAccountingKernelV3.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrSwapAccountingKernelV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "44b8aaeb3851c7c5227ee3cf0d244748d6373471a4bba66b52652b7f6aa44c48"
+    },
+    {
+      "path": "src/HookrSwapKernelV3.sol",
+      "role": "compiled-into-a-deployed-contract",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrSwapKernelV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "d1b389feaa1d8b2d0334b9b5a7cc472fafdbb29f93afe4b866e9d52a5ffc2ded"
+    },
+    {
+      "path": "src/HookrTokenV61.sol",
+      "role": "compiled-into-a-deployed-contract",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrTokenV61.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "b0cf9fde32a2ea8fd0db16f6aff1c4ccd621a31331c08865a290fe7896785387"
+    },
+    {
+      "path": "src/HookrTreasuryForwarderV1.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/HookrTreasuryForwarderV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "cc5ac7765ea8ad359ced73248740c33c192c48cee734ac67d0e3272c99a7f112"
+    },
+    {
+      "path": "src/interfaces/IHookrArbExecutorV2.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrArbExecutorV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "d96d58dc952a59522419fc9f35b7c51f2aecdac4b55257983820afc24a34f137"
+    },
+    {
+      "path": "src/interfaces/IHookrArbExecutorV3.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrArbExecutorV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "3a8d331556eb79087571fc7f9b9b34d2bfaa35484d4f2864e4c1a77cafe20233"
+    },
+    {
+      "path": "src/interfaces/IHookrClaimSinkV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrClaimSinkV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "7bf18fa1055e1628191d1a83902836586e96d7a6a66e4f11d7e41a7323cf451f"
+    },
+    {
+      "path": "src/interfaces/IHookrKernelInstanceFactoryV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrKernelInstanceFactoryV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "dcde2d13f5b892745496664e520ee895eac346fda07947c8159d6783c80fb0d1"
+    },
+    {
+      "path": "src/interfaces/IHookrKernelInstanceLayoutV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrKernelInstanceLayoutV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "1ec933ff913198a5fb9a56add0e0d249a7527ebef1f8568b04261f0fe23d6f8d"
+    },
+    {
+      "path": "src/interfaces/IHookrKernelInstanceV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrKernelInstanceV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "4ddddd53cdf988b4f1e1c8452ad4f90d4ec0f4322a4d8c13346bccf5bed6c49a"
+    },
+    {
+      "path": "src/interfaces/IHookrKernelIntegrationV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrKernelIntegrationV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "3804891f16ac7ee1163470ac4b45163009e61bc2f09e426319a5a94cde2c063d"
+    },
+    {
+      "path": "src/interfaces/IHookrKernelRouterV2.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrKernelRouterV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "b0776c82123c54e0acb54725476f82e430817582c2102c8c32211e16f9d5b9ce"
+    },
+    {
+      "path": "src/interfaces/IHookrMaturityTokenV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrMaturityTokenV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "b2ee0ddddfb2a0b71ca1592c52d7052f335a5159b3a5fd2af846700ea3a4893d"
+    },
+    {
+      "path": "src/interfaces/IHookrModuleV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrModuleV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "d4b4962577349c4496ea0168831cdac51665b3cf1e3e1f042b14390302c09bac"
+    },
+    {
+      "path": "src/interfaces/IHookrPartnerRegistryV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrPartnerRegistryV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "fcba87dc3425505d59ae9bb299e0d65ee661dd37cbde13c363164f04ed14ce24"
+    },
+    {
+      "path": "src/interfaces/IHookrStackRegistryV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrStackRegistryV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "30cea1aa8cd21a395a7f7e97c868450d97939bb3d4648ebce7b7f526cee7644b"
+    },
+    {
+      "path": "src/interfaces/IHookrStatefulModuleV1.sol",
+      "role": "interface",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/interfaces/IHookrStatefulModuleV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "f3fa90323c4556fff81db5912f4ee6934b10e7018b44bdba6f21906d7852f892"
+    },
+    {
+      "path": "src/libraries/HookrArbTypesV2.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrArbTypesV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "b9ef6e7455396ef33480a32c9cdeb06ad13636a586c5ee7d56be614fad927fa6"
+    },
+    {
+      "path": "src/libraries/HookrArbTypesV3.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrArbTypesV3.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "298a6feb3d7144ed5ba22364cef854628a84a6f5aa653855ad7f5a908b3d8cc3"
+    },
+    {
+      "path": "src/libraries/HookrCorrectionPayloadV2.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrCorrectionPayloadV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "fffb812ae89dfa6d93ef359ccefc172febd02b0665f536d536eaeb08661f65d8"
+    },
+    {
+      "path": "src/libraries/HookrHookDataV1.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrHookDataV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "cf97cfc65b186df2eb25e74fb5a76f87eeeea903b0f4b878590d1c4d7b5573ff"
+    },
+    {
+      "path": "src/libraries/HookrMarketCoordinatorInitialBuyLibV4.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrMarketCoordinatorInitialBuyLibV4.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "9fdbadb51ce099c8f01447e273396cd7ba11a2345ac60f50db99926c3827086e"
+    },
+    {
+      "path": "src/libraries/HookrModularCorrectionLibV2.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrModularCorrectionLibV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "60e3c94f1e48b1de1b1ae94669d73185ea19d6ada014cca344893ddde8254d62"
+    },
+    {
+      "path": "src/libraries/HookrModuleTypesV1.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrModuleTypesV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "7383fd5f677a8fac5c59c3f4a40444511b34e38d38030b0936818081977cfaf5"
+    },
+    {
+      "path": "src/libraries/HookrNativeMechanicsCoordinatorLibV1.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrNativeMechanicsCoordinatorLibV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "8911b03b1b8eaf632f7282db3c9d0fb3ac4fd96e3a08e2132c9c896e1b87fd80"
+    },
+    {
+      "path": "src/libraries/HookrNativeMechanicsCoordinatorLibV2.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrNativeMechanicsCoordinatorLibV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "4583e4db54c205a3a74e847b9363f97587ef1d970798d570902830a9832ce799"
+    },
+    {
+      "path": "src/libraries/HookrStatefulModuleTypesV1.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrStatefulModuleTypesV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "8c316887b0050d2c6602b9876f2d692cead0fade3658ffcc9c879b0368c62332"
+    },
+    {
+      "path": "src/libraries/HookrStatefulSettlementLibV1.sol",
+      "role": "deployed",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrStatefulSettlementLibV1.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "caee8150ddb6affa1351f29d4d57e1d22e605c07c5c5e946c5673ddd57e010ef"
+    },
+    {
+      "path": "src/libraries/HookrTokenTransfer.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrTokenTransfer.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "cfd338792dd0b2bdb432c0d3e5b19b2499d9bc3b235120bb73fce71fbee82993"
+    },
+    {
+      "path": "src/libraries/HookrWthFeePolicyV2.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/HookrWthFeePolicyV2.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "219c26ebbca239dbb72dc89fd07a3c1f704870784eccf1b1b96a3c95672f4cfa"
+    },
+    {
+      "path": "src/libraries/V4PoolMath.sol",
+      "role": "library",
+      "source_repository": "https://github.com/Hookr-fun/hookr.git",
+      "source_path": "contracts/src/libraries/V4PoolMath.sol",
+      "source_commit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+      "sha256": "c39f3a6e42e918c91547fab0e8663b826148903a7d988e3e78fefc5bb4849165"
+    }
+  ]
+}

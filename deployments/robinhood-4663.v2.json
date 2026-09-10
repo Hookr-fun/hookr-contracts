@@ -1,0 +1,217 @@
+{
+  "$schema": "hookr.deployments.v2",
+  "chainId": 4663,
+  "chainName": "Robinhood Chain",
+  "explorer": "https://robinhoodchain.blockscout.com",
+  "status": "deployed",
+  "compiler": {
+    "version": "v0.8.26+commit.8a97fa7a",
+    "viaIR": true,
+    "optimizerRuns": 200,
+    "evmVersion": "cancun",
+    "bytecodeHash": "ipfs"
+  },
+  "roles": {
+    "deployer": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "coordinatorOwner": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "registryOwner": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "catalogOwner": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "forwarderOwner": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "forwarderTarget": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE"
+  },
+  "contracts": {
+    "moduleCatalog": {
+      "name": "HookrModuleCatalogV1",
+      "address": "0x6a3561d5B6305E2229F30EDF66702e8Bc4fA19D1",
+      "runtimeCodeHash": "0x66edd27410b1d49f8d0367d856cafc339776a0ca62ccfbf847b560a5fc9b3924",
+      "txHash": "0x798314fca53e7f74e53cfec00307905cf9fa30f1631f86f44b49755a9346cdaf",
+      "blockNumber": "57281759",
+      "runtimeSize": 6448
+    },
+    "stackRegistry": {
+      "name": "HookrStackRegistryV2",
+      "address": "0x5b7f1A117A83aaac15B0698Aa4eB9D53fE5f5BA3",
+      "runtimeCodeHash": "0xfc9ac0527917d802fe2f13fc71bbd5aa6b836dfec0676fd9bb6317b7638a47d4",
+      "txHash": "0x7cde354ab3aac31d9b193c6a7a33a61ec8a6880df622e83c4c574d3000d3b93f",
+      "blockNumber": "57297367",
+      "runtimeSize": 23307
+    },
+    "treasuryForwarder": {
+      "name": "HookrTreasuryForwarderV1",
+      "address": "0x9BB7c01571ef6e59a8834A6a89A6b024822BAf6f",
+      "runtimeCodeHash": "0x1f2295fcb405d1ca32cb476978148d27cedd2d96b3bdd0aef5849924218efcef",
+      "txHash": "0x332a81d4810beeedac40f94ee7be3239ff9c5d166e7ea2318030dae2136ea3bb",
+      "blockNumber": "57297409",
+      "runtimeSize": 3272
+    },
+    "nativeMechanicsCoordinatorLib": {
+      "name": "HookrNativeMechanicsCoordinatorLibV2",
+      "address": "0xafC0a7656DF8B1aA5A173d04612a9661C4b9c7E2",
+      "runtimeCodeHash": "0x27363b30d248040ba7498c3e8c8830bd13c7b5e090701b9e3a98fc5fdc7f2da4",
+      "txHash": "0x7e8cae67b66781587eb644671b9fc799062ddaecdf43e05a65446a7ded33ece3",
+      "blockNumber": "57297424",
+      "runtimeSize": 3713
+    },
+    "initialBuyLib": {
+      "name": "HookrMarketCoordinatorInitialBuyLibV4",
+      "address": "0xE12f58f1662293B8b4fF3f0227384bD9D2a6e382",
+      "runtimeCodeHash": "0x35047a8dfabd374e4489c227f73adf39891dedee2dd504d183c674f2692d9d8e",
+      "txHash": "0x70b038295f4f21ed890853a788e589b43c5da6e297cf9e82a9c36968f9786656",
+      "blockNumber": "57297439",
+      "runtimeSize": 2209
+    },
+    "marketCoordinator": {
+      "name": "HookrMarketCoordinatorV5",
+      "address": "0x53A192A3fCeE94Da77916B461E0cCa2Dd6402442",
+      "runtimeCodeHash": "0xe8ddc7767b334ad58a29bafc8d610b33842fa3d4188233d48e791aef5bf2e6e5",
+      "txHash": "0x438f7186e382493399a79b2718276b1b63754e895576c4d316e9e8e09ca7570c",
+      "blockNumber": "57297469",
+      "runtimeSize": 22865
+    },
+    "swapAccountingKernel": {
+      "name": "HookrSwapAccountingKernelV3",
+      "address": "0x530523DEcC9523dDF8A87842fFBBD24a59C7E060",
+      "runtimeCodeHash": "0x9ee2621354023ddf80d1b28a35f138be370ceb16b27a1a94b51819c5e9b708c1",
+      "txHash": "0x6eabec7bb53b1b0b02c3475860db4b7637ad56405222bac884d1caaa0389012c",
+      "blockNumber": "57297525",
+      "runtimeSize": 23965
+    },
+    "kernelRouter": {
+      "name": "HookrKernelRouterV3",
+      "address": "0xf0E528c39f33F565876cbaa7e0DFaCa38Df966E9",
+      "runtimeCodeHash": "0x5cdb8e9a4bb0dba6f156c9f0633f8c9f86d8f432e49ef07591a1bbd9dd2c73c9",
+      "txHash": "0xd2a2837fb2e89961fdb22ab4264fcae9a450f338c7f11bff2be7df58acc9a00e",
+      "blockNumber": "57297538",
+      "runtimeSize": 10178
+    },
+    "kernelQuoter": {
+      "name": "HookrKernelQuoterV1",
+      "address": "0x5Ba8FBbB4aB20Ff6Daf0ecDEBe3784f869BcB1B5",
+      "runtimeCodeHash": "0x35eb35c0033541b938e11587d7e4b78f4f61da23a2aaf32630076fc532a44e6b",
+      "txHash": "0x5ffcfc02833ef4c5366046da0a7f9ef2fcab9dfd4a47721d4fdf81fe168eb4da",
+      "blockNumber": "57297554",
+      "runtimeSize": 5412
+    },
+    "nativeMechanicsBlock": {
+      "name": "HookrNativeMechanicsBlockV2",
+      "address": "0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae",
+      "runtimeCodeHash": "0xffaf3f999cbb2e2ac56570cff8979b7811c8e0fc4a3af19f0624bc5e01faf959",
+      "txHash": "0x94f2edc2eebe2baa674904531a4c92575688c19b051f6d9dfffc89886e0db09d",
+      "blockNumber": "57297569",
+      "runtimeSize": 16889
+    },
+    "rootHook": {
+      "name": "HookrModularHookV6",
+      "address": "0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC",
+      "runtimeCodeHash": "0xe888568e00fc1fc425d8f0135d8ceae791584cf78fbd902f3c569d6292dc38f2",
+      "txHash": "0xb06d6751528e4297202afc925325ec26e3ce09104d265a768fbd0627c71409d7",
+      "blockNumber": "57297676",
+      "salt": "0x8c9e77df3bb392756dba4c4cf9d2aa29484ee71c730478e055c9ef7240737b80",
+      "requiredFlags": "0x28cc",
+      "flagMask": "0x3fff",
+      "runtimeSize": 8474
+    }
+  },
+  "reusedLibraries": {
+    "tokenDeployer": {
+      "name": "HookrMarketCoordinatorTokenDeployerV3",
+      "address": "0x7A2821F7Ea0e4d0C5a409D479cd457d5B34F9399",
+      "linkedInto": "marketCoordinator",
+      "runtimeCodeHash": "0xac65ece57c16e5404fe03a6ba19d72f10c13e2080b5de4f49ce6d761d3290f83",
+      "reused": false,
+      "txHash": "0x8e45f594f9cb8136be0663cb28a60921a0eca6a6870e8c05f41793284715546d",
+      "blockNumber": "57297454"
+    },
+    "kernelReservationLib": {
+      "name": "HookrMarketCoordinatorKernelReservationLibV1",
+      "address": "0x8C2E208eDFf0eF7535B20AE8F13dfBF71133521d",
+      "linkedInto": "marketCoordinator",
+      "verifyBeforeLinking": true,
+      "runtimeCodeHash": "0x6936c50b4dfa7e3e4d628416db33cedab825151a7d02a5421259ae2bb06a13d0",
+      "reused": true
+    },
+    "statefulSettlementLib": {
+      "name": "HookrStatefulSettlementLibV1",
+      "address": "0xde7Ae40c713D5C9EC2C8e2E28810C6C7Eb791706",
+      "linkedInto": "swapAccountingKernel",
+      "verifyBeforeLinking": true,
+      "runtimeCodeHash": "0x7bce660b11085f30016a5e073913c5ca14893b2c42f3af6f656ce246ab285328",
+      "reused": true
+    },
+    "modularCorrectionLib": {
+      "name": "HookrModularCorrectionLibV2",
+      "address": "0xd2832D5F64C7116bE2c7B32D8c06d60023b479D8",
+      "linkedInto": "rootHook",
+      "verifyBeforeLinking": true,
+      "runtimeCodeHash": "0x2aefdc592278625679094ad9729879bd92c245c3c0da51619d84026ca398a51f",
+      "reused": true
+    }
+  },
+  "identifiers": {
+    "kernelFamilyId": "0x8b1849873123e8aae0521342fa900a748f6ac5f572800cddb1e71027474213b0",
+    "moduleKey": "0xb7e3f7cb75273b57fec1d1eec0c8e7c59568c1537ce2135df897d1f14ef74304",
+    "rootProfileId": "0x460f3441e5dc6f26fe4729ecb80ad7aa9ba896af54bed88a47f1218588129d72",
+    "kernelId": "0x1be0c118b1c6520d97de31ee9f0c33069f0e715ffcdcb16c87a343752bb5be14",
+    "moduleId": "0x961091565aaf4eaa4996296fda9772957e61d18d90b965111a59ded2bbb5e774",
+    "routerIntegrationId": "0xc9ddc18b51d83cdafa6da985c67b4db41895dcde37b719597bdda9db6396c455",
+    "quoterIntegrationId": "0x6e5a5b6aa6d141ccaf3b9f25f60e87919fc7a724cc845d146581eb49c079a9a9",
+    "profileManifestHash": "0x74f018eb9afa65dcf38eb682397a21937b8568572c9884faa12465833bbcf213",
+    "preimages": {
+      "kernelFamilyId": "keccak256(\"HOOKR_SWAP_DELTA_V1\")",
+      "moduleKey": "keccak256(\"HOOKR_NATIVE_MECHANICS\")",
+      "rootProfileId": "keccak256(\"HOOKR_LAUNCH_V2_MIN_ROOT_PROFILE\")"
+    }
+  },
+  "upstream": {
+    "poolManager": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+    "positionManager": "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
+    "v4Quoter": "0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
+    "permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "universalRouter": {
+      "value": "",
+      "note": "Two conflicting official sources on chain 4663. Both addresses hold a deployed router of 24,546 bytes reporting the same poolManager, and their runtime code hashes differ, so they are not the same build. Nothing in the Hookr graph pins either one. Pin the address you tested, record its runtime code hash, and state which source it came from.",
+      "candidates": [
+        {
+          "address": "0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99",
+          "source": "Uniswap deployment registry",
+          "runtimeCodeHash": "0xbe8e8191bb42d843c2e948a5a55772eaab864ce01e54dcd47c9d089170b302d5"
+        },
+        {
+          "address": "0x8876789976dEcBfCbBbe364623C63652db8C0904",
+          "source": "Uniswap rendered deployments page; the address the fork runs used",
+          "runtimeCodeHash": "0x2ce6aaaf9f4151f5e1cbf774668772f17f532ae11b15e9284fd0a072a8b0fbde"
+        }
+      ]
+    },
+    "createTwoFactory": "0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe"
+  },
+  "tokens": {
+    "hookr": "0x18E674231A58c239Dc7DaeDcffE15Ec3A24cff5c",
+    "usdg": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+    "nflx": "0xE0444EF8BF4eD74f74FD73686e2ddF4C1c5591E8",
+    "aapl": "0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9"
+  },
+  "wiring": {
+    "registryCoordinator": "0x53A192A3fCeE94Da77916B461E0cCa2Dd6402442",
+    "coordinatorTreasuryBeneficiary": "0x9BB7c01571ef6e59a8834A6a89A6b024822BAf6f",
+    "blockProtocolRecipient": "0x9BB7c01571ef6e59a8834A6a89A6b024822BAf6f",
+    "forwarderNativeBlock": "0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae",
+    "catalogCanonicalStatefulModule": "0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae",
+    "routerIntegrationVersion": 3,
+    "quoterIntegrationVersion": 1,
+    "createTwoFactoryAuthorizedDeployer": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE"
+  },
+  "protocolShare": {
+    "defaultBps": 2000,
+    "ceilingBps": 5000
+  },
+  "sourceCommit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+  "registrationCaps": {
+    "requiredHookFlags": "0x28cc",
+    "maxLpFeeSurchargePips": 500000,
+    "maxSpecifiedQuoteTakeBps": 4000,
+    "maxUnspecifiedQuoteTakeBps": 2500,
+    "maxSubjectTakeBps": 1000,
+    "callbackGasLimit": 2000000
+  }
+}

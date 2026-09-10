@@ -1,0 +1,112 @@
+name: External hook integration
+description: Propose a third-party Uniswap v4 hook for Hookr's portable integration registry
+title: "hook integration: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit the exact source identity and product behavior first. Deployment, security review, Hooklist registration, and Uniswap routing remain separate evidence gates. Do not post email addresses, Telegram handles, secrets, or legal-consent records here.
+  - type: input
+    id: repository
+    attributes:
+      label: Source repository
+      description: Public HTTPS repository containing the hook system
+      placeholder: "https://github.com/owner/repository"
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Pinned commit
+      description: Exact 40-character commit reviewed for this integration
+      placeholder: "0123456789abcdef0123456789abcdef01234567"
+    validations:
+      required: true
+  - type: input
+    id: hook_contract
+    attributes:
+      label: Hook contract path
+      placeholder: "src/MyHook.sol"
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Integration lane
+      options:
+        - Standalone hook product
+        - Composable Hookr blueprint
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Enforced behavior
+      description: Describe what the contracts enforce, ordinary swap behavior, enabled hook flags, and any custom hook data.
+      placeholder: "Empty hookData does... The hook enables..."
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Factories, routers, tokens, and external dependencies
+      description: Include exact contract paths and whether each dependency is required for ordinary swaps or only an optional feature.
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Factory and runtime provenance
+      description: State whether this is a per-instance hook, singleton, or typed allowlisted factory. Include factory interface, CREATE2 salt derivation, creation/runtime code hashes, constructor evidence, proxy/admin/beacon state, and mutable operator dependencies. Say unavailable where evidence does not exist.
+    validations:
+      required: true
+  - type: textarea
+    id: callback_contract
+    attributes:
+      label: Callback contract
+      description: For every enabled callback, list caller authentication, PoolId/state scope, hookData schema/version/max length and trusted fields, selector/return tuple, delta units/sign, failure mode, external calls, reentrancy boundary, and gas boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: routing_matrix
+    attributes:
+      label: Swap and quote compatibility matrix
+      description: Cover exact-input and exact-output in both directions. Separate PoolSwapTest, dedicated router, direct PoolManager, exact deployed Universal Router, multihop, and ALF Multiplexer evidence. Include hookData for each route, exact router addresses/code hashes for fork or live claims, final wallet deltas/router events, and any unsupported cases.
+    validations:
+      required: true
+  - type: textarea
+    id: security_framework
+    attributes:
+      label: Uniswap security-framework assessment
+      description: List triggered features, dependency-failure tests, accounting/stateful/math review, fork evidence, audit scope, monitoring, bounty, incident plan, and any legal review. An unscored source candidate should say unscored.
+    validations:
+      required: true
+  - type: dropdown
+    id: audit_status
+    attributes:
+      label: Current security status
+      options:
+        - Unaudited
+        - Independently reviewed
+        - Audited
+    validations:
+      required: true
+  - type: textarea
+    id: deployment_evidence
+    attributes:
+      label: Deployment evidence
+      description: Optional. If deployed, include chain, hook address, transaction, block, PoolManager, runtime hash, verified source, pool ID, and liquidity evidence. Omit this section for source-only work.
+  - type: textarea
+    id: scanner_evidence
+    attributes:
+      label: Scanner and sellability evidence
+      description: Optional. Include timestamped Blockaid or other scanner request/response evidence separately from exact buy/sell receipts and wallet deltas. Scanner output is non-authoritative and must not replace route testing.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Evidence boundaries
+      options:
+        - label: I understand that source submission does not prove deployment, audit, Hooklist inclusion, routing approval, or Hookr endorsement.
+          required: true
+        - label: I confirm that this issue contains no private contact, wallet secret, or legal-consent data.
+          required: true
