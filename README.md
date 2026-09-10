@@ -117,9 +117,9 @@ Read [Known limitations](./docs/security/known-limitations.md) before treating a
 
 Three earlier generations of Hookr are live on chain 4663 and stay that way; nothing in this release changes a pool opened on them. Their addresses are in [`legacy/README.md`](./legacy/README.md), and the generation 3 workspace, with its tests, scripts and broadcast records, is kept whole under [`legacy/generation-3/`](./legacy/generation-3/README.md).
 
-## Issues
+## Issues and contributions
 
-Use the [external hook](https://github.com/Hookr-fun/hookr-contracts/issues/new?template=external-hook.yml) template to propose a third-party hook, and the [partner integration](https://github.com/Hookr-fun/hookr-contracts/issues/new?template=partner-integration.yml) template for integration work. Both are public; put nothing private in them.
+Use the [external hook](https://github.com/Hookr-fun/hookr-contracts/issues/new?template=external-hook.yml) template to propose a third-party hook, and the [partner integration](https://github.com/Hookr-fun/hookr-contracts/issues/new?template=partner-integration.yml) template for integration work. Both are public; put nothing private in them. Pull requests are welcome on the documentation and the deployment record; `src/` is a pinned export of the deployed code and changes to it arrive with each release, as [CONTRIBUTING.md](./CONTRIBUTING.md) explains.
 
 ## License
 
