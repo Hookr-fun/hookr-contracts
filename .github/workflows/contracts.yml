@@ -48,3 +48,8 @@ jobs:
         run: |
           ulimit -s 65536
           forge build --jobs 1 --sizes
+
+      - name: Check the storage layout against STORAGE_LAYOUT.json
+        run: |
+          ulimit -s 65536
+          node check-storage-layout.mjs

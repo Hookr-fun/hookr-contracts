@@ -45,7 +45,7 @@ graph TD
   ROUTER[HookrKernelRouterV3]
   QUOTER[HookrKernelQuoterV1]
   FWD[HookrTreasuryForwarderV1]
-  UR[Universal Router]
+  UR[Universal Router 2.1.1<br/>pinned 0x8876…0904]
 
   COORD -->|createStack| REG
   COORD -.->|DELEGATECALL| LIB

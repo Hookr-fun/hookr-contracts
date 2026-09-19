@@ -20,7 +20,7 @@ graph TD
   QUOTER[HookrKernelQuoterV1<br/>trusted quoter]
   FWD[HookrTreasuryForwarderV1]
   TARGET[owner-set payout target]
-  UR[Universal Router]
+  UR[Universal Router 2.1.1<br/>pinned 0x8876…0904]
 
   COORD -->|createStack| REG
   COORD -.->|DELEGATECALL| LIB
@@ -91,6 +91,7 @@ git submodule update --init --recursive
 forge build --sizes
 node check-source-manifest.mjs
 node check-review-boundary.mjs
+node check-storage-layout.mjs
 ```
 
 Solidity 0.8.26, via-IR, optimizer at 200 runs, `evm_version = cancun`, `bytecode_hash = ipfs`. Those are the settings the deployed code was compiled under, so a build from this repository reproduces the runtime bytes at the addresses below, metadata trailer included, for the twelve contracts this release deployed. The three reused libraries and the CREATE2 factory predate it and were compiled with the source text embedded in their metadata rather than its hash; reproducing their trailers takes `use_literal_content = true`, as the deployments page explains. The 24,576-byte EIP-170 limit binds hard here: `HookrSwapAccountingKernelV3` has 611 bytes of headroom, `HookrStackRegistryV2` 1,269 and `HookrMarketCoordinatorV5` 1,711, so check `--sizes` after any change to those three. The test suites live in the source repository at the pinned commit; see [Audit scope](./docs/security/audit-scope.md).
