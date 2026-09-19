@@ -1,0 +1,3037 @@
+{
+  "comment": "Storage layout of every contract under src/, as forge inspect reports it with AST ids removed. check-storage-layout.mjs fails the build when the current sources disagree with this file.",
+  "generatedWith": "forge Version: 1.7.1",
+  "delegatecallHosts": [
+    "HookrModularHookV6",
+    "HookrSwapKernelV3"
+  ],
+  "contracts": {
+    "HookrKernelQuoterV1": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "_callbackState",
+          "type": "t_uint256"
+        }
+      ],
+      "types": {
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrKernelRouterV3": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "_callbackState",
+          "type": "t_uint256"
+        }
+      ],
+      "types": {
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrMarketCoordinatorV3": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 20,
+          "label": "marketOpeningPaused",
+          "type": "t_bool"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "reentrancyState",
+          "type": "t_uint256"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "activeCallbackAction",
+          "type": "t_uint8"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "activeCallbackPoolId",
+          "type": "t_userDefinedValueType(PoolId)"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "launchedByIntent",
+          "type": "t_mapping(t_address,t_mapping(t_bytes32,t_address))"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "tokenByCreate2Salt",
+          "type": "t_mapping(t_bytes32,t_address)"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "_markets",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_struct(Market)_storage)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "marketIds",
+          "type": "t_array(t_userDefinedValueType(PoolId))dyn_storage"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_userDefinedValueType(PoolId))dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "PoolId[]",
+          "numberOfBytes": "32",
+          "base": "t_userDefinedValueType(PoolId)"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(MarketOrigin)": {
+          "encoding": "inplace",
+          "label": "enum HookrMarketCoordinatorV3.MarketOrigin",
+          "numberOfBytes": "1"
+        },
+        "t_int24": {
+          "encoding": "inplace",
+          "label": "int24",
+          "numberOfBytes": "3"
+        },
+        "t_mapping(t_address,t_mapping(t_bytes32,t_address))": {
+          "encoding": "mapping",
+          "label": "mapping(address => mapping(bytes32 => address))",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_mapping(t_bytes32,t_address)"
+        },
+        "t_mapping(t_bytes32,t_address)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => address)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_address"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_struct(Market)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrMarketCoordinatorV3.Market)",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_struct(Market)_storage"
+        },
+        "t_struct(Market)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrMarketCoordinatorV3.Market",
+          "numberOfBytes": "768",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "live",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "origin",
+              "type": "t_enum(MarketOrigin)"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "subject",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "quote",
+              "type": "t_address"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "creator",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "kernel",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "revenueVault",
+              "type": "t_address"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "lpFeeRecipient",
+              "type": "t_address"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "stackHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "poolId",
+              "type": "t_userDefinedValueType(PoolId)"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "sqrtPriceX96",
+              "type": "t_uint160"
+            },
+            {
+              "slot": "9",
+              "offset": 20,
+              "label": "tickSpacing",
+              "type": "t_int24"
+            },
+            {
+              "slot": "10",
+              "offset": 0,
+              "label": "subjectSupplied",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "11",
+              "offset": 0,
+              "label": "quoteSupplied",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "12",
+              "offset": 0,
+              "label": "subjectUsed",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "13",
+              "offset": 0,
+              "label": "quoteUsed",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "14",
+              "offset": 0,
+              "label": "cumulativeFee0",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "15",
+              "offset": 0,
+              "label": "cumulativeFee1",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "16",
+              "offset": 0,
+              "label": "openedAtBlock",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "17",
+              "offset": 0,
+              "label": "launchIntentId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "18",
+              "offset": 0,
+              "label": "initialBuyRouter",
+              "type": "t_address"
+            },
+            {
+              "slot": "19",
+              "offset": 0,
+              "label": "creatorAllocation",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "20",
+              "offset": 0,
+              "label": "initialBuyQuoteIn",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "21",
+              "offset": 0,
+              "label": "initialBuySubjectOut",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "22",
+              "offset": 0,
+              "label": "initialBuySubjectOutMinimum",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "23",
+              "offset": 0,
+              "label": "initialBuyModuleDataHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_uint160": {
+          "encoding": "inplace",
+          "label": "uint160",
+          "numberOfBytes": "20"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        },
+        "t_userDefinedValueType(PoolId)": {
+          "encoding": "inplace",
+          "label": "PoolId",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrMarketCoordinatorV5": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "treasury",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 20,
+          "label": "marketOpeningPaused",
+          "type": "t_bool"
+        },
+        {
+          "slot": "2",
+          "offset": 21,
+          "label": "defaultProtocolShareBps",
+          "type": "t_uint24"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "reentrancyState",
+          "type": "t_uint256"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "activeCallbackAction",
+          "type": "t_uint8"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "activeCallbackPoolId",
+          "type": "t_userDefinedValueType(PoolId)"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "launchedByIntent",
+          "type": "t_mapping(t_address,t_mapping(t_bytes32,t_address))"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "tokenByCreate2Salt",
+          "type": "t_mapping(t_bytes32,t_address)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "creatorTier",
+          "type": "t_mapping(t_address,t_struct(Tier)_storage)"
+        },
+        {
+          "slot": "9",
+          "offset": 0,
+          "label": "_markets",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_struct(Market)_storage)"
+        },
+        {
+          "slot": "10",
+          "offset": 0,
+          "label": "marketIds",
+          "type": "t_array(t_userDefinedValueType(PoolId))dyn_storage"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_userDefinedValueType(PoolId))dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "PoolId[]",
+          "numberOfBytes": "32",
+          "base": "t_userDefinedValueType(PoolId)"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(MarketOrigin)": {
+          "encoding": "inplace",
+          "label": "enum HookrMarketCoordinatorV5.MarketOrigin",
+          "numberOfBytes": "1"
+        },
+        "t_int24": {
+          "encoding": "inplace",
+          "label": "int24",
+          "numberOfBytes": "3"
+        },
+        "t_mapping(t_address,t_mapping(t_bytes32,t_address))": {
+          "encoding": "mapping",
+          "label": "mapping(address => mapping(bytes32 => address))",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_mapping(t_bytes32,t_address)"
+        },
+        "t_mapping(t_address,t_struct(Tier)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(address => struct HookrMarketCoordinatorV5.Tier)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_struct(Tier)_storage"
+        },
+        "t_mapping(t_bytes32,t_address)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => address)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_address"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_struct(Market)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrMarketCoordinatorV5.Market)",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_struct(Market)_storage"
+        },
+        "t_struct(Market)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrMarketCoordinatorV5.Market",
+          "numberOfBytes": "736",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "live",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "origin",
+              "type": "t_enum(MarketOrigin)"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "subject",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "quote",
+              "type": "t_address"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "creator",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "kernel",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "lpFeeRecipient",
+              "type": "t_address"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "stackHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "poolId",
+              "type": "t_userDefinedValueType(PoolId)"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "sqrtPriceX96",
+              "type": "t_uint160"
+            },
+            {
+              "slot": "8",
+              "offset": 20,
+              "label": "tickSpacing",
+              "type": "t_int24"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "subjectSupplied",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "10",
+              "offset": 0,
+              "label": "quoteSupplied",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "11",
+              "offset": 0,
+              "label": "subjectUsed",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "12",
+              "offset": 0,
+              "label": "quoteUsed",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "13",
+              "offset": 0,
+              "label": "cumulativeFee0",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "14",
+              "offset": 0,
+              "label": "cumulativeFee1",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "15",
+              "offset": 0,
+              "label": "openedAtBlock",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "16",
+              "offset": 0,
+              "label": "launchIntentId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "17",
+              "offset": 0,
+              "label": "initialBuyRouter",
+              "type": "t_address"
+            },
+            {
+              "slot": "18",
+              "offset": 0,
+              "label": "creatorAllocation",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "19",
+              "offset": 0,
+              "label": "initialBuyQuoteIn",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "20",
+              "offset": 0,
+              "label": "initialBuySubjectOut",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "21",
+              "offset": 0,
+              "label": "initialBuySubjectOutMinimum",
+              "type": "t_uint256"
+            },
+            {
+              "slot": "22",
+              "offset": 0,
+              "label": "initialBuyModuleDataHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(Tier)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrMarketCoordinatorV5.Tier",
+          "numberOfBytes": "32",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "set",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "shareBps",
+              "type": "t_uint24"
+            }
+          ]
+        },
+        "t_uint160": {
+          "encoding": "inplace",
+          "label": "uint160",
+          "numberOfBytes": "20"
+        },
+        "t_uint24": {
+          "encoding": "inplace",
+          "label": "uint24",
+          "numberOfBytes": "3"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        },
+        "t_userDefinedValueType(PoolId)": {
+          "encoding": "inplace",
+          "label": "PoolId",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrModularHookV6": {
+      "storage": [],
+      "types": {}
+    },
+    "HookrModuleCatalogV1": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "canonicalStatefulModule",
+          "type": "t_address"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "canonicalStatefulModuleCodeHash",
+          "type": "t_bytes32"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "_modules",
+          "type": "t_mapping(t_bytes32,t_struct(ModuleSnapshot)_storage)"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "moduleStatus",
+          "type": "t_mapping(t_bytes32,t_enum(ModuleStatus))"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "_requiredModuleKeys",
+          "type": "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "_conflictingModuleKeys",
+          "type": "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "_moduleIds",
+          "type": "t_array(t_bytes32)dyn_storage"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_bytes32)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "bytes32[]",
+          "numberOfBytes": "32",
+          "base": "t_bytes32"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(ExecutionMode)": {
+          "encoding": "inplace",
+          "label": "enum HookrModuleTypesV1.ExecutionMode",
+          "numberOfBytes": "1"
+        },
+        "t_enum(ModuleStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrModuleCatalogV1.ModuleStatus",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bytes32[])",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_array(t_bytes32)dyn_storage"
+        },
+        "t_mapping(t_bytes32,t_enum(ModuleStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => enum HookrModuleCatalogV1.ModuleStatus)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_enum(ModuleStatus)"
+        },
+        "t_mapping(t_bytes32,t_struct(ModuleSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrModuleTypesV1.ModuleSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(ModuleSnapshot)_storage"
+        },
+        "t_struct(ModuleSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.ModuleSnapshot",
+          "numberOfBytes": "320",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "moduleId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "moduleKey",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "2",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "configSchemaHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "requiredHookFlags",
+              "type": "t_uint160"
+            },
+            {
+              "slot": "5",
+              "offset": 20,
+              "label": "phaseMask",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "exclusiveGroup",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "executionMode",
+              "type": "t_enum(ExecutionMode)"
+            },
+            {
+              "slot": "7",
+              "offset": 1,
+              "label": "maxLpFeeSurchargePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "7",
+              "offset": 4,
+              "label": "maxSpecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 6,
+              "label": "maxUnspecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 8,
+              "label": "maxSubjectTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 10,
+              "label": "callbackGasLimit",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "requirementsHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "conflictsHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_uint16": {
+          "encoding": "inplace",
+          "label": "uint16",
+          "numberOfBytes": "2"
+        },
+        "t_uint160": {
+          "encoding": "inplace",
+          "label": "uint160",
+          "numberOfBytes": "20"
+        },
+        "t_uint24": {
+          "encoding": "inplace",
+          "label": "uint24",
+          "numberOfBytes": "3"
+        },
+        "t_uint32": {
+          "encoding": "inplace",
+          "label": "uint32",
+          "numberOfBytes": "4"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        }
+      }
+    },
+    "HookrNativeMechanicsBlockV2": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "potWei",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "potBuyCount",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "potLastQualifyingBlock",
+          "type": "t_mapping(t_bytes32,t_uint40)"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "guardBuyBlock",
+          "type": "t_mapping(t_bytes32,t_uint40)"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "guardBuyAmount",
+          "type": "t_mapping(t_bytes32,t_uint96)"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "guardLpEarnedQuote",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "totalHookFeesWei",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "totalBurnedTokens",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "totalLpDonatedWei",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "9",
+          "offset": 0,
+          "label": "totalPotPaidWei",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "10",
+          "offset": 0,
+          "label": "totalProtocolShareWei",
+          "type": "t_mapping(t_bytes32,t_uint256)"
+        },
+        {
+          "slot": "11",
+          "offset": 0,
+          "label": "protocolShareByStream",
+          "type": "t_mapping(t_bytes32,t_mapping(t_uint8,t_uint256))"
+        },
+        {
+          "slot": "12",
+          "offset": 0,
+          "label": "claimable",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "slot": "13",
+          "offset": 0,
+          "label": "totalClaimLiability",
+          "type": "t_mapping(t_address,t_uint256)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+          "encoding": "mapping",
+          "label": "mapping(address => mapping(address => uint256))",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_mapping(t_address,t_uint256)"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_bytes32,t_mapping(t_uint8,t_uint256))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => mapping(uint8 => uint256))",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_mapping(t_uint8,t_uint256)"
+        },
+        "t_mapping(t_bytes32,t_uint256)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => uint256)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_bytes32,t_uint40)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => uint40)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_uint40"
+        },
+        "t_mapping(t_bytes32,t_uint96)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => uint96)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_uint96"
+        },
+        "t_mapping(t_uint8,t_uint256)": {
+          "encoding": "mapping",
+          "label": "mapping(uint8 => uint256)",
+          "numberOfBytes": "32",
+          "key": "t_uint8",
+          "value": "t_uint256"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_uint40": {
+          "encoding": "inplace",
+          "label": "uint40",
+          "numberOfBytes": "5"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        },
+        "t_uint96": {
+          "encoding": "inplace",
+          "label": "uint96",
+          "numberOfBytes": "12"
+        }
+      }
+    },
+    "HookrReleaseCreate2FactoryV1": {
+      "storage": [],
+      "types": {}
+    },
+    "HookrStackRegistryV1": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "coordinator",
+          "type": "t_address"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "_kernels",
+          "type": "t_mapping(t_bytes32,t_struct(KernelSnapshot)_storage)"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "kernelStatus",
+          "type": "t_mapping(t_bytes32,t_enum(KernelStatus))"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "_kernelIds",
+          "type": "t_array(t_bytes32)dyn_storage"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "_rootProfiles",
+          "type": "t_mapping(t_bytes32,t_struct(RootProfileSnapshot)_storage)"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "_rootProfileSource",
+          "type": "t_mapping(t_bytes32,t_bytes32)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "_rootProfileModuleIds",
+          "type": "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)"
+        },
+        {
+          "slot": "9",
+          "offset": 0,
+          "label": "_rootProfileModuleAllowed",
+          "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))"
+        },
+        {
+          "slot": "10",
+          "offset": 0,
+          "label": "_rootKernelForProfileKey",
+          "type": "t_mapping(t_bytes32,t_bytes32)"
+        },
+        {
+          "slot": "11",
+          "offset": 0,
+          "label": "_kernelInstanceFactories",
+          "type": "t_mapping(t_address,t_struct(KernelInstanceFactorySnapshot)_storage)"
+        },
+        {
+          "slot": "12",
+          "offset": 0,
+          "label": "kernelInstanceFactoryStatus",
+          "type": "t_mapping(t_address,t_enum(KernelInstanceFactoryStatus))"
+        },
+        {
+          "slot": "13",
+          "offset": 0,
+          "label": "_kernelInstanceFactoryFor",
+          "type": "t_mapping(t_bytes32,t_address)"
+        },
+        {
+          "slot": "14",
+          "offset": 0,
+          "label": "_integrations",
+          "type": "t_mapping(t_bytes32,t_struct(IntegrationSnapshot)_storage)"
+        },
+        {
+          "slot": "15",
+          "offset": 0,
+          "label": "integrationStatus",
+          "type": "t_mapping(t_bytes32,t_enum(IntegrationStatus))"
+        },
+        {
+          "slot": "16",
+          "offset": 0,
+          "label": "integrationIdFor",
+          "type": "t_mapping(t_address,t_bytes32)"
+        },
+        {
+          "slot": "17",
+          "offset": 0,
+          "label": "_integrationIds",
+          "type": "t_array(t_bytes32)dyn_storage"
+        },
+        {
+          "slot": "18",
+          "offset": 0,
+          "label": "_stacks",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_struct(StackCore)_storage)"
+        },
+        {
+          "slot": "19",
+          "offset": 0,
+          "label": "_stackModules",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_array(t_struct(ModuleSnapshot)_storage)dyn_storage)"
+        },
+        {
+          "slot": "20",
+          "offset": 0,
+          "label": "_stackConfigs",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_array(t_bytes_storage)dyn_storage)"
+        },
+        {
+          "slot": "21",
+          "offset": 0,
+          "label": "_frozenModuleConfigHashes",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_mapping(t_address,t_bytes32))"
+        },
+        {
+          "slot": "22",
+          "offset": 0,
+          "label": "_poolIds",
+          "type": "t_array(t_userDefinedValueType(PoolId))dyn_storage"
+        },
+        {
+          "slot": "23",
+          "offset": 0,
+          "label": "_stableRootKernelIdForImplementation",
+          "type": "t_mapping(t_address,t_bytes32)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_bytes_storage)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "bytes[]",
+          "numberOfBytes": "32",
+          "base": "t_bytes_storage"
+        },
+        "t_array(t_bytes32)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "bytes32[]",
+          "numberOfBytes": "32",
+          "base": "t_bytes32"
+        },
+        "t_array(t_struct(ModuleSnapshot)_storage)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "struct HookrModuleTypesV1.ModuleSnapshot[]",
+          "numberOfBytes": "32",
+          "base": "t_struct(ModuleSnapshot)_storage"
+        },
+        "t_array(t_userDefinedValueType(PoolId))dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "PoolId[]",
+          "numberOfBytes": "32",
+          "base": "t_userDefinedValueType(PoolId)"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes_storage": {
+          "encoding": "bytes",
+          "label": "bytes",
+          "numberOfBytes": "32"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(ExecutionMode)": {
+          "encoding": "inplace",
+          "label": "enum HookrModuleTypesV1.ExecutionMode",
+          "numberOfBytes": "1"
+        },
+        "t_enum(IntegrationStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.IntegrationStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(KernelInstanceFactoryStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.KernelInstanceFactoryStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(KernelStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.KernelStatus",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_bytes32)": {
+          "encoding": "mapping",
+          "label": "mapping(address => bytes32)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_bytes32"
+        },
+        "t_mapping(t_address,t_enum(KernelInstanceFactoryStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(address => enum HookrStackRegistryV1.KernelInstanceFactoryStatus)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_enum(KernelInstanceFactoryStatus)"
+        },
+        "t_mapping(t_address,t_struct(KernelInstanceFactorySnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(address => struct HookrStackRegistryV1.KernelInstanceFactorySnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_struct(KernelInstanceFactorySnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_address)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => address)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_address"
+        },
+        "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bytes32[])",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_array(t_bytes32)dyn_storage"
+        },
+        "t_mapping(t_bytes32,t_bool)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bool)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_bytes32,t_bytes32)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bytes32)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_bytes32"
+        },
+        "t_mapping(t_bytes32,t_enum(IntegrationStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => enum HookrStackRegistryV1.IntegrationStatus)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_enum(IntegrationStatus)"
+        },
+        "t_mapping(t_bytes32,t_enum(KernelStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => enum HookrStackRegistryV1.KernelStatus)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_enum(KernelStatus)"
+        },
+        "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => mapping(bytes32 => bool))",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_mapping(t_bytes32,t_bool)"
+        },
+        "t_mapping(t_bytes32,t_struct(IntegrationSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.IntegrationSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(IntegrationSnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_struct(KernelSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.KernelSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(KernelSnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_struct(RootProfileSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.RootProfileSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(RootProfileSnapshot)_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_array(t_bytes_storage)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => bytes[])",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_array(t_bytes_storage)dyn_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_array(t_struct(ModuleSnapshot)_storage)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrModuleTypesV1.ModuleSnapshot[])",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_array(t_struct(ModuleSnapshot)_storage)dyn_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_mapping(t_address,t_bytes32))": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => mapping(address => bytes32))",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_mapping(t_address,t_bytes32)"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_struct(StackCore)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrModuleTypesV1.StackCore)",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_struct(StackCore)_storage"
+        },
+        "t_struct(IntegrationSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.IntegrationSnapshot",
+          "numberOfBytes": "160",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "integrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "integrationKind",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "integrationFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "3",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(KernelInstanceFactorySnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.KernelInstanceFactorySnapshot",
+          "numberOfBytes": "96",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "factory",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "factoryCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "templateKernelId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(KernelSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.KernelSnapshot",
+          "numberOfBytes": "160",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "kernelFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "2",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "hookFlags",
+              "type": "t_uint160"
+            }
+          ]
+        },
+        "t_struct(ModuleSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.ModuleSnapshot",
+          "numberOfBytes": "320",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "moduleId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "moduleKey",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "2",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "configSchemaHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "requiredHookFlags",
+              "type": "t_uint160"
+            },
+            {
+              "slot": "5",
+              "offset": 20,
+              "label": "phaseMask",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "exclusiveGroup",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "executionMode",
+              "type": "t_enum(ExecutionMode)"
+            },
+            {
+              "slot": "7",
+              "offset": 1,
+              "label": "maxLpFeeSurchargePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "7",
+              "offset": 4,
+              "label": "maxSpecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 6,
+              "label": "maxUnspecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 8,
+              "label": "maxSubjectTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 10,
+              "label": "callbackGasLimit",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "requirementsHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "conflictsHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(RootProfileSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.RootProfileSnapshot",
+          "numberOfBytes": "224",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "isSealed",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "allowsExceptionalInstances",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "moduleCount",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "0",
+              "offset": 3,
+              "label": "profileVersion",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "profileId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "profileManifestHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "moduleSetHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "routerIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "quoterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "correctionExecutorIntegrationId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(StackCore)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.StackCore",
+          "numberOfBytes": "672",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "configured",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "initialized",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "kernel",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "kernelFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "kernelCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "subject",
+              "type": "t_address"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "quote",
+              "type": "t_address"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "stackHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "trustedRouterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "trustedRouterCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "trustedQuoterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "10",
+              "offset": 0,
+              "label": "trustedQuoterCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "11",
+              "offset": 0,
+              "label": "correctionExecutorIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "12",
+              "offset": 0,
+              "label": "correctionExecutorCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "13",
+              "offset": 0,
+              "label": "moduleCount",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "14",
+              "offset": 0,
+              "label": "limits",
+              "type": "t_struct(StackLimits)_storage"
+            }
+          ]
+        },
+        "t_struct(StackLimits)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.StackLimits",
+          "numberOfBytes": "224",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "baseLpFeePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "0",
+              "offset": 3,
+              "label": "maxLpFeePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "0",
+              "offset": 6,
+              "label": "maxSpecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 8,
+              "label": "maxUnspecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 10,
+              "label": "maxSubjectTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 12,
+              "label": "maxTotalModuleGas",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "trustedRouter",
+              "type": "t_address"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "trustedQuoter",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "correctionExecutor",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "correctionCreator",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 20,
+              "label": "correctionMaxVolumeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "correctionMinProfitQuote",
+              "type": "t_uint96"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "correctionFeePolicyId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_uint16": {
+          "encoding": "inplace",
+          "label": "uint16",
+          "numberOfBytes": "2"
+        },
+        "t_uint160": {
+          "encoding": "inplace",
+          "label": "uint160",
+          "numberOfBytes": "20"
+        },
+        "t_uint24": {
+          "encoding": "inplace",
+          "label": "uint24",
+          "numberOfBytes": "3"
+        },
+        "t_uint32": {
+          "encoding": "inplace",
+          "label": "uint32",
+          "numberOfBytes": "4"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        },
+        "t_uint96": {
+          "encoding": "inplace",
+          "label": "uint96",
+          "numberOfBytes": "12"
+        },
+        "t_userDefinedValueType(PoolId)": {
+          "encoding": "inplace",
+          "label": "PoolId",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrStackRegistryV2": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "coordinator",
+          "type": "t_address"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "_kernels",
+          "type": "t_mapping(t_bytes32,t_struct(KernelSnapshot)_storage)"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "kernelStatus",
+          "type": "t_mapping(t_bytes32,t_enum(KernelStatus))"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "_kernelIds",
+          "type": "t_array(t_bytes32)dyn_storage"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "_rootProfiles",
+          "type": "t_mapping(t_bytes32,t_struct(RootProfileSnapshot)_storage)"
+        },
+        {
+          "slot": "7",
+          "offset": 0,
+          "label": "_rootProfileSource",
+          "type": "t_mapping(t_bytes32,t_bytes32)"
+        },
+        {
+          "slot": "8",
+          "offset": 0,
+          "label": "_rootProfileModuleIds",
+          "type": "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)"
+        },
+        {
+          "slot": "9",
+          "offset": 0,
+          "label": "_rootProfileModuleAllowed",
+          "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))"
+        },
+        {
+          "slot": "10",
+          "offset": 0,
+          "label": "_rootKernelForProfileKey",
+          "type": "t_mapping(t_bytes32,t_bytes32)"
+        },
+        {
+          "slot": "11",
+          "offset": 0,
+          "label": "_kernelInstanceFactories",
+          "type": "t_mapping(t_address,t_struct(KernelInstanceFactorySnapshot)_storage)"
+        },
+        {
+          "slot": "12",
+          "offset": 0,
+          "label": "kernelInstanceFactoryStatus",
+          "type": "t_mapping(t_address,t_enum(KernelInstanceFactoryStatus))"
+        },
+        {
+          "slot": "13",
+          "offset": 0,
+          "label": "_kernelInstanceFactoryFor",
+          "type": "t_mapping(t_bytes32,t_address)"
+        },
+        {
+          "slot": "14",
+          "offset": 0,
+          "label": "_integrations",
+          "type": "t_mapping(t_bytes32,t_struct(IntegrationSnapshot)_storage)"
+        },
+        {
+          "slot": "15",
+          "offset": 0,
+          "label": "integrationStatus",
+          "type": "t_mapping(t_bytes32,t_enum(IntegrationStatus))"
+        },
+        {
+          "slot": "16",
+          "offset": 0,
+          "label": "integrationIdFor",
+          "type": "t_mapping(t_address,t_bytes32)"
+        },
+        {
+          "slot": "17",
+          "offset": 0,
+          "label": "_integrationIds",
+          "type": "t_array(t_bytes32)dyn_storage"
+        },
+        {
+          "slot": "18",
+          "offset": 0,
+          "label": "_stacks",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_struct(StackCore)_storage)"
+        },
+        {
+          "slot": "19",
+          "offset": 0,
+          "label": "_stackModules",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_array(t_struct(ModuleSnapshot)_storage)dyn_storage)"
+        },
+        {
+          "slot": "20",
+          "offset": 0,
+          "label": "_stackConfigs",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_array(t_bytes_storage)dyn_storage)"
+        },
+        {
+          "slot": "21",
+          "offset": 0,
+          "label": "_frozenModuleConfigHashes",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_mapping(t_address,t_bytes32))"
+        },
+        {
+          "slot": "22",
+          "offset": 0,
+          "label": "_poolIds",
+          "type": "t_array(t_userDefinedValueType(PoolId))dyn_storage"
+        },
+        {
+          "slot": "23",
+          "offset": 0,
+          "label": "_stableRootKernelIdForImplementation",
+          "type": "t_mapping(t_address,t_bytes32)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_bytes_storage)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "bytes[]",
+          "numberOfBytes": "32",
+          "base": "t_bytes_storage"
+        },
+        "t_array(t_bytes32)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "bytes32[]",
+          "numberOfBytes": "32",
+          "base": "t_bytes32"
+        },
+        "t_array(t_struct(ModuleSnapshot)_storage)dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "struct HookrModuleTypesV1.ModuleSnapshot[]",
+          "numberOfBytes": "32",
+          "base": "t_struct(ModuleSnapshot)_storage"
+        },
+        "t_array(t_userDefinedValueType(PoolId))dyn_storage": {
+          "encoding": "dynamic_array",
+          "label": "PoolId[]",
+          "numberOfBytes": "32",
+          "base": "t_userDefinedValueType(PoolId)"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes_storage": {
+          "encoding": "bytes",
+          "label": "bytes",
+          "numberOfBytes": "32"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_enum(ExecutionMode)": {
+          "encoding": "inplace",
+          "label": "enum HookrModuleTypesV1.ExecutionMode",
+          "numberOfBytes": "1"
+        },
+        "t_enum(IntegrationStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.IntegrationStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(KernelInstanceFactoryStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.KernelInstanceFactoryStatus",
+          "numberOfBytes": "1"
+        },
+        "t_enum(KernelStatus)": {
+          "encoding": "inplace",
+          "label": "enum HookrStackRegistryV1.KernelStatus",
+          "numberOfBytes": "1"
+        },
+        "t_mapping(t_address,t_bytes32)": {
+          "encoding": "mapping",
+          "label": "mapping(address => bytes32)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_bytes32"
+        },
+        "t_mapping(t_address,t_enum(KernelInstanceFactoryStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(address => enum HookrStackRegistryV1.KernelInstanceFactoryStatus)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_enum(KernelInstanceFactoryStatus)"
+        },
+        "t_mapping(t_address,t_struct(KernelInstanceFactorySnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(address => struct HookrStackRegistryV1.KernelInstanceFactorySnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_struct(KernelInstanceFactorySnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_address)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => address)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_address"
+        },
+        "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bytes32[])",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_array(t_bytes32)dyn_storage"
+        },
+        "t_mapping(t_bytes32,t_bool)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bool)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_bytes32,t_bytes32)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => bytes32)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_bytes32"
+        },
+        "t_mapping(t_bytes32,t_enum(IntegrationStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => enum HookrStackRegistryV1.IntegrationStatus)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_enum(IntegrationStatus)"
+        },
+        "t_mapping(t_bytes32,t_enum(KernelStatus))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => enum HookrStackRegistryV1.KernelStatus)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_enum(KernelStatus)"
+        },
+        "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => mapping(bytes32 => bool))",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_mapping(t_bytes32,t_bool)"
+        },
+        "t_mapping(t_bytes32,t_struct(IntegrationSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.IntegrationSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(IntegrationSnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_struct(KernelSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.KernelSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(KernelSnapshot)_storage"
+        },
+        "t_mapping(t_bytes32,t_struct(RootProfileSnapshot)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(bytes32 => struct HookrStackRegistryV1.RootProfileSnapshot)",
+          "numberOfBytes": "32",
+          "key": "t_bytes32",
+          "value": "t_struct(RootProfileSnapshot)_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_array(t_bytes_storage)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => bytes[])",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_array(t_bytes_storage)dyn_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_array(t_struct(ModuleSnapshot)_storage)dyn_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrModuleTypesV1.ModuleSnapshot[])",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_array(t_struct(ModuleSnapshot)_storage)dyn_storage"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_mapping(t_address,t_bytes32))": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => mapping(address => bytes32))",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_mapping(t_address,t_bytes32)"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_struct(StackCore)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrModuleTypesV1.StackCore)",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_struct(StackCore)_storage"
+        },
+        "t_struct(IntegrationSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.IntegrationSnapshot",
+          "numberOfBytes": "160",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "integrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "integrationKind",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "integrationFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "3",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(KernelInstanceFactorySnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.KernelInstanceFactorySnapshot",
+          "numberOfBytes": "96",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "factory",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "factoryCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "templateKernelId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(KernelSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.KernelSnapshot",
+          "numberOfBytes": "160",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "kernelFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "2",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "hookFlags",
+              "type": "t_uint160"
+            }
+          ]
+        },
+        "t_struct(ModuleSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.ModuleSnapshot",
+          "numberOfBytes": "320",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "moduleId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "moduleKey",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "version",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "2",
+              "offset": 4,
+              "label": "implementation",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "implementationCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "configSchemaHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "requiredHookFlags",
+              "type": "t_uint160"
+            },
+            {
+              "slot": "5",
+              "offset": 20,
+              "label": "phaseMask",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "exclusiveGroup",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "executionMode",
+              "type": "t_enum(ExecutionMode)"
+            },
+            {
+              "slot": "7",
+              "offset": 1,
+              "label": "maxLpFeeSurchargePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "7",
+              "offset": 4,
+              "label": "maxSpecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 6,
+              "label": "maxUnspecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 8,
+              "label": "maxSubjectTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "7",
+              "offset": 10,
+              "label": "callbackGasLimit",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "requirementsHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "conflictsHash",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(RootProfileSnapshot)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrStackRegistryV1.RootProfileSnapshot",
+          "numberOfBytes": "224",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "isSealed",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "allowsExceptionalInstances",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "moduleCount",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "0",
+              "offset": 3,
+              "label": "profileVersion",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "profileId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "profileManifestHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "moduleSetHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "routerIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "quoterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "correctionExecutorIntegrationId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_struct(StackCore)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.StackCore",
+          "numberOfBytes": "672",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "configured",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 1,
+              "label": "initialized",
+              "type": "t_bool"
+            },
+            {
+              "slot": "0",
+              "offset": 2,
+              "label": "kernel",
+              "type": "t_address"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "kernelId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "kernelFamilyId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "kernelCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "subject",
+              "type": "t_address"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "quote",
+              "type": "t_address"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "stackHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "7",
+              "offset": 0,
+              "label": "trustedRouterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "8",
+              "offset": 0,
+              "label": "trustedRouterCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "9",
+              "offset": 0,
+              "label": "trustedQuoterIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "10",
+              "offset": 0,
+              "label": "trustedQuoterCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "11",
+              "offset": 0,
+              "label": "correctionExecutorIntegrationId",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "12",
+              "offset": 0,
+              "label": "correctionExecutorCodeHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "13",
+              "offset": 0,
+              "label": "moduleCount",
+              "type": "t_uint8"
+            },
+            {
+              "slot": "14",
+              "offset": 0,
+              "label": "limits",
+              "type": "t_struct(StackLimits)_storage"
+            }
+          ]
+        },
+        "t_struct(StackLimits)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrModuleTypesV1.StackLimits",
+          "numberOfBytes": "224",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "baseLpFeePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "0",
+              "offset": 3,
+              "label": "maxLpFeePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "0",
+              "offset": 6,
+              "label": "maxSpecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 8,
+              "label": "maxUnspecifiedQuoteTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 10,
+              "label": "maxSubjectTakeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "0",
+              "offset": 12,
+              "label": "maxTotalModuleGas",
+              "type": "t_uint32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "trustedRouter",
+              "type": "t_address"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "trustedQuoter",
+              "type": "t_address"
+            },
+            {
+              "slot": "3",
+              "offset": 0,
+              "label": "correctionExecutor",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 0,
+              "label": "correctionCreator",
+              "type": "t_address"
+            },
+            {
+              "slot": "4",
+              "offset": 20,
+              "label": "correctionMaxVolumeBps",
+              "type": "t_uint16"
+            },
+            {
+              "slot": "5",
+              "offset": 0,
+              "label": "correctionMinProfitQuote",
+              "type": "t_uint96"
+            },
+            {
+              "slot": "6",
+              "offset": 0,
+              "label": "correctionFeePolicyId",
+              "type": "t_bytes32"
+            }
+          ]
+        },
+        "t_uint16": {
+          "encoding": "inplace",
+          "label": "uint16",
+          "numberOfBytes": "2"
+        },
+        "t_uint160": {
+          "encoding": "inplace",
+          "label": "uint160",
+          "numberOfBytes": "20"
+        },
+        "t_uint24": {
+          "encoding": "inplace",
+          "label": "uint24",
+          "numberOfBytes": "3"
+        },
+        "t_uint32": {
+          "encoding": "inplace",
+          "label": "uint32",
+          "numberOfBytes": "4"
+        },
+        "t_uint8": {
+          "encoding": "inplace",
+          "label": "uint8",
+          "numberOfBytes": "1"
+        },
+        "t_uint96": {
+          "encoding": "inplace",
+          "label": "uint96",
+          "numberOfBytes": "12"
+        },
+        "t_userDefinedValueType(PoolId)": {
+          "encoding": "inplace",
+          "label": "PoolId",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrSwapAccountingKernelV3": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "_inFlight",
+          "type": "t_mapping(t_userDefinedValueType(PoolId),t_struct(InFlightSwap)_storage)"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "_callbackState",
+          "type": "t_uint256"
+        }
+      ],
+      "types": {
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes32": {
+          "encoding": "inplace",
+          "label": "bytes32",
+          "numberOfBytes": "32"
+        },
+        "t_mapping(t_userDefinedValueType(PoolId),t_struct(InFlightSwap)_storage)": {
+          "encoding": "mapping",
+          "label": "mapping(PoolId => struct HookrSwapAccountingKernelV3.InFlightSwap)",
+          "numberOfBytes": "32",
+          "key": "t_userDefinedValueType(PoolId)",
+          "value": "t_struct(InFlightSwap)_storage"
+        },
+        "t_struct(InFlightSwap)_storage": {
+          "encoding": "inplace",
+          "label": "struct HookrSwapAccountingKernelV3.InFlightSwap",
+          "numberOfBytes": "96",
+          "members": [
+            {
+              "slot": "0",
+              "offset": 0,
+              "label": "contextHash",
+              "type": "t_bytes32"
+            },
+            {
+              "slot": "1",
+              "offset": 0,
+              "label": "specifiedQuoteTake",
+              "type": "t_uint128"
+            },
+            {
+              "slot": "1",
+              "offset": 16,
+              "label": "quoteDonation",
+              "type": "t_uint128"
+            },
+            {
+              "slot": "2",
+              "offset": 0,
+              "label": "effectiveLpFeePips",
+              "type": "t_uint24"
+            },
+            {
+              "slot": "2",
+              "offset": 3,
+              "label": "quoteDonationDeferred",
+              "type": "t_bool"
+            }
+          ]
+        },
+        "t_uint128": {
+          "encoding": "inplace",
+          "label": "uint128",
+          "numberOfBytes": "16"
+        },
+        "t_uint24": {
+          "encoding": "inplace",
+          "label": "uint24",
+          "numberOfBytes": "3"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_userDefinedValueType(PoolId)": {
+          "encoding": "inplace",
+          "label": "PoolId",
+          "numberOfBytes": "32"
+        }
+      }
+    },
+    "HookrSwapKernelV3": {
+      "storage": [],
+      "types": {}
+    },
+    "HookrTokenV61": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "name",
+          "type": "t_string_storage"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "symbol",
+          "type": "t_string_storage"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "tagline",
+          "type": "t_string_storage"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "logoURI",
+          "type": "t_string_storage"
+        },
+        {
+          "slot": "4",
+          "offset": 0,
+          "label": "balanceOf",
+          "type": "t_mapping(t_address,t_uint256)"
+        },
+        {
+          "slot": "5",
+          "offset": 0,
+          "label": "allowance",
+          "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+        },
+        {
+          "slot": "6",
+          "offset": 0,
+          "label": "weightedAcquiredAt",
+          "type": "t_mapping(t_address,t_uint40)"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+          "encoding": "mapping",
+          "label": "mapping(address => mapping(address => uint256))",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_mapping(t_address,t_uint256)"
+        },
+        "t_mapping(t_address,t_uint256)": {
+          "encoding": "mapping",
+          "label": "mapping(address => uint256)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_uint256"
+        },
+        "t_mapping(t_address,t_uint40)": {
+          "encoding": "mapping",
+          "label": "mapping(address => uint40)",
+          "numberOfBytes": "32",
+          "key": "t_address",
+          "value": "t_uint40"
+        },
+        "t_string_storage": {
+          "encoding": "bytes",
+          "label": "string",
+          "numberOfBytes": "32"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        },
+        "t_uint40": {
+          "encoding": "inplace",
+          "label": "uint40",
+          "numberOfBytes": "5"
+        }
+      }
+    },
+    "HookrTreasuryForwarderV1": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "target",
+          "type": "t_address"
+        },
+        {
+          "slot": "3",
+          "offset": 0,
+          "label": "nativeBlock",
+          "type": "t_address"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        }
+      }
+    }
+  }
+}

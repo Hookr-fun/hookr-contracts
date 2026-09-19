@@ -9,7 +9,7 @@ This repository publishes each Hookr release: the sources behind the deployed co
 
 ## What does not
 
-`src/` is a byte-for-byte export of the sources the deployed bytecode was compiled from, pinned by `SOURCE_MANIFEST.json`, and the workflow on every pull request checks each file against that manifest. A change to `src/` here cannot pass that check, by design, and would describe code that is not on chain. New hook blocks and new hook profiles are built in Hookr's working repository and arrive here with the release that deploys them.
+`src/` is a byte-for-byte export of the sources the deployed bytecode was compiled from, pinned by `SOURCE_MANIFEST.json`, and the workflow on every pull request checks each file against that manifest and every contract's storage layout against `STORAGE_LAYOUT.json`. A change to `src/` here cannot pass that check, by design, and would describe code that is not on chain. New hook blocks and new hook profiles are built in Hookr's working repository and arrive here with the release that deploys them.
 
 ## Proposing a hook, a block or an integration
 

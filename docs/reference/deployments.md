@@ -50,18 +50,11 @@ These are live and independently verified on chain 4663.
 | [PositionManager](https://github.com/Uniswap/v4-periphery/blob/main/src/PositionManager.sol) | [`0x58daec3116aae6D93017bAAea7749052E8a04fA7`](https://robinhoodchain.blockscout.com/address/0x58daec3116aae6D93017bAAea7749052E8a04fA7) |
 | [Quoter](https://github.com/Uniswap/v4-periphery/blob/main/src/lens/V4Quoter.sol) | [`0x8dc178efb8111bb0973dd9d722ebeff267c98f94`](https://robinhoodchain.blockscout.com/address/0x8dc178efb8111bb0973dd9d722ebeff267c98f94) |
 | [Permit2](https://github.com/Uniswap/permit2) | [`0x000000000022D473030F116dDEE9F6B43aC78BA3`](https://robinhoodchain.blockscout.com/address/0x000000000022D473030F116dDEE9F6B43aC78BA3) |
-| [Universal Router 2.1.1](https://github.com/Uniswap/universal-router) | see the note below |
+| [Universal Router 2.1.1](https://github.com/Uniswap/universal-router) | [`0x8876789976dEcBfCbBbe364623C63652db8C0904`](https://robinhoodchain.blockscout.com/address/0x8876789976dEcBfCbBbe364623C63652db8C0904) |
 
-The Universal Router address on chain 4663 has two conflicting official sources. Uniswap's deployment registry gives `0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99`; the rendered deployments page gives `0x8876789976dEcBfCbBbe364623C63652db8C0904`. The fork evidence behind this package used `0x8876789976dEcBfCbBbe364623C63652db8C0904`, and swaps settled correctly through it.
+Hookr pins one Universal Router: `0x8876789976dEcBfCbBbe364623C63652db8C0904`, runtime code hash `0x2ce6aaaf9f4151f5e1cbf774668772f17f532ae11b15e9284fd0a072a8b0fbde`, deployed at block 48,954. The fork rehearsals, the canary swaps and the app's swap paths settle through it. The app keeps the pin in `src/lib/universal-router.ts` and reads the code hash back from the chain in CI.
 
-Both addresses hold a deployed router, both are 24,546 bytes, and both report the same `poolManager()`. Their runtime code hashes differ, so they are not the same build:
-
-| Address | Runtime code hash |
-| --- | --- |
-| [`0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99`](https://robinhoodchain.blockscout.com/address/0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99) | `0xbe8e8191bb42d843c2e948a5a55772eaab864ce01e54dcd47c9d089170b302d5` |
-| [`0x8876789976dEcBfCbBbe364623C63652db8C0904`](https://robinhoodchain.blockscout.com/address/0x8876789976dEcBfCbBbe364623C63652db8C0904) | `0x2ce6aaaf9f4151f5e1cbf774668772f17f532ae11b15e9284fd0a072a8b0fbde` |
-
-Nothing in the Hookr graph pins either one: the hook accepts any caller, and a pool's trusted-router slot holds `HookrKernelRouterV3`, not a Universal Router. The choice belongs to whoever routes through this hook. Pin the address you tested against, record its runtime code hash alongside the evidence, and say which one you pinned. This documentation does not choose for you.
+Uniswap's deployment registry lists a second router, [`0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99`](https://robinhoodchain.blockscout.com/address/0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99), runtime code hash `0xbe8e8191bb42d843c2e948a5a55772eaab864ce01e54dcd47c9d089170b302d5`. It is a later deployment with different bytecode. Nothing in Hookr routes through it. Re-pinning needs a fork rehearsal of the swap paths against the new address first.
 
 ### Tokens on Chain 4663
 
