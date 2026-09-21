@@ -16,6 +16,10 @@ Three things follow.
 
 **`intentId` is scoped to the creator.** `launchedByIntent[creator][intentId]` guards against replay for one creator address. With a contract launcher that is a single namespace shared by all your users, so derive `intentId` from something user-specific.
 
+## Choosing a Root for Your Users
+
+Every market you open names a root by `kernelId`: the default root (`0x1be0c118…be14`, hook `0xb3cA…e8cC`) or the recapture root (`0xd8b6c165…555a`, hook `0xb914…68CC`). The five rules are identical on both. The recapture root adds WTH's correction lane on native-ETH-quoted pools whose stack freezes the five correction fields, and on it `correctionCreator` is frozen at launch as the address paid the creator's 40% of every realised correction, so set it to your user, not to your launcher, unless you mean to collect it. Swaps on a correcting pool need a gas limit of at least 1,100,000, which `eth_estimateGas` will not tell you. `hookr-sdk` 0.2.0 (`ROOTS`, `RECAPTURE_CORRECTION`, `correctionFor`, `swapGasLimit`, `listRoots`) carries these values. Read [HookrModularHookV6WthV5](../reference/HookrModularHookV6WthV5.md) before offering it: only there can a swap be refused on the partner's answer, and it is not on Uniswap's routing allowlist as of 2026-09-21.
+
 ## Getting a Tier
 
 Tiers are owner-set on the coordinator and unconditional. There is no application flow in the contracts.
@@ -78,6 +82,7 @@ Your interface should surface these rather than retrying blindly.
 - Read your own `protocolShareBps` in the same transaction you launch in.
 - Set `limits.baseLpFeePips` equal to the config's `baseFeePips`.
 - Set `limits.trustedRouter` and `limits.trustedQuoter` to the registered Hookr router and quoter, or the registry rejects the stack (`IntegrationOutsideRootProfile`).
+- Pick the `kernelId` deliberately. On the default root leave the five correction fields zero; on the recapture root either fill all five for a correcting pool or leave all five zero for a plain one.
 - Put the opening price exactly on a usable tick for your tick spacing.
 - Approve the router for an ERC-20 quote if you are doing a creator buy. The coordinator never pulls the quote.
 - Set `potMinBuyWei` to at least `10 ** (decimals - 3)` for an ERC-20 quote with a pot.

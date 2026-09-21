@@ -4,7 +4,7 @@ Source: [`src/HookrModularHookV6.sol`](../../src/HookrModularHookV6.sol)
 
 **Inherits:** `HookrSwapKernelV3`
 
-The root hook. One address serving every Hookr pool, with per-PoolId frozen state
+The default root hook. One of two roots on the registry, serving every pool opened on the default kernel id, with per-PoolId frozen state. The other, [`HookrModularHookV6WthV5`](./HookrModularHookV6WthV5.md), runs the same rules on the same accounting kernel and adds a correction lane.
 
 The contract body is a constructor that forwards to `HookrSwapKernelV3` and the two identity getters. Everything else on this page is inherited from `HookrSwapKernelV3`, which handles `beforeSwap` and `afterSwap` itself and forwards every other selector to `HookrSwapAccountingKernelV3` by `DELEGATECALL`. The separate name gives the deployed root its own identity and its own CREATE2 mining target.
 
@@ -153,7 +153,7 @@ function kernelInstanceLayoutId() external pure returns (bytes32);
 
 `HookrSwapKernelV3` carries a correction lane for pools whose frozen `StackLimits` name a correction executor. After the accounting kernel returns, a trusted caller's correction payload can trigger one bounded, fail-open correction attempt per phase, reported by the three events below and guarded against nested callbacks by `ReentrantCallback`.
 
-The root profile this release seals names no correction-executor integration, and `createStack` rejects any stack whose `correctionExecutor` is not the profile's, so every pool on this root freezes all-zero correction fields and the lane never runs. The stack check still requires those fields to be consistently zero on every callback and reverts `InvalidStack` otherwise.
+The default root's sealed profile names no correction-executor integration, and `createStack` rejects any stack whose `correctionExecutor` is not the profile's, so every pool on this root freezes all-zero correction fields and the lane never runs on it. The stack check still requires those fields to be consistently zero on every callback and reverts `InvalidStack` otherwise. The recapture root, `HookrModularHookV6WthV5`, seals one correction executor, `HookrWthExecutorAdapterV1`, and runs the lane on every qualifying swap; see [its page](./HookrModularHookV6WthV5.md).
 
 ## Events
 
@@ -192,3 +192,7 @@ event CorrectionAttemptSkipped(PoolId indexed poolId, uint8 indexed phase, bytes
 ## Address Mining
 
 The address must satisfy `address & 0x3fff == 0x28cc`, which is why it is mined: a CREATE2 salt through `HookrReleaseCreate2FactoryV1` produces an address with those low bits. See [Hook permissions](./hook-permissions.md).
+
+## Listing
+
+On Uniswap's routing allowlist and hooklist as of 2026-09-21, so Uniswap's own interface and API route swaps through pools on this root.

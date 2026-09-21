@@ -1,6 +1,6 @@
 # Deployments
 
-Every address on this page is live on Robinhood Chain. The Hookr addresses hold the code that `src/` in this repository compiles to; the upstream addresses are Uniswap's own deployments.
+Every address on this page is live on Robinhood Chain. The Hookr addresses hold the code that `src/` in this repository compiles to; the upstream addresses are Uniswap's own deployments, and one address under the recapture root, WTH's executor, is a partner's contract that Hookr neither wrote nor can verify.
 
 Explorer: [Robinhood Blockscout](https://robinhoodchain.blockscout.com).
 
@@ -23,7 +23,14 @@ The contracts, in deployment order.
 | HookrNativeMechanicsBlockV2 | [`0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae`](https://robinhoodchain.blockscout.com/address/0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae) |
 | HookrModularHookV6 | [`0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC`](https://robinhoodchain.blockscout.com/address/0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC) |
 
-The root hook's address is mined by CREATE2 so its low fourteen bits equal `0x28cc`. See [Hook permissions](./hook-permissions.md).
+These are the default lineage, in deployment order; `HookrModularHookV6` is the default root. The recapture root and the two contracts around it are in their own section below. Both roots' addresses are mined by CREATE2 so their low fourteen bits equal `0x28cc`. See [Hook permissions](./hook-permissions.md).
+
+| Root | Address | Kernel id | Uniswap routing allowlist | Uniswap hooklist |
+| --- | --- | --- | --- | --- |
+| Default, `HookrModularHookV6` | [`0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC`](https://robinhoodchain.blockscout.com/address/0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC) | `0x1be0c118b1c6520d97de31ee9f0c33069f0e715ffcdcb16c87a343752bb5be14` | yes | yes |
+| Recapture, `HookrModularHookV6WthV5` | [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC) | `0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a` | no | no |
+
+Listing status as checked on 2026-09-21. Listing is Uniswap's decision and a separate submission per root; pools on either root trade through the Universal Router and the Hookr router regardless, because both hooks accept any caller.
 
 ### Linked Libraries
 
@@ -39,6 +46,60 @@ The root hook's address is mined by CREATE2 so its low fourteen bits equal `0x28
 | HookrNativeMechanicsCoordinatorLibV2 | HookrMarketCoordinatorV5 | [`0xafC0a7656DF8B1aA5A173d04612a9661C4b9c7E2`](https://robinhoodchain.blockscout.com/address/0xafC0a7656DF8B1aA5A173d04612a9661C4b9c7E2) |
 
 The CREATE2 factory the root hook is mined through is `HookrReleaseCreate2FactoryV1` at [`0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe`](https://robinhoodchain.blockscout.com/address/0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe). Its `authorizedDeployer()` is the deployer address below, and only that address can deploy through it.
+
+### Recapture Root
+
+The second root, sealed on the same registry on 2026-09-12. It shares every address in the tables above except the default root itself and the V2 correction library; what it adds is the three rows here.
+
+| Contract | Address | Deployed |
+| --- | --- | --- |
+| HookrWthExecutorAdapterV1 | [`0x28AF7A3645080e926a3101461e0Ec0594D42D806`](https://robinhoodchain.blockscout.com/address/0x28AF7A3645080e926a3101461e0Ec0594D42D806) | tx [`0x99f7bc3a…9be42`](https://robinhoodchain.blockscout.com/tx/0x99f7bc3a9a1f46a3f0d6d763fd7e8be1e2d2cd327a0cb1b5efff6721fed9be42), block 61,264,312 |
+| HookrModularHookV6WthV5 | [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC) | tx [`0xbe054779…680f0`](https://robinhoodchain.blockscout.com/tx/0xbe054779ef042dae6988f72ac7727c6d645915594040ab91b8148bd1451680f0), block 61,270,834, CREATE2 through the same factory, salt `0x7a973dabaf3e3bc1eb1b0c02f49fb11669f5e7f098d1f4007a14e724d3e6bb80` |
+
+| Library | Linked into | Address | Deployed |
+| --- | --- | --- | --- |
+| HookrModularCorrectionLibV3 | HookrModularHookV6WthV5 | [`0x11996B4e04571718d49454fC52830dc7fA0FF99C`](https://robinhoodchain.blockscout.com/address/0x11996B4e04571718d49454fC52830dc7fA0FF99C) | tx [`0xaed05dd5…975fc2`](https://robinhoodchain.blockscout.com/tx/0xaed05dd54ab488975d1f60ca982b7cae785cf6da053369c316ec258ce6975fc2), block 60,326,894, for an earlier recapture root and linked where it stands |
+
+The root's constructor arguments, decoded from its verified entry, are the PoolManager, the registry `0x5b7f…5BA3`, the coordinator `0x53A1…2442` and the accounting kernel `0x5305…E060`: the same four the default root was built with. The adapter's are the deployer as owner, the PoolManager, the registry and the execution clock below.
+
+Wiring, read back from the chain on 2026-09-21:
+
+| Read | Value | Verification |
+| --- | --- | --- |
+| `HookrModularHookV6WthV5.accountingKernel()` | [`0x530523DEcC9523dDF8A87842fFBBD24a59C7E060`](https://robinhoodchain.blockscout.com/address/0x530523DEcC9523dDF8A87842fFBBD24a59C7E060) | the shared accounting kernel, full match |
+| `HookrModularHookV6WthV5.REQUIRED_FLAGS()` | 10444 (`0x28cc`) | |
+| `HookrWthExecutorAdapterV1.wthExecutor()` | [`0xc356cf51134e0DF02BFE880115DD8c66Ead45803`](https://robinhoodchain.blockscout.com/address/0xc356cf51134e0DF02BFE880115DD8c66Ead45803) | WTH's executor, not Hookr's; closed source, unverified on Blockscout and Sourcify; 62,358 bytes; bound once by `setExecutorOnce` in tx [`0xf49c1330…36614`](https://robinhoodchain.blockscout.com/tx/0xf49c1330a13832fcacbfd3e972273738c2b3eae7cf27e4aca3b8dce6b3736614), block 61,272,510 |
+| `HookrWthExecutorAdapterV1.executionClock()` | [`0x72841e61d6701dEf8eDB3D780b13d3b44E6A0F92`](https://robinhoodchain.blockscout.com/address/0x72841e61d6701dEf8eDB3D780b13d3b44E6A0F92) | `HookrArbSysBlockClockV1`, 340 bytes, deployed 2026-09-08; not verified on Blockscout, exact match on Sourcify; its source is not in this export |
+| `HookrWthExecutorAdapterV1.feePolicyId()` | `0xd2653e091cb7002585fd8b1192b58f11b9c951061dc797123e37d5e2ccb45cef` | equals `HookrWthFeePolicyV2.FEE_POLICY_ID` |
+| `HookrWthExecutorAdapterV1.owner()` | [`0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE`](https://robinhoodchain.blockscout.com/address/0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE) | the deployer; ownership no longer controls anything the lane does, because the executor cannot be moved |
+| `HookrStackRegistryV2.rootProfile(0xd8b6c165…)` | `isSealed = true`, `allowsExceptionalInstances = false`, `moduleCount = 1`, `profileVersion = 1` | sealed in tx [`0x48870c31…8adcb`](https://robinhoodchain.blockscout.com/tx/0x48870c31a5c64099e9448875f490e0d3743f1cf752617d0545fd41f17008adcb), block 61,272,550 |
+| `HookrStackRegistryV2.kernel(0xd8b6c165…)` | implementation `0xb914…68CC`, code hash `0xd25dbcdc…3c28`, hook flags `0x28cc`, version 1 | |
+| `HookrStackRegistryV2.integration(0xc4ae59ad…)` | implementation `0x28AF…D806`, code hash `0xd842cd7f…3ba8`, version 1 | the correction-executor integration the profile names |
+
+#### Recapture root identifiers
+
+| Identifier | Value |
+| --- | --- |
+| Kernel id | `0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a` |
+| Root profile id | `0x9caac337e176ae6f2df97f1b153dc95a1ab0e73808155e3e1c969456832c9f78`, `keccak256("HOOKR_LAUNCH_V2_MIN_WTH_ROOT_PROFILE_V5")` |
+| Root profile manifest hash | `0xdaa4fb5df3a94ca355e77dab6ba718fcd3b464294c03e1a8a90a848ec99f7f4e` |
+| Module set hash | `0x8fafd562dd2b8dbb0d67a4d8cbc40c5cd2177836b0788028f8e855a8d96d8304`, identical to the default profile's: the same one module |
+| Correction-executor integration id | `0xc4ae59ad11d59ac158b587ee1eed79594de1b0be1b13c86e7403f95dfd20f72c` |
+| Correction-executor integration kind | `0x6a1418d9bfb6c90eb5ef654cb59024d67946df272310d833799228ea58e217dc`, `keccak256("HOOKR_KERNEL_INTEGRATION_CORRECTION_EXECUTOR")` |
+| Fee policy id | `0xd2653e091cb7002585fd8b1192b58f11b9c951061dc797123e37d5e2ccb45cef`, `HookrWthFeePolicyV2.FEE_POLICY_ID`: creator 4,000 / trader 2,000 / triggering pool's LPs 2,000 / WTH 1,000 / Hookr 1,000 bps |
+| Fee policy integration id | `0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680`, `keccak256("hookr.integration.wth-arb.v2")` |
+
+The module id, the router and quoter integration ids and the kernel family id are the same values as in [Registry Identifiers](#registry-identifiers) below; the recapture profile names the same module, router and quoter.
+
+#### Superseded recapture roots
+
+Three earlier recapture roots were sealed on this registry before the current one. They are listed here because their pools are still open and still trade; none is offered for new markets, none is exported, and no page in this repository describes them further.
+
+| Address | Status |
+| --- | --- |
+| [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) | superseded, pools still open, unverified |
+| [`0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc`](https://robinhoodchain.blockscout.com/address/0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc) | superseded, pools still open, unverified |
+| [`0xE5429dB8f63912E632E86733905667AaEb6ea8cC`](https://robinhoodchain.blockscout.com/address/0xE5429dB8f63912E632E86733905667AaEb6ea8cC) | superseded, pools still open, unverified |
 
 ### Upstream Dependencies
 
@@ -106,7 +167,7 @@ The last three are hashes of fixed strings and read back off the contracts that 
 
 ## Source Verification
 
-Every Hookr contract on this page holds verified source on Blockscout, and every one is a full match: the explorer recompiles the source and gets the deployed bytes back, CBOR metadata trailer included. None is a partial match, which is what the explorer reports when the code agrees and the trailer does not. Sourcify holds the same sixteen addresses on chain 4663 as exact matches, creation and runtime bytecode both (`https://sourcify.dev/server/v2/contract/4663/<address>`).
+Every contract of the default lineage on this page, sixteen addresses, holds verified source on Blockscout, and every one is a full match: the explorer recompiles the source and gets the deployed bytes back, CBOR metadata trailer included. None is a partial match, which is what the explorer reports when the code agrees and the trailer does not. Sourcify holds the same sixteen addresses on chain 4663 as exact matches, creation and runtime bytecode both (`https://sourcify.dev/server/v2/contract/4663/<address>`). Of the recapture root's three addresses, the root and the adapter are Blockscout full matches and Sourcify exact matches; the linked correction library is not verified at its address on either, for the reason its row gives. WTH's executor and the execution clock are outside this claim.
 
 The build is Solidity `v0.8.26+commit.8a97fa7a` through via-IR, the optimizer at 200 runs, `evm_version = cancun`, `bytecode_hash = ipfs`, CBOR metadata appended. `foundry.toml` in this repository is that profile, with its ten remappings written out rather than detected, because a contract's metadata records them and the metadata is hashed into the trailer.
 
@@ -138,16 +199,19 @@ cast code <address> --rpc-url https://rpc.mainnet.chain.robinhood.com
 | `HookrStatefulSettlementLibV1` | [`0xde7Ae40c713D5C9EC2C8e2E28810C6C7Eb791706`](https://robinhoodchain.blockscout.com/address/0xde7Ae40c713D5C9EC2C8e2E28810C6C7Eb791706) | 2,715 B | 1 slot | identical once masked | verified, full match |
 | `HookrModularCorrectionLibV2` | [`0xd2832D5F64C7116bE2c7B32D8c06d60023b479D8`](https://robinhoodchain.blockscout.com/address/0xd2832D5F64C7116bE2c7B32D8c06d60023b479D8) | 3,063 B | 1 slot | identical once masked | verified, full match |
 | `HookrReleaseCreate2FactoryV1` | [`0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe`](https://robinhoodchain.blockscout.com/address/0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe) | 972 B | 2 slots | identical once masked | verified, full match |
+| `HookrModularHookV6WthV5` | [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC) | 9,853 B | 12 slots | identical once masked | verified, full match (2026-09-12); Sourcify exact runtime match |
+| `HookrWthExecutorAdapterV1` | [`0x28AF7A3645080e926a3101461e0Ec0594D42D806`](https://robinhoodchain.blockscout.com/address/0x28AF7A3645080e926a3101461e0Ec0594D42D806) | 4,492 B | 3 slots | identical once masked | verified, full match (2026-09-13); Sourcify exact creation and runtime match |
+| `HookrModularCorrectionLibV3` | [`0x11996B4e04571718d49454fC52830dc7fA0FF99C`](https://robinhoodchain.blockscout.com/address/0x11996B4e04571718d49454fC52830dc7fA0FF99C) | 3,007 B | 1 slot | 2,995 code bytes identical once the trailer and the immutable are masked | not verified; deployed without the metadata hash, so its trailer is `solc` only and no full match is reachable at this address; the source is in the root's verified bundle |
 
-The last four rows predate the rest and carry the metadata of a build that embeds the source text instead of its hash, so reproducing their trailers takes `use_literal_content = true`. Their code is identical either way. The single immutable in each of the three libraries is its own address, which is how a library refuses a direct call.
+Rows thirteen to sixteen predate the rest and carry the metadata of a build that embeds the source text instead of its hash, so reproducing their trailers takes `use_literal_content = true`. Their code is identical either way. The single immutable in each of the four libraries is its own address, which is how a library refuses a direct call. The last three rows are the recapture root's set; the root's and the adapter's runtime bytes reproduce from this build with the trailer included, and the library's reproduce without it.
 
 ## Machine-Readable Deployments
 
-`deployments/robinhood-4663.v2.json` carries the same set as JSON, plus, for the contracts this release deployed, the runtime code hash and size and the deployment transaction and block (the three reused libraries carry only their address and code hash, and the factory appears under `upstream`), the registry identifiers and the wiring reads above, so a consumer reads one file rather than parsing this page.
+`deployments/robinhood-4663.v2.json` carries the same set as JSON, plus, for the contracts this release deployed, the runtime code hash and size and the deployment transaction and block (the three reused libraries carry only their address and code hash, and the factory appears under `upstream`), the registry identifiers and the wiring reads above, so a consumer reads one file rather than parsing this page. The recapture root is under `contracts.recaptureRootHook` and `contracts.wthExecutorAdapter`, its library under `reusedLibraries.modularCorrectionLibV3`, its identifiers under `identifiers.recapture`, its wiring under `wiring.adapterWthExecutor` and `wiring.adapterExecutionClock`, each root's listing status under `roots`, and the superseded recapture roots under `supersededRoots`.
 
 ## Refilling the Addresses
 
-`scripts/sync-from-release.mjs` writes the address cells above and `deployments/robinhood-4663.v2.json` from a deployment record:
+`scripts/sync-from-release.mjs` writes the default lineage's address cells above and the matching keys of `deployments/robinhood-4663.v2.json` from a deployment record; the recapture rows were filled by hand from the chain reads on this page:
 
 ```sh
 node scripts/sync-from-release.mjs --journal /path/to/journal.json --root .

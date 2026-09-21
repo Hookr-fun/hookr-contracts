@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(repositoryRoot, "SOURCE_MANIFEST.json");
 const sourceRepository = "https://github.com/Hookr-fun/hookr.git";
-const sourceCommit = "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25";
+const sourceCommit = "b694e9ad6ba4e372ca9c1419640262be651ce91f";
 const exportRoots = ["src"];
 
 /** Deployed at its own address by this release, or linked from one it already had. */
@@ -30,14 +30,17 @@ const deployed = new Set([
   "src/HookrKernelRouterV3.sol",
   "src/HookrMarketCoordinatorV5.sol",
   "src/HookrModularHookV6.sol",
+  "src/HookrModularHookV6WthV5.sol",
   "src/HookrModuleCatalogV1.sol",
   "src/HookrNativeMechanicsBlockV2.sol",
   "src/HookrReleaseCreate2FactoryV1.sol",
   "src/HookrStackRegistryV2.sol",
   "src/HookrSwapAccountingKernelV3.sol",
   "src/HookrTreasuryForwarderV1.sol",
+  "src/HookrWthExecutorAdapterV1.sol",
   "src/libraries/HookrMarketCoordinatorInitialBuyLibV4.sol",
   "src/libraries/HookrModularCorrectionLibV2.sol",
+  "src/libraries/HookrModularCorrectionLibV3.sol",
   "src/libraries/HookrNativeMechanicsCoordinatorLibV2.sol",
   "src/libraries/HookrStatefulSettlementLibV1.sol",
 ]);
@@ -49,6 +52,7 @@ const compiledInto = new Set([
   "src/HookrMarketCoordinatorV3.sol",
   "src/HookrStackRegistryV1.sol",
   "src/HookrSwapKernelV3.sol",
+  "src/HookrSwapKernelV5Wth.sol",
   "src/HookrTokenV61.sol",
 ]);
 

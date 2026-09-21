@@ -1,0 +1,52 @@
+name: Hook idea
+description: A rule, a module or a full hook you want feedback on before writing much code
+title: "idea: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The light template. A paragraph on the mechanism and which lane it belongs to is enough; nothing has to be deployed, measured or audited yet. When there is code, open a pull request into `labs/` or use the module submission template. For a hook that is ready for listing review, use the external hook template; for integration work, the partner integration template. This issue is public: no contact details, no keys, no unpublished addresses.
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: Mechanism
+      description: One paragraph. What happens on a swap that does not happen today, and who pays or receives what.
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Lane
+      description: A rule lives inside the native block and needs a new block version in a new sealed profile. A module is a separate contract the catalog registers. A full hook has an address of its own and is reviewed for listing, not admitted to the registry. CONTRIBUTING.md explains the three.
+      options:
+        - Rule (a change to what the native block does)
+        - Module (a separate contract the catalog would register)
+        - Full hook (a standalone v4 hook)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: swap
+    attributes:
+      label: What it changes on a swap
+      description: The fee, the takes, the deltas, the counters. Which phase, beforeSwap or afterSwap, and on which leg.
+    validations:
+      required: true
+  - type: textarea
+    id: root
+    attributes:
+      label: Which root, if any
+      description: Default root, recapture root, both, or its own address. Leave blank if the lane is not sure.
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: A repository, a prototype under labs/, a paper, a comparable hook. Optional.
+  - type: checkboxes
+    id: public
+    attributes:
+      label: Public
+      options:
+        - label: This issue contains no private contact details, no secrets and no unpublished addresses.
+          required: true

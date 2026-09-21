@@ -33,11 +33,10 @@ const goldenPath = join(root, "STORAGE_LAYOUT.json");
 const write = process.argv.includes("--write");
 
 /**
- * These host the accounting kernel's layout by DELEGATECALL and must own no storage. When the
- * arbitrage-recapture sources join this export, HookrModularHookV6WthV5 and HookrSwapKernelV5Wth
- * belong here too, in the same pull request that adds their layouts with --write.
+ * These host the accounting kernel's layout by DELEGATECALL and must own no storage. The default
+ * root and its kernel base, and the recapture root and its kernel base.
  */
-const delegatecallHosts = ["HookrModularHookV6", "HookrSwapKernelV3"];
+const delegatecallHosts = ["HookrModularHookV6", "HookrSwapKernelV3", "HookrModularHookV6WthV5", "HookrSwapKernelV5Wth"];
 
 function fail(message) {
   console.error(message);

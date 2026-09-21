@@ -1,6 +1,6 @@
 # Overview
 
-Hookr is one Uniswap v4 hook that serves many pools. A pool opened through Hookr freezes a configuration at creation and the hook reads it on every callback. Nothing about that configuration can change afterwards, including by the Hookr owner.
+Hookr is two Uniswap v4 hooks that serve many pools: a default root that runs the five rules below, and a recapture root that runs the same five rules and adds a partner correction lane (see [Architecture](./architecture.md)). A pool opened through Hookr names one root and freezes a configuration at creation, and the root reads it on every callback. Nothing about that configuration can change afterwards, including by the Hookr owner.
 
 The hook does five things, each independently switchable per pool:
 

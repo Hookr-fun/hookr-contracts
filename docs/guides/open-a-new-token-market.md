@@ -35,7 +35,7 @@ HookrNativeMechanicsBlockV2.Config memory cfg = HookrNativeMechanicsBlockV2.Conf
 });
 ```
 
-Four of these are not free choices. `poolId` must be the pool you are about to open. `kernel` must be the root hook. `lockedLiquidityProvider` must be the coordinator whenever `guardEndBlock` is non-zero, and the zero address whenever it is not. `protocolRecipient` and `protocolShareBps` must be exactly what the coordinator resolves for you, or admission reverts.
+Four of these are not free choices. `poolId` must be the pool you are about to open. `kernel` must be the root hook you are opening on (see Choose a root below). `lockedLiquidityProvider` must be the coordinator whenever `guardEndBlock` is non-zero, and the zero address whenever it is not. `protocolRecipient` and `protocolShareBps` must be exactly what the coordinator resolves for you, or admission reverts.
 
 Read the full rule set in [Config schema and limits](../reference/config-schema-and-limits.md) before you commit to values. The validator rejects several combinations that look reasonable, such as a non-zero `surgeSens` with `maxFeePips == baseFeePips`.
 
@@ -53,7 +53,18 @@ The address depends on the launch arguments, your address as `expectedCreator`, 
 PoolKey memory key = coordinator.poolKeyFor(subject, args.market);
 ```
 
-`poolKeyFor` sorts the currencies, sets `fee` to `0x800000`, and names the root hook. Take `key.toId()` for the config's `poolId`.
+`poolKeyFor` sorts the currencies, sets `fee` to `0x800000`, and names the root hook for the kernel id in `args.market`. Take `key.toId()` for the config's `poolId`.
+
+## Choose a Root
+
+A market names its root by the `kernelId` in its market parameters, and the coordinator resolves the root hook from the registry's active kernel for that id. Two are open:
+
+| Root | `kernelId` | Root hook |
+| --- | --- | --- |
+| Default: the five rules | `0x1be0c118b1c6520d97de31ee9f0c33069f0e715ffcdcb16c87a343752bb5be14` | `0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC` |
+| Recapture: the five rules plus WTH's correction lane | `0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a` | `0xb914f955294799de4b891bd2EA8AF628Fa1c68CC` |
+
+On the default root, leave the five correction fields in `limits` at zero. On the recapture root, the lane runs only on a pool whose stack freezes them, and the registry admits that only for a native-ETH quote (`currency0 == address(0)`): `correctionExecutor` is `0x28AF7A3645080e926a3101461e0Ec0594D42D806` (the adapter the profile seals), `correctionCreator` is your address and is frozen as the creator the executor pays 40% of every realised correction to, `correctionFeePolicyId` is `0xd2653e091cb7002585fd8b1192b58f11b9c951061dc797123e37d5e2ccb45cef`, `correctionMaxVolumeBps` is in `(0, 5000]` and `correctionMinProfitQuote` is non-zero; the last two are frozen but not enforced, because WTH's interface takes neither. A pool opened on the recapture root with all five at zero is admitted and behaves as a plain pool. Swaps on a correcting pool should carry a gas limit of at least 1,100,000, because a correction is fail-open and `eth_estimateGas` converges on a swap that skipped it. The [`hookr-sdk`](https://www.npmjs.com/package/hookr-sdk) package, version 0.2.0, exports `ROOTS`, `RECAPTURE_CORRECTION`, `correctionFor`, `swapGasLimit` and `listRoots` for exactly these values. Read [HookrModularHookV6WthV5](../reference/HookrModularHookV6WthV5.md) before choosing it: on that root, and only there, a swap can be refused on WTH's answer. The recapture root is not on Uniswap's routing allowlist as of 2026-09-21, so Uniswap's own interface does not route to its pools.
 
 ## Assemble the Market Parameters
 
@@ -65,13 +76,13 @@ MarketParams memory market = MarketParams({
     lpFeeRecipient:  yourFeeRecipient,         // must not be zero or the coordinator
     tickSpacing:     60,
     sqrtPriceX96:    openingPrice,             // must sit exactly on a usable tick
-    kernelId:        kernelId,
+    kernelId:        kernelId,                 // default or recapture, see above
     modules:         selections,               // one entry: the native module and cfg
     limits:          limits
 });
 ```
 
-`limits.baseLpFeePips` must equal the config's `baseFeePips`. `limits.trustedRouter` and `limits.trustedQuoter` must be the registered Hookr router and quoter, or the pot leg cannot work and the registry rejects the stack. Leave every correction field zero.
+`limits.baseLpFeePips` must equal the config's `baseFeePips`. `limits.trustedRouter` and `limits.trustedQuoter` must be the registered Hookr router and quoter, or the pot leg cannot work and the registry rejects the stack. Leave every correction field zero on the default root; fill all five as described under Choose a root for a correcting pool on the recapture root.
 
 `sqrtPriceX96` has to land exactly on a usable tick for your `tickSpacing`. That tick becomes the founding band's edge on the price: the upper edge when the token sorts as `currency1` (every native-quote pool, since `address(0)` sorts first), the lower edge when it sorts as `currency0`. The whole supply sits on the token's side of it. The coordinator reverts `InvalidMarketArgs` otherwise.
 

@@ -3,7 +3,9 @@
   "generatedWith": "forge Version: 1.7.1",
   "delegatecallHosts": [
     "HookrModularHookV6",
-    "HookrSwapKernelV3"
+    "HookrSwapKernelV3",
+    "HookrModularHookV6WthV5",
+    "HookrSwapKernelV5Wth"
   ],
   "contracts": {
     "HookrKernelQuoterV1": {
@@ -698,6 +700,10 @@
       }
     },
     "HookrModularHookV6": {
+      "storage": [],
+      "types": {}
+    },
+    "HookrModularHookV6WthV5": {
       "storage": [],
       "types": {}
     },
@@ -2909,6 +2915,10 @@
       "storage": [],
       "types": {}
     },
+    "HookrSwapKernelV5Wth": {
+      "storage": [],
+      "types": {}
+    },
     "HookrTokenV61": {
       "storage": [
         {
@@ -3022,6 +3032,35 @@
           "slot": "3",
           "offset": 0,
           "label": "nativeBlock",
+          "type": "t_address"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        }
+      }
+    },
+    "HookrWthExecutorAdapterV1": {
+      "storage": [
+        {
+          "slot": "0",
+          "offset": 0,
+          "label": "owner",
+          "type": "t_address"
+        },
+        {
+          "slot": "1",
+          "offset": 0,
+          "label": "pendingOwner",
+          "type": "t_address"
+        },
+        {
+          "slot": "2",
+          "offset": 0,
+          "label": "wthExecutor",
           "type": "t_address"
         }
       ],

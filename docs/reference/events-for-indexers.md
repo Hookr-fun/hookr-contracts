@@ -1,6 +1,6 @@
 # Events for indexers
 
-Which contract emits what, and how to keep the streams apart. Every event below is on a contract in this repository; the PoolManager's own `Swap`, `Initialize` and `ModifyLiquidity` are unchanged and still the source of truth for price and depth.
+Which contract emits what, and how to keep the streams apart. Every event below is on a contract in this repository; the PoolManager's own `Swap`, `Initialize` and `ModifyLiquidity` are unchanged and still the source of truth for price and depth. There are two root hooks, and a pool's `PoolKey.hooks` says which one it is on: the default root `0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC` or the recapture root `0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`. Index both.
 
 ## Stream Separation
 
@@ -75,7 +75,7 @@ enum ProtocolStream { Surcharge, Guard, LpReward, Pot, Burn }
 
 ## HookrSwapAccountingKernelV3
 
-Emitted from the root hook's address, because the kernel runs by `DELEGATECALL`. Point your indexer at the root hook, not at the kernel.
+Emitted from the root hook's address, because the kernel runs by `DELEGATECALL`, so the same event set arrives from both root addresses, `0xb3cA…e8cC` and `0xb914…68CC`. Point your indexer at both roots, not at the kernel.
 
 | Event | When |
 | --- | --- |
@@ -86,6 +86,22 @@ Emitted from the root hook's address, because the kernel runs by `DELEGATECALL`.
 | `HookFee` | totals for one swap, in both currencies |
 
 `ModuleFeeSkipped` is worth alerting on. It means a recipient could not receive a credit.
+
+## The Recapture Root's Own Events
+
+Three events and one revert appear only from the recapture root, `0xb914…68CC`, because only its lane runs.
+
+| Event | When | Index on |
+| --- | --- | --- |
+| `CorrectionAttemptSucceeded` | WTH's executor returned a realised profit | `poolId`, `phase`, `planDigest` |
+| `CorrectionAttemptFailed` | the executor call reverted or returned the wrong shape, or the dispatcher reverted | `poolId`, `phase` |
+| `CorrectionAttemptSkipped` | the dispatcher declined to call: ineligible, bad or expired plan, wrong phase, clock unavailable | `poolId`, `phase` |
+
+`phase` is 1 for `beforeSwap`, 2 for `afterSwap`, and an ordinary swap on an ETH-quoted pool produces one of these events per phase, so two per swap. `realizedProfitQuote` on `Succeeded` is what the executor reported, in quote; the split it paid is WTH's to account for, and the trader's share, the creator's share and the LPs' share are paid by WTH's executor directly rather than through any Hookr ledger, so none of them appears in `ProtocolShareAccrued` or the claim counters. `MevCallbackRefused(subject, quote)` is a revert, not an event: a swap that hit it never settled and emits nothing.
+
+The executor's own swap back into the pool during a correction is an ordinary PoolManager `Swap` on the same pool id from the adapter or WTH's executor as sender, with no `SwapExecuted` on the router and zero deltas from the hook. Count it as a correction leg, not as a trade.
+
+Three earlier recapture roots, `0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`, `0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc` and `0xE5429dB8f63912E632E86733905667AaEb6ea8cC`, are superseded; their pools are still open and still emit the kernel's events from those addresses. An indexer that wants every Hookr pool includes them; nothing here recommends opening on them.
 
 ## HookrKernelRouterV3
 
