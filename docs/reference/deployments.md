@@ -97,7 +97,7 @@ Three earlier recapture roots were sealed on this registry before the current on
 
 | Address | Status |
 | --- | --- |
-| [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) | superseded, pools still open, unverified |
+| [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) | superseded, pools still open, verified on Blockscout as `HookrModularHookV6Wth` |
 | [`0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc`](https://robinhoodchain.blockscout.com/address/0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc) | superseded, pools still open, unverified |
 | [`0xE5429dB8f63912E632E86733905667AaEb6ea8cC`](https://robinhoodchain.blockscout.com/address/0xE5429dB8f63912E632E86733905667AaEb6ea8cC) | superseded, pools still open, unverified |
 

@@ -18,7 +18,7 @@ Before the current recapture root, three earlier recapture roots were sealed on 
 
 | Root | Address | Status | Source verification |
 | --- | --- | --- | --- |
-| First recapture root | [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) | superseded, pools still open | not verified; its correction lane needs more gas than an ordinary swap carries, so on real traffic only the five rules run |
+| First recapture root | [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) | superseded, pools still open | verified on Blockscout as `HookrModularHookV6Wth`, no Sourcify match; its correction lane needs more gas than an ordinary swap carries, so on real traffic only the five rules run |
 | Third recapture root | [`0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc`](https://robinhoodchain.blockscout.com/address/0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc) | superseded, pools still open | not verified; built without the release profile, so a full match is unreachable at its address |
 | Fourth recapture root | [`0xE5429dB8f63912E632E86733905667AaEb6ea8cC`](https://robinhoodchain.blockscout.com/address/0xE5429dB8f63912E632E86733905667AaEb6ea8cC) | superseded, pools still open | not verified at its address |
 

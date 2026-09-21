@@ -297,7 +297,7 @@
     "defaultBps": 2000,
     "ceilingBps": 5000
   },
-  "sourceCommit": "b694e9ad6ba4e372ca9c1419640262be651ce91f",
+  "sourceCommit": "5baea2799015ff7c46ff69fcc08e7d0ba1d4223e",
   "registrationCaps": {
     "requiredHookFlags": "0x28cc",
     "maxLpFeeSurchargePips": 500000,
@@ -329,7 +329,9 @@
     {
       "address": "0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC",
       "status": "superseded, pools still open",
-      "verified": false
+      "verified": true,
+      "verifiedOn": "Blockscout",
+      "verifiedAs": "HookrModularHookV6Wth"
     },
     {
       "address": "0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc",
