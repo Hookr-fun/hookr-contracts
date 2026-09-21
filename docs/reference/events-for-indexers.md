@@ -101,7 +101,7 @@ Three events and one revert appear only from the recapture root, `0xb914…68CC`
 
 The executor's own swap back into the pool during a correction is an ordinary PoolManager `Swap` on the same pool id from the adapter or WTH's executor as sender, with no `SwapExecuted` on the router and zero deltas from the hook. Count it as a correction leg, not as a trade.
 
-Three earlier recapture roots are superseded; their pools are still open and still emit the kernel's events from those addresses, which are listed in [legacy/README.md](../../legacy/README.md). An indexer that wants every Hookr pool includes them; nothing here recommends opening on them.
+Three earlier recapture roots are superseded; the only pools on them are Hookr's own canary and rehearsal pools, which still emit the kernel's events from those addresses, which are listed in [legacy/README.md](../../legacy/README.md). An indexer that wants every Hookr pool includes them; nothing here recommends opening on them.
 
 ## HookrKernelRouterV3
 

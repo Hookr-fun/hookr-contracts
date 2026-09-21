@@ -328,19 +328,19 @@
   "supersededRoots": [
     {
       "address": "0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC",
-      "status": "superseded, pools still open",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
       "verified": true,
       "verifiedOn": "Blockscout",
       "verifiedAs": "HookrModularHookV6Wth"
     },
     {
       "address": "0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc",
-      "status": "superseded, pools still open",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
       "verified": false
     },
     {
       "address": "0xE5429dB8f63912E632E86733905667AaEb6ea8cC",
-      "status": "superseded, pools still open",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
       "verified": false
     }
   ]
