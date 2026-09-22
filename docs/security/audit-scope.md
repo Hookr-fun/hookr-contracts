@@ -4,7 +4,7 @@ What an auditor is asked to review, what they may treat as a dependency, and the
 
 ## Status
 
-Deployed on chain 4663. The evidence behind this scope is source review, a full run of the deployment and trading path against a fork of chain 4663, reads against the live contracts, and two canary pools the deployer opened and traded on the live deployment for a few thousandths of an ETH: a throwaway token against ETH (pool id `0xe375174c3e1a06b3150df6e27b7c409c06f259b9853d6287cd5262d2de26cc15`, seven transactions, every moved amount checked against the fee model) and HOOKR/ETH on the base fee alone (pool id `0x59fa67bc858058b4daad41ce138317c92e48fd9bccffdf2be646f18c2ec07720`, one position and one buy, every protocol counter unchanged). No independent audit has been completed. Every deployed contract's source is verified on Blockscout as a full match, and Sourcify holds each as an exact match. Addresses, runtime code hashes and the wiring read back from the chain are in [Deployments](../reference/deployments.md).
+Deployed on chain 4663. The evidence behind this scope is source review, a full run of the deployment and trading path against a fork of chain 4663, reads against the live contracts, and two canary pools the deployer opened and traded on the live deployment for a few thousandths of an ETH: a throwaway token against ETH (pool id `0xe375174c3e1a06b3150df6e27b7c409c06f259b9853d6287cd5262d2de26cc15`, seven transactions, every moved amount checked against the fee model) and HOOKR/ETH on the base fee alone (pool id `0x59fa67bc858058b4daad41ce138317c92e48fd9bccffdf2be646f18c2ec07720`, one position and one buy, every protocol counter unchanged). No independent audit has been completed. Every contract of the default lineage, the recapture root and its adapter hold source verified on Blockscout as a full match, and Sourcify holds each as an exact match; the recapture root's linked correction library does not, for the reason its row on the deployments page gives. Addresses, runtime code hashes and the wiring read back from the chain are in [Deployments](../reference/deployments.md).
 
 ## In Scope
 
@@ -41,9 +41,28 @@ Compiled from the same source tree, at an address of their own or linked from an
 
 `HookrSwapKernelV3` is the base `HookrModularHookV6` extends and has no address of its own. `HookrStackRegistryV1` is the base `HookrStackRegistryV2` extends, in the same way. The `HookrMarketCoordinatorV3` contract compiles because two libraries the V5 coordinator links live in its file; it is not deployed by this release and is out of scope. The accounting kernel is the contract that recomputes every module's split; the native block's exact-input-buy split is computed to satisfy that recomputation byte for byte. It has 611 bytes of headroom, the tightest in the graph, and the registry 1,269.
 
+## The Recapture Lineage
+
+Three contracts and one partner address extend the graph above into a second root, and they are in scope with a trust boundary of their own. Runtime sizes from the same build.
+
+| Contract | Runtime | Role |
+| --- | --- | --- |
+| `HookrModularHookV6WthV5` | 9,853 B | the recapture root, at a CREATE2-mined address; inherits `HookrSwapKernelV5Wth`, a copy of `HookrSwapKernelV3` with the correction lane always on |
+| `HookrWthExecutorAdapterV1` | 4,492 B | the one correction executor the recapture profile seals; forwards to WTH's executor |
+| `HookrModularCorrectionLibV3` | 3,007 B on chain | linked where it stands, reused from an earlier recapture root; unverified at its address, source in the root's verified bundle |
+
+The boundary, as the source draws it. The correction runs inside the kernel's `try/catch`; the library calls the adapter with a 2,300,000-gas stipend and the adapter forwards at most 2,200,000 to WTH's executor; the executor may swap back into the triggering pool during that window and nowhere else, and only with empty `hookData`; and a revert anywhere on that path is a `CorrectionAttemptFailed` event, never a failed swap. The adapter's `wthExecutor` was set once and cannot move, so ownership of the adapter controls nothing the lane does. The one place a user's swap can fail on the partner's word is the MEV refusal in `beforeSwap`: a 200,000-gas `staticcall` to WTH's executor, refusing only on a clean single `true`, outside the correction window. WTH's executor at `0xc356cf51134e0DF02BFE880115DD8c66Ead45803` is closed source, unverified and not Hookr's; the questions below treat it as hostile.
+
+Additional questions for the auditor on this lineage:
+
+9. The correction window admits two senders, the adapter and the executor it is bound to, re-read from `wthExecutor()` once per transaction and cached in transient storage. Is there a sequence, across the two phases of one swap or across two swaps in one transaction, in which the cached bound address admits a sender the seal did not intend?
+10. The MEV refusal reads a partner view and reverts the user's swap on `true`. Can a hostile executor use it to censor a pool's trading selectively (for example, answering `true` only to certain senders it can identify from the call context), and is the 200,000-gas stipend enough to make a griefing answer cost the executor more than it costs the trader?
+11. The executor's inner swap returns zero hook deltas and pays no fees through the hook. Does that inner swap create any path by which the five rules' counters (guard, pot, burn) can be advanced or bypassed, given it runs on the same pool inside the same transaction?
+12. `correctionMaxVolumeBps` and `correctionMinProfitQuote` are frozen per pool and forwarded but not enforced, because WTH's interface takes neither. Does any surface or invariant in the graph rely on them as caps?
+
 ## Non-Goals
 
-Nothing converts or burns the protocol share. It accrues to a pull-claim ledger and the treasury forwarder pushes it to one address. Uniswap routing allowlisting for the root hook is a separate submission.
+Nothing converts or burns the protocol share. It accrues to a pull-claim ledger and the treasury forwarder pushes it to one address. Uniswap routing allowlisting is a separate submission per root: the default root is listed, the recapture root is not.
 
 ## Regression Tests Behind Closed Findings
 
@@ -75,4 +94,4 @@ Every runtime size in the tables above came out of this build, and each matches 
 
 Twelve deployments in an enforced order, interleaved with the binds and ending with the sealing of the root profile: catalog, registry, treasury forwarder, admission library, initial-buy library, token-deployer library, coordinator, `setCoordinatorOnce`, accounting kernel, router, quoter, native block, `setNativeBlock`, `setCanonicalStatefulModuleOnce`, `registerModule`, the CREATE2-mined root hook, `registerIntegration` for the router and the quoter, `registerKernel`, `sealRootProfile`. That is the order on chain, and every step's address, transaction and block is in [Deployments](../reference/deployments.md).
 
-`setCoordinatorOnce`, `setCanonicalStatefulModuleOnce` and `sealRootProfile` are each one-shot and have all been spent on this graph. Nothing in it can admit a second coordinator, a second canonical stateful module, or a second root implementation under the sealed profile.
+`setCoordinatorOnce`, `setCanonicalStatefulModuleOnce` and `sealRootProfile` are each one-shot and have all been spent on this graph. Nothing in it can admit a second coordinator, a second canonical stateful module, or a second root implementation under a sealed profile. The recapture root was added afterwards as a second sealed profile on the same registry: adapter (block 61,264,312), CREATE2-mined root (61,270,834), `registerIntegration` for the adapter, `registerKernel`, `setExecutorOnce` on the adapter (61,272,510), `sealRootProfile` (61,272,550), all on 2026-09-12. Its correction library had been deployed on 2026-09-11 for an earlier root and was linked where it stood.

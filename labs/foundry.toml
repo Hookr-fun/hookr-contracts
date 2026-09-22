@@ -1,0 +1,39 @@
+# labs/ is its own Foundry project: `forge build --root labs`, `forge test --root labs`,
+# `forge fmt --check --root labs`. It compiles nothing under the repository's src/ into an
+# artifact of its own; it imports the pinned interfaces and types from there through the
+# `hookr/` remapping, read-only. Same compiler settings as the release so a template's gas
+# numbers mean something. No RPC endpoint table and no secrets: a fork test takes its RPC
+# from `--fork-url` on the command line.
+[profile.default]
+src = "."
+test = "."
+script = "script"
+out = "out"
+cache_path = "cache"
+libs = ["../lib"]
+allow_paths = ["../lib", "../src"]
+solc = "0.8.26"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "cancun"
+auto_detect_remappings = false
+remappings = [
+    "@uniswap/v4-core/=../lib/v4-core/",
+    "forge-std/=../lib/forge-std/src/",
+    "hookr/=../src/",
+    "@ensdomains/=../lib/v4-core/node_modules/@ensdomains/",
+    "@openzeppelin/=../lib/v4-core/lib/openzeppelin-contracts/",
+    "ds-test/=../lib/v4-core/lib/forge-std/lib/ds-test/src/",
+    "erc4626-tests/=../lib/v4-core/lib/openzeppelin-contracts/lib/erc4626-tests/",
+    "hardhat/=../lib/v4-core/node_modules/hardhat/",
+    "openzeppelin-contracts/=../lib/v4-core/lib/openzeppelin-contracts/",
+    "solmate/=../lib/v4-core/lib/solmate/",
+    "v4-core/=../lib/v4-core/src/"
+]
+
+[profile.default.fuzz]
+runs = 64
+
+[fmt]
+line_length = 120

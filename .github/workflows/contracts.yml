@@ -53,3 +53,33 @@ jobs:
         run: |
           ulimit -s 65536
           node check-storage-layout.mjs
+
+  labs:
+    name: Labs templates and prototypes build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the package and its submodules
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: v1.7.1
+
+      - name: Check labs formatting
+        run: forge fmt --check --root labs
+
+      - name: Build labs
+        run: |
+          ulimit -s 65536
+          forge build --root labs
+
+      - name: Test labs
+        run: |
+          ulimit -s 65536
+          forge test --root labs

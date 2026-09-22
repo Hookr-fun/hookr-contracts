@@ -34,3 +34,16 @@ runs = 256
 
 [profile.ci]
 verbosity = 3
+
+# The six recapture-root files are byte-pinned exports (SOURCE_MANIFEST.json pins each one's
+# sha256 to the deployed source), and forge fmt would rewrite three of them. They are excluded
+# from `forge fmt --check` rather than reformatted; the check still covers every other file.
+[fmt]
+ignore = [
+    "src/HookrModularHookV6WthV5.sol",
+    "src/HookrSwapKernelV5Wth.sol",
+    "src/HookrWthExecutorAdapterV1.sol",
+    "src/interfaces/IHookrExecutionClockV1.sol",
+    "src/interfaces/IWthArbitrageExecutorV1.sol",
+    "src/libraries/HookrModularCorrectionLibV3.sol",
+]

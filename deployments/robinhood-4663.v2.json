@@ -110,6 +110,33 @@
       "requiredFlags": "0x28cc",
       "flagMask": "0x3fff",
       "runtimeSize": 8474
+    },
+    "recaptureRootHook": {
+      "name": "HookrModularHookV6WthV5",
+      "address": "0xb914f955294799de4b891bd2EA8AF628Fa1c68CC",
+      "runtimeCodeHash": "0xd25dbcdc1b52a98796b4faf7c5d5515531060ea7776b0949c749fdddded23c28",
+      "txHash": "0xbe054779ef042dae6988f72ac7727c6d645915594040ab91b8148bd1451680f0",
+      "blockNumber": "61270834",
+      "salt": "0x7a973dabaf3e3bc1eb1b0c02f49fb11669f5e7f098d1f4007a14e724d3e6bb80",
+      "requiredFlags": "0x28cc",
+      "flagMask": "0x3fff",
+      "runtimeSize": 9853,
+      "verification": {
+        "blockscout": "full match, 2026-09-12T17:34:06Z",
+        "sourcify": "exact runtime match, 2026-09-12T17:33:56Z"
+      }
+    },
+    "wthExecutorAdapter": {
+      "name": "HookrWthExecutorAdapterV1",
+      "address": "0x28AF7A3645080e926a3101461e0Ec0594D42D806",
+      "runtimeCodeHash": "0xd842cd7f7c8ca1b784e1c7ac889ecda72791741b73628b589937614854d43ba8",
+      "txHash": "0x99f7bc3a9a1f46a3f0d6d763fd7e8be1e2d2cd327a0cb1b5efff6721fed9be42",
+      "blockNumber": "61264312",
+      "runtimeSize": 4492,
+      "verification": {
+        "blockscout": "full match, 2026-09-13T03:45:44Z",
+        "sourcify": "exact creation and runtime match, 2026-09-13T03:45:27Z"
+      }
     }
   },
   "reusedLibraries": {
@@ -145,6 +172,19 @@
       "verifyBeforeLinking": true,
       "runtimeCodeHash": "0x2aefdc592278625679094ad9729879bd92c245c3c0da51619d84026ca398a51f",
       "reused": true
+    },
+    "modularCorrectionLibV3": {
+      "name": "HookrModularCorrectionLibV3",
+      "address": "0x11996B4e04571718d49454fC52830dc7fA0FF99C",
+      "linkedInto": "recaptureRootHook",
+      "verifyBeforeLinking": true,
+      "runtimeCodeHash": "0x7211812e81ff0320f7b3963c0f9f2ae1caab7a44e3f710205175e24310766883",
+      "runtimeSize": 3007,
+      "reused": true,
+      "txHash": "0xaed05dd54ab488975d1f60ca982b7cae785cf6da053369c316ec258ce6975fc2",
+      "blockNumber": "60326894",
+      "verified": false,
+      "note": "Deployed 2026-09-11 for an earlier recapture root without the ipfs metadata hash, so no full match is reachable at this address. Its 2,995 code bytes equal this repository's build once the CBOR trailer and the self-address immutable are masked; the source file is in the root's verified bundle on Blockscout."
     }
   },
   "identifiers": {
@@ -160,6 +200,34 @@
       "kernelFamilyId": "keccak256(\"HOOKR_SWAP_DELTA_V1\")",
       "moduleKey": "keccak256(\"HOOKR_NATIVE_MECHANICS\")",
       "rootProfileId": "keccak256(\"HOOKR_LAUNCH_V2_MIN_ROOT_PROFILE\")"
+    },
+    "recapture": {
+      "kernelId": "0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a",
+      "rootProfileId": "0x9caac337e176ae6f2df97f1b153dc95a1ab0e73808155e3e1c969456832c9f78",
+      "profileVersion": 1,
+      "profileManifestHash": "0xdaa4fb5df3a94ca355e77dab6ba718fcd3b464294c03e1a8a90a848ec99f7f4e",
+      "moduleSetHash": "0x8fafd562dd2b8dbb0d67a4d8cbc40c5cd2177836b0788028f8e855a8d96d8304",
+      "moduleId": "0x961091565aaf4eaa4996296fda9772957e61d18d90b965111a59ded2bbb5e774",
+      "routerIntegrationId": "0xc9ddc18b51d83cdafa6da985c67b4db41895dcde37b719597bdda9db6396c455",
+      "quoterIntegrationId": "0x6e5a5b6aa6d141ccaf3b9f25f60e87919fc7a724cc845d146581eb49c079a9a9",
+      "correctionExecutorIntegrationId": "0xc4ae59ad11d59ac158b587ee1eed79594de1b0be1b13c86e7403f95dfd20f72c",
+      "correctionExecutorIntegrationKind": "0x6a1418d9bfb6c90eb5ef654cb59024d67946df272310d833799228ea58e217dc",
+      "feePolicyId": "0xd2653e091cb7002585fd8b1192b58f11b9c951061dc797123e37d5e2ccb45cef",
+      "feePolicyIntegrationId": "0xd49d445cfb1f944f40848794320f9ba89f9a8830fcbedf98c236f82476f7d680",
+      "feePolicyBps": {
+        "creator": 4000,
+        "trader": 2000,
+        "triggerPoolLp": 2000,
+        "wth": 1000,
+        "hookr": 1000
+      },
+      "sealTxHash": "0x48870c31a5c64099e9448875f490e0d3743f1cf752617d0545fd41f17008adcb",
+      "sealBlockNumber": "61272550",
+      "preimages": {
+        "rootProfileId": "keccak256(\"HOOKR_LAUNCH_V2_MIN_WTH_ROOT_PROFILE_V5\")",
+        "correctionExecutorIntegrationKind": "keccak256(\"HOOKR_KERNEL_INTEGRATION_CORRECTION_EXECUTOR\")",
+        "feePolicyIntegrationId": "keccak256(\"hookr.integration.wth-arb.v2\")"
+      }
     }
   },
   "upstream": {
@@ -168,18 +236,16 @@
     "v4Quoter": "0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
     "permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "universalRouter": {
-      "value": "",
-      "note": "Two conflicting official sources on chain 4663. Both addresses hold a deployed router of 24,546 bytes reporting the same poolManager, and their runtime code hashes differ, so they are not the same build. Nothing in the Hookr graph pins either one. Pin the address you tested, record its runtime code hash, and state which source it came from.",
-      "candidates": [
+      "value": "0x8876789976dEcBfCbBbe364623C63652db8C0904",
+      "runtimeCodeHash": "0x2ce6aaaf9f4151f5e1cbf774668772f17f532ae11b15e9284fd0a072a8b0fbde",
+      "deployedAtBlock": "48954",
+      "source": "Uniswap rendered deployments page; the address the fork rehearsals and the canary swaps settled through",
+      "note": "Uniswap's deployment registry lists a second router with different bytecode; nothing in Hookr routes through it. Re-pinning needs a fork rehearsal of the swap paths first.",
+      "notPinned": [
         {
           "address": "0x06afBA43fd06227fA663b0dAeCF536F6eaA6BF99",
           "source": "Uniswap deployment registry",
           "runtimeCodeHash": "0xbe8e8191bb42d843c2e948a5a55772eaab864ce01e54dcd47c9d089170b302d5"
-        },
-        {
-          "address": "0x8876789976dEcBfCbBbe364623C63652db8C0904",
-          "source": "Uniswap rendered deployments page; the address the fork runs used",
-          "runtimeCodeHash": "0x2ce6aaaf9f4151f5e1cbf774668772f17f532ae11b15e9284fd0a072a8b0fbde"
         }
       ]
     },
@@ -199,13 +265,39 @@
     "catalogCanonicalStatefulModule": "0xD700492b504ba5A72D7de28dDe11Cd7985a7F1ae",
     "routerIntegrationVersion": 3,
     "quoterIntegrationVersion": 1,
-    "createTwoFactoryAuthorizedDeployer": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE"
+    "createTwoFactoryAuthorizedDeployer": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE",
+    "recaptureRootAccountingKernel": "0x530523DEcC9523dDF8A87842fFBBD24a59C7E060",
+    "adapterWthExecutor": {
+      "value": "0xc356cf51134e0DF02BFE880115DD8c66Ead45803",
+      "owner": "WTH",
+      "verified": false,
+      "runtimeSize": 62358,
+      "runtimeCodeHash": "0xdde9eabb70415450f3aedefbb6fe050e66e59cd58472cc91d0db126b64794b85",
+      "boundBy": {
+        "txHash": "0xf49c1330a13832fcacbfd3e972273738c2b3eae7cf27e4aca3b8dce6b3736614",
+        "blockNumber": "61272510",
+        "method": "setExecutorOnce"
+      }
+    },
+    "adapterExecutionClock": {
+      "value": "0x72841e61d6701dEf8eDB3D780b13d3b44E6A0F92",
+      "name": "HookrArbSysBlockClockV1",
+      "runtimeSize": 340,
+      "runtimeCodeHash": "0xd6b4f5977de0d97f01a082fc6cf69d77bcc93823d1b4ff7d5eab815a6432b7a6",
+      "verified": {
+        "blockscout": false,
+        "sourcify": "exact match, 2026-09-08T18:52:02Z"
+      },
+      "exported": false
+    },
+    "adapterFeePolicyId": "0xd2653e091cb7002585fd8b1192b58f11b9c951061dc797123e37d5e2ccb45cef",
+    "adapterOwner": "0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE"
   },
   "protocolShare": {
     "defaultBps": 2000,
     "ceilingBps": 5000
   },
-  "sourceCommit": "8db7fc940938f811f508ba9cb0c8f2d3f24c9a25",
+  "sourceCommit": "3e5c022764d8eda3a4c417f777abc9c8256ff011",
   "registrationCaps": {
     "requiredHookFlags": "0x28cc",
     "maxLpFeeSurchargePips": 500000,
@@ -213,5 +305,43 @@
     "maxUnspecifiedQuoteTakeBps": 2500,
     "maxSubjectTakeBps": 1000,
     "callbackGasLimit": 2000000
-  }
+  },
+  "roots": {
+    "default": {
+      "contract": "HookrModularHookV6",
+      "address": "0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC",
+      "kernelId": "0x1be0c118b1c6520d97de31ee9f0c33069f0e715ffcdcb16c87a343752bb5be14",
+      "rootProfileId": "0x460f3441e5dc6f26fe4729ecb80ad7aa9ba896af54bed88a47f1218588129d72",
+      "uniswapRoutingAllowlist": true,
+      "uniswapHooklist": true
+    },
+    "recapture": {
+      "contract": "HookrModularHookV6WthV5",
+      "address": "0xb914f955294799de4b891bd2EA8AF628Fa1c68CC",
+      "kernelId": "0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a",
+      "rootProfileId": "0x9caac337e176ae6f2df97f1b153dc95a1ab0e73808155e3e1c969456832c9f78",
+      "uniswapRoutingAllowlist": false,
+      "uniswapHooklist": false
+    },
+    "listingCheckedOn": "2026-09-21"
+  },
+  "supersededRoots": [
+    {
+      "address": "0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
+      "verified": true,
+      "verifiedOn": "Blockscout",
+      "verifiedAs": "HookrModularHookV6Wth"
+    },
+    {
+      "address": "0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
+      "verified": false
+    },
+    {
+      "address": "0xE5429dB8f63912E632E86733905667AaEb6ea8cC",
+      "status": "superseded; only Hookr's own canary and rehearsal pools",
+      "verified": false
+    }
+  ]
 }

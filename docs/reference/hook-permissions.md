@@ -1,6 +1,6 @@
 # Hook permissions
 
-The Hookr root hook is `HookrModularHookV6`. Its address is mined so the low fourteen bits equal `0x28cc`, which is six permissions.
+Hookr has two root hooks, `HookrModularHookV6` (the default root) and `HookrModularHookV6WthV5` (the recapture root). Both addresses are mined so the low fourteen bits equal `0x28cc`, which is six permissions, and both pin the same `REQUIRED_FLAGS`; the registry's `registerKernel` records `0x28cc` for each. Everything on this page applies to both. The recapture root's correction lane runs inside the same two swap callbacks and needs no permission of its own.
 
 ## The Permissions Struct
 
@@ -23,7 +23,7 @@ Hooks.Permissions({
 });
 ```
 
-The root does not inherit `BaseHook` and does not expose `getHookPermissions()`. It pins the same set as a constant instead:
+Neither root inherits `BaseHook` or exposes `getHookPermissions()`. Each pins the same set as a constant instead:
 
 ```solidity
 uint160 public constant REQUIRED_FLAGS =
@@ -53,7 +53,7 @@ That value is 10444 decimal, `0x28cc` hex. The CREATE2 mining target is `require
 
 The authoritative bit list is [`Hooks.sol`](https://github.com/Uniswap/v4-core/blob/main/src/libraries/Hooks.sol) in v4-core.
 
-Note the two spellings. `Hooks.Permissions` uses `beforeSwapReturnDelta` and `afterSwapReturnDelta`. Uniswap's hooklist schema uses `beforeSwapReturnsDelta` and `afterSwapReturnsDelta`. The hooklist entry in this repository uses the hooklist spelling; everything else uses the struct spelling.
+Note the two spellings. `Hooks.Permissions` uses `beforeSwapReturnDelta` and `afterSwapReturnDelta`. Uniswap's hooklist schema uses `beforeSwapReturnsDelta` and `afterSwapReturnsDelta`. A hooklist entry uses the hooklist spelling; everything in this repository uses the struct spelling.
 
 ## What Each Permission Is For
 
@@ -91,4 +91,4 @@ Fees are in pips: 3,000 pips is 0.30%, and `MAX_TOTAL_FEE_PIPS = 500_000` is 50%
 
 ## Hooklist Entry
 
-The hooklist entry carries this flag set in the shape Uniswap's hooklist expects, with the root hook's live address filled in. It names no audit report, because none exists.
+This repository carries no copy of a hooklist entry. The entry for the default root lives in Uniswap's hooklist, where it carries this flag set in the hooklist's own spelling and the root's live address, and names no audit report, because none exists. Listing is per root: the default root, `0xb3cA…e8cC`, is on Uniswap's routing allowlist and hooklist; the recapture root, `0xb914…68CC`, is on neither as of 2026-09-21, and would need a submission of its own.

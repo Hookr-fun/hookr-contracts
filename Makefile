@@ -1,6 +1,6 @@
-.PHONY: check fmt build sizes source boundary layout
+.PHONY: check fmt build sizes source boundary layout labs
 
-check: fmt build sizes source boundary layout
+check: fmt build sizes source boundary layout labs
 
 fmt:
 	forge fmt --check
@@ -19,3 +19,8 @@ boundary:
 
 layout:
 	node check-storage-layout.mjs
+
+labs:
+	forge fmt --check --root labs
+	forge build --root labs
+	forge test --root labs

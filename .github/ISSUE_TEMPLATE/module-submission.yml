@@ -1,0 +1,70 @@
+name: Module submission
+description: A module with code and tests, for review against the catalog's registration shape
+title: "module: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a module that compiles and has tests, either under `labs/` in a pull request or in a public repository at a pinned commit. Start from `labs/templates/module`. A review here says whether the module fits the shape the catalog admits and what a registration would have to declare; it does not register anything. Registration is permanent and a registered module serves pools only once a sealed profile names it. This issue is public: no contact details, no keys, no unpublished addresses.
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A labs path on a branch or pull request, or a public repository URL plus a 40-character commit.
+      placeholder: "labs/hooks/my-module at PR #NN, or https://github.com/owner/repo at 0123…"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Config struct
+      description: The fields, their bounds, and what validateConfig rejects.
+    validations:
+      required: true
+  - type: textarea
+    id: maxima
+    attributes:
+      label: Requested maxima
+      description: The most the module will ever ask for, against the five registration caps. The native block's registration is maxLpFeeSurchargePips 500,000, maxSpecifiedQuoteTakeBps 4,000, maxUnspecifiedQuoteTakeBps 2,500, maxSubjectTakeBps 1,000, callbackGasLimit 2,000,000.
+      placeholder: |
+        maxLpFeeSurchargePips:
+        maxSpecifiedQuoteTakeBps:
+        maxUnspecifiedQuoteTakeBps:
+        maxSubjectTakeBps:
+        callbackGasLimit:
+    validations:
+      required: true
+  - type: input
+    id: gas
+    attributes:
+      label: Gas per callback, if measured
+      description: From forge test --gas-report or a trace. Say which callback. Leave blank if not measured.
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests run
+      description: The exact command and the summary line it printed.
+      placeholder: |
+        forge test --root labs --match-contract MyModuleTest
+        Ran 8 tests ... 8 passed
+    validations:
+      required: true
+  - type: dropdown
+    id: block
+    attributes:
+      label: Does it need a new native-block version?
+      description: A read-only module (IHookrModuleV1) can be registered as it is. Anything that must hold state across swaps or execute PoolManager actions is the stateful lane, which the catalog admits once per catalog, and so is a new block version in a new sealed profile.
+      options:
+        - No, it is a read-only module
+        - Yes, it needs the stateful lane
+        - Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: public
+    attributes:
+      label: Public
+      options:
+        - label: This issue contains no private contact details, no secrets and no unpublished addresses.
+          required: true
