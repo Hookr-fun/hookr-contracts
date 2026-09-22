@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 const manifestPath = join(repositoryRoot, "SOURCE_MANIFEST.json");
 const sourceRepository = "https://github.com/Hookr-fun/hookr.git";
-const sourceCommit = "5baea2799015ff7c46ff69fcc08e7d0ba1d4223e";
+const sourceCommit = "3e5c022764d8eda3a4c417f777abc9c8256ff011";
 const exportRoots = ["src"];
 
 /** Deployed at its own address by this release, or linked from one it already had. */

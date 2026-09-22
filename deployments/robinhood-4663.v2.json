@@ -297,7 +297,7 @@
     "defaultBps": 2000,
     "ceilingBps": 5000
   },
-  "sourceCommit": "5baea2799015ff7c46ff69fcc08e7d0ba1d4223e",
+  "sourceCommit": "3e5c022764d8eda3a4c417f777abc9c8256ff011",
   "registrationCaps": {
     "requiredHookFlags": "0x28cc",
     "maxLpFeeSurchargePips": 500000,
