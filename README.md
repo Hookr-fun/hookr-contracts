@@ -2,7 +2,7 @@
 
 ## Hookr 1
 
-Hookr 1 is the current release: a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663), where every pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code). A creator launches a token on one to eight pools in a single transaction and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, every parameter the creator's to set. The rules are frozen when the pool opens. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with its LPs and traders, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook.
+Hookr 1 is the current release: a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663), where every pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code). A creator launches a token on one to eight pools in a single transaction and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with its LPs and traders, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook.
 
 Everything for Hookr 1 lives in [`hookr-1/`](./hookr-1/README.md):
 
@@ -14,7 +14,11 @@ Everything for Hookr 1 lives in [`hookr-1/`](./hookr-1/README.md):
 | Every production address on chain 4663, all 83 | [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) |
 | Every address, deployment and build setting, as JSON | [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) |
 
-Every source file there is byte-identical to the verified source of the contract it belongs to, and all 83 contracts hold an exact match on [Sourcify](https://sourcify.dev); each README links every address on [RobinScan](https://robin.etherscan.io) and Sourcify. To reproduce a build, use solc 0.8.37 with via-IR, the optimizer at 200 runs and EVM version prague. `node hookr-1/standard-input.mjs <address>` writes a contract's compiler input with the source paths its verified metadata records, and solc's output then equals the code on chain, metadata hash included, which `node hookr-1/check-runtime.mjs` checks byte for byte against `cast code`; `forge build --root hookr-1` builds the release from the same files and matches up to the metadata hashes. [`hookr-1/README.md`](./hookr-1/README.md#building) has the details. No independent audit of Hookr 1 has been completed.
+Every source file there is byte-identical to the verified source of its contract, and all 83 contracts are exact matches on [Sourcify](https://sourcify.dev). Each README links every address on [RobinScan](https://robin.etherscan.io) and Sourcify.
+
+To reproduce a build, use solc 0.8.37 with via-IR, the optimizer at 200 runs and EVM version prague. `node hookr-1/standard-input.mjs <address>` writes a contract's compiler input with the source paths its verified metadata records. solc's output then equals the code on chain, metadata hash included, and `node hookr-1/check-runtime.mjs` checks that byte for byte against `cast code`. `forge build --root hookr-1` builds the release from the same files and matches up to the metadata hashes. [`hookr-1/README.md`](./hookr-1/README.md#building) has the details.
+
+No independent audit of Hookr 1 has been completed.
 
 The rest of this page describes the V2 release, whose sources sit at the repository root and whose contracts stay live on chain.
 

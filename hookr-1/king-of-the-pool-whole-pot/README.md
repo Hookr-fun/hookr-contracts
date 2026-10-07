@@ -1,6 +1,6 @@
 # King of the Pool, whole pot
 
-A second Rules contract for the Hookr 1 root, deployed on 2026-10-07. Its King of the Pool pays the round's winner the whole pot. Everything else is the release's Rules, unchanged.
+A second Rules contract for the Hookr 1 root, deployed on 2026-10-07. Its King of the Pool pays the round's winner the whole pot. Everything else is the release's Rules, unchanged. The registry admits these Rules on the Hookr 1 root next to the release's Rules.
 
 | Contract | Address | Verified source |
 | --- | --- | --- |
@@ -13,10 +13,10 @@ Both were deployed in transaction `0x133dcefd312eb7ea3b97e75ec91852178a84987f03c
 
 One file: [`src/core/HookrRecapture.sol`](./src/core/HookrRecapture.sol). Every other source of both contracts is the release's own file in [`../src/`](../src/). `HookrRules` is the release's source too; it is deployed again because its constructor creates the recapture module, so new module code means new Rules.
 
-- **The winner takes the whole pot.** When a round closes with a leader, the leader is credited the entire pot as a claim in the pool's quote. Nothing is released to LPs and nothing carries to the next round. In the release, the prize was the smaller of the pot and a share of the winning buy.
-- **The pot can be all of the pool's arb share.** A pool may put up to 100% of its share of each arb recapture profit (what is left after the partner's and Hookr's cuts) in the pot: `MAX_POT_BPS` is 10,000, up from 5,000. The split still sums to 10,000 and the trader's share may be zero.
-- **No buy fee behind the prize, and no prize cap.** The pot is funded only by arb recapture profit, so the prize is no longer bounded by the protocol fee a buy pays. `maxPrizeBps` must be exactly 10,000, and a pool needs neither LP Rewards nor Auto Burn to run King of the Pool. `prizeBound` and `prizeBoundFor` keep their signatures and return 10,000.
-- **A round with no leader** releases `potReleaseBps` of the pot to the pool's LPs and carries the rest, as before.
+- The winner takes the whole pot. When a round closes with a leader, the leader is credited the entire pot as a claim in the pool's quote. Nothing is released to LPs and nothing carries to the next round. In the release, the prize was the smaller of the pot and a share of the winning buy.
+- The pot can be all of the pool's arb share. A pool may put up to 100% of its share of each arb recapture profit (what is left after the partner's and Hookr's cuts) in the pot: `MAX_POT_BPS` is 10,000, up from 5,000. The split still sums to 10,000 and the trader's share may be zero.
+- No buy fee behind the prize, and no prize cap. The pot is funded only by arb recapture profit, so the prize is no longer bounded by the protocol fee a buy pays. `maxPrizeBps` must be exactly 10,000, and a pool needs neither LP Rewards nor Auto Burn to run King of the Pool. `prizeBound` and `prizeBoundFor` keep their signatures and return 10,000.
+- A round with no leader releases `potReleaseBps` of the pot to the pool's LPs and carries the rest, as before.
 
 The leader rules are the release's: the largest buy of at least `minBuyQuote` in the round leads; a sell on the pool in the same transaction voids the lead; the arb recapture executor's own legs never lead.
 
