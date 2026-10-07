@@ -1,0 +1,26 @@
+# Hookr 1, as deployed on Robinhood Chain (chain id 4663). The compiler settings are the release's; the remappings
+# point at this repository's pinned submodules in ../lib, which hold the same commits the release was built with.
+# The verified metadata records the release's own dependency paths, so a build from here matches the deployed code
+# up to the metadata hash. For a byte-exact build, metadata hash included, use standard-input.mjs (README.md).
+[profile.default]
+src = "src"
+out = "out"
+cache_path = "cache"
+libs = ["../lib"]
+remappings = [
+    "@uniswap/v4-core/=../lib/v4-core/",
+    "forge-std/=../lib/forge-std/src/",
+    "@openzeppelin/contracts/=../lib/v4-core/lib/openzeppelin-contracts/contracts/",
+    "solmate/=../lib/v4-core/lib/solmate/",
+]
+auto_detect_remappings = false
+solc_version = "0.8.37"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "prague"
+bytecode_hash = "ipfs"
+use_literal_content = true
+
+[lint]
+lint_on_build = false

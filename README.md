@@ -1,5 +1,25 @@
 # Hookr contracts
 
+## Hookr 1
+
+Hookr 1 is the current release: a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663), where every pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code). A creator launches a token on one to eight pools in a single transaction and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, every parameter the creator's to set. The rules are frozen when the pool opens. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with its LPs and traders, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook.
+
+Everything for Hookr 1 lives in [`hookr-1/`](./hookr-1/README.md):
+
+| Part | Where |
+| --- | --- |
+| The release: 35 contracts, their sources and addresses | [`hookr-1/`](./hookr-1/README.md), sources in [`hookr-1/src/`](./hookr-1/src/) |
+| King of the Pool, whole pot: a second Rules contract whose round winner takes the whole pot | [`hookr-1/king-of-the-pool-whole-pot/`](./hookr-1/king-of-the-pool-whole-pot/README.md) |
+| The Hook Blocks deployed in production waves 0 to 3: 46 contracts in 17 blocks | [`hookr-1/hook-blocks/`](./hookr-1/hook-blocks/README.md) |
+| Every production address on chain 4663, all 83 | [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) |
+| Every address, deployment and build setting, as JSON | [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) |
+
+Every source file there is byte-identical to the verified source of the contract it belongs to, and all 83 contracts hold an exact match on [Sourcify](https://sourcify.dev); each README links every address on [RobinScan](https://robin.etherscan.io) and Sourcify. To reproduce a build, use solc 0.8.37 with via-IR, the optimizer at 200 runs and EVM version prague. `node hookr-1/standard-input.mjs <address>` writes a contract's compiler input with the source paths its verified metadata records, and solc's output then equals the code on chain, metadata hash included, which `node hookr-1/check-runtime.mjs` checks byte for byte against `cast code`; `forge build --root hookr-1` builds the release from the same files and matches up to the metadata hashes. [`hookr-1/README.md`](./hookr-1/README.md#building) has the details. No independent audit of Hookr 1 has been completed.
+
+The rest of this page describes the V2 release, whose sources sit at the repository root and whose contracts stay live on chain.
+
+## Hookr V2
+
 Hookr is two Uniswap v4 hooks that serve many pools. Both are roots on one registry and share one accounting kernel, one module, one coordinator, one router, one quoter and one treasury forwarder. The default root, `HookrModularHookV6` at [`0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC`](https://robinhoodchain.blockscout.com/address/0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC), runs five rules and nothing else. The recapture root, `HookrModularHookV6WthV5` at [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC), runs the same five rules and adds a partner correction lane: on every swap of an ETH-quoted pool it asks WTH's arbitrage executor, through a Hookr adapter, to trade the pool's price gap against its other venues and split the realised profit between the pool's creator, the trader, the pool's LPs, WTH and Hookr. A pool opened through Hookr names one root and freezes its configuration at creation; the root reads that frozen record on every callback, so nothing about the pool's rules can change afterwards, including by the Hookr owner. The rules are a surge LP fee that rises with trade size against in-range depth, a temporal guard window on new launches, an auto-burn of subject output on exact-input buys, an in-swap LP-reward donation, and an Nth-buy pot. All five work on any quote currency, native or ERC-20. The protocol's revenue is a share carved out of those opt-in rules and never out of the base LP fee, so a pool that runs on its base fee alone produces no protocol revenue at all.
 
 This repository holds the sources behind the contracts live on Robinhood Chain, the documentation for them, and the addresses. Earlier generations of Hookr stay live on chain and are kept under [`legacy/`](./legacy/README.md).
