@@ -1,6 +1,6 @@
 # Hook Blocks
 
-The Hook Blocks deployed with Hookr 1 in production waves 0 to 3 on Robinhood Chain (chain id 4663): 46 contracts in 17 blocks, each in its own folder with its sources and addresses. Every contract here holds an exact match on Sourcify, and its source files are byte-identical to the verified ones.
+The Hook Blocks deployed with Hookr 1 in production waves 0 to 3 on Robinhood Chain (chain id 4663): 46 contracts in 17 blocks, each in its own folder with its sources and addresses. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones.
 
 | Wave | Block | Contracts | What it does |
 | --- | --- | --- | --- |

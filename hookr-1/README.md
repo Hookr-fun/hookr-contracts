@@ -2,7 +2,7 @@
 
 Hookr 1 is a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663). Every Hookr 1 pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code).
 
-A creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter the creator's to set. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
+A creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
 
 The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: before initialize, before add liquidity, before remove liquidity, before swap, after swap, and the before-swap and after-swap return deltas.
 
@@ -22,7 +22,7 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 
 Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, and the 46 of the Hook Blocks, 83 in all.
 
-Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules` and 37 of the Hook Block contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below holds an exact match on Sourcify, and its runtime code hashes to the value in the record.
+Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules` and 37 of the Hook Block contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
 
 ### Hook and rules
 
@@ -96,7 +96,7 @@ Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc
 
 ### King of the Pool, whole pot
 
-Deployed on 2026-10-07; [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) has what differs from the release.
+Deployed on 2026-10-07. The registry admits these Rules on the root next to the release's Rules. [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) has what differs from the release.
 
 | Contract | Address | Sourcify |
 | --- | --- | --- |
@@ -164,7 +164,9 @@ The release compiles with solc 0.8.37 (`0.8.37+commit.f401782d`), via-IR, the op
 git submodule update --init --recursive
 ```
 
-**Byte for byte.** The verified metadata records each source by the path it had in the release's build tree: `src/...` for the release, `../hookr-phase-one/src/...` for a release file a Hook Block imports, and `../../../contracts/lib/...` for a dependency. Those paths are part of the metadata hash in the deployed code. `standard-input.mjs` rebuilds a contract's compiler input with those exact names, reading each file from where it sits here:
+### Byte for byte
+
+The verified metadata records each source by the path it had in the release's build tree: `src/...` for the release, `../hookr-phase-one/src/...` for a release file a Hook Block imports, and `../../../contracts/lib/...` for a dependency. Those paths are part of the metadata hash in the deployed code. `standard-input.mjs` rebuilds a contract's compiler input with those exact names, reading each file from where it sits here:
 
 ```sh
 node hookr-1/standard-input.mjs --list
@@ -174,7 +176,9 @@ solc-0.8.37 --standard-json root.json > root.out.json
 
 The deployed bytecode in the output, with the linked libraries filled in, equals the code on chain everywhere except the immutables, which the constructor writes. That holds for all 83 contracts in the record, the metadata hash included.
 
-**Against the chain.** `check-runtime.mjs` fills in the linked libraries from the record, takes only the immutables from the chain code, at the offsets solc reports for them, and requires every other byte to be equal:
+### Against the chain
+
+`check-runtime.mjs` fills in the linked libraries from the record, takes only the immutables from the chain code, at the offsets solc reports for them, and requires every other byte to be equal:
 
 ```sh
 cast code 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc > root.hex   # with ETH_RPC_URL set to a chain 4663 node
@@ -192,7 +196,9 @@ for a in $(node hookr-1/standard-input.mjs --list | cut -d' ' -f1); do
 done
 ```
 
-**With Forge.** From the repository root:
+### With Forge
+
+From the repository root:
 
 ```sh
 forge build --root hookr-1
