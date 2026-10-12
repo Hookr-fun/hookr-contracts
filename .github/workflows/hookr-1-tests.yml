@@ -1,0 +1,115 @@
+name: Hookr 1 tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hookr-1-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Hookr 1 formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the package
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: v1.7.1
+
+      - name: Check formatting of the sources, tests and helpers
+        run: forge fmt --check --root hookr-1
+
+      - name: Check that the test jobs below cover every test folder
+        run: |
+          covered=" core periphery engagement owned invariant extensions bench base compliance factory gasless kit libraries support utils lane "
+          for d in $(cd hookr-1/test && find . -name '*.t.sol' | cut -d/ -f2 | sort -u); do
+            case "$covered" in
+              *" $d "*) ;;
+              *) echo "hookr-1/test/$d is in no test job"; exit 1 ;;
+            esac
+          done
+
+  tests:
+    # One solc process compiles every test file a run selects, and all of them at once needs more memory than a
+    # hosted runner has, so each job runs one group of folders. Together the groups cover every test the default and
+    # lane profiles select; the fork tests are not run here (hookr-1/test/README.md).
+    name: Hookr 1 tests (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: core
+            profile: default
+            path: "test/core/**"
+          - group: periphery
+            profile: default
+            path: "test/periphery/**"
+          - group: engagement and owned roots
+            profile: default
+            path: "test/{engagement,owned}/**"
+          - group: invariants, extensions and benches
+            profile: default
+            path: "test/{invariant,extensions,bench}/**"
+            bench: "test/bench/*"
+          - group: the other folders
+            profile: default
+            path: "test/{base,compliance,factory,gasless,kit,libraries,support,utils}/**"
+            bench: "test/factory/HookrPairRootGas.t.sol"
+          - group: arb recapture lane
+            profile: lane
+            path: "test/lane/**"
+            bench: "test/lane/bench/*"
+    defaults:
+      run:
+        working-directory: hookr-1
+    steps:
+      - name: Check out the package and its submodules
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: v1.7.1
+
+      - name: Build the PoolManager fixture
+        run: |
+          # The via-IR build hit SIGSEGV on the default stack.
+          ulimit -s 65536
+          forge build test/fixtures/PoolManagerArtifact.sol
+
+      - name: Run the tests
+        env:
+          FOUNDRY_PROFILE: ${{ matrix.profile }}
+          TEST_PATH: ${{ matrix.path }}
+        run: |
+          ulimit -s 65536
+          forge test --match-path "$TEST_PATH"
+
+      - name: Check the gas and code-size snapshots
+        if: matrix.bench
+        env:
+          FOUNDRY_PROFILE: ${{ matrix.profile }}
+          BENCH_PATH: ${{ matrix.bench }}
+          FORGE_SNAPSHOT_CHECK: "true"
+        run: |
+          ulimit -s 65536
+          # Isolated, as the snapshots were taken: every measured call is its own transaction.
+          forge test --isolate --match-path "$BENCH_PATH"
