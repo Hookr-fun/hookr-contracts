@@ -1,0 +1,18 @@
+{
+  "launch.devBuy.lane": "2054066",
+  "launch.devBuy.noLane": "1905663",
+  "root.correcting.buy": "691716",
+  "root.correcting.buy.cap5M": "691716",
+  "root.dyn.correcting.buy": "779273",
+  "root.dyn.laneIdle.buy": "354667",
+  "root.fullRules.correcting.buy": "773683",
+  "root.fullRules.noLane.buy": "284997",
+  "root.guard.correcting.buy": "658055",
+  "root.guard.laneIdle.buy": "327906",
+  "root.koth.correcting.buy": "676123",
+  "root.koth.laneIdle.buy": "352311",
+  "root.laneIdle.buy": "295867",
+  "root.laneIdle.sell": "304794",
+  "root.noLane.buy": "136663",
+  "root.noLane.sell": "147452"
+}
