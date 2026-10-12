@@ -2,7 +2,7 @@
 
 Hookr 1 is a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663). Every Hookr 1 pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code).
 
-A creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
+A creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. A pool launched on the Wallet Cap Rules also caps how much of its token one wallet can buy while its launch guard lasts. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
 
 The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: before initialize, before add liquidity, before remove liquidity, before swap, after swap, and the before-swap and after-swap return deltas.
 
@@ -13,16 +13,17 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 | [`src/`](./src/) | The release's sources, byte-identical to the verified sources of its 35 contracts. |
 | [`foundry.toml`](./foundry.toml) | The release's compiler settings, with remappings to the pinned submodules in [`../lib/`](../lib/). |
 | [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) | A second Rules contract whose King of the Pool pays the round's winner the whole pot. One source file differs from the release. |
+| [`wallet-cap/`](./wallet-cap/README.md) | The Wallet Cap Rules: the whole-pot Rules plus a cap on how much of a pool's token one wallet can buy while the pool's launch guard lasts. One source file is added to the whole-pot Rules' sources. |
 | [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 6 contracts of the three HookrBook connectors, one folder per block or connector. |
-| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 89 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
+| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 91 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
 | [`standard-input.mjs`](./standard-input.mjs) | Writes any of those contracts' solc standard JSON input from the files here. |
 | [`check-runtime.mjs`](./check-runtime.mjs) | Compares a contract's solc output with the code at its address, byte for byte. |
 
 ## Deployed contracts
 
-Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 46 of the Hook Blocks and the 6 of the HookrBook connectors, 89 in all.
+Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 2 of Wallet Cap, the 46 of the Hook Blocks and the 6 of the HookrBook connectors, 91 in all.
 
-Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, 37 of the Hook Block contracts and 3 of the connector contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
+Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, `HookrRulesWalletCap`, 37 of the Hook Block contracts and 3 of the connector contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
 
 ### Hook and rules
 
@@ -102,6 +103,15 @@ Deployed on 2026-10-07. The registry admits these Rules on the root next to the 
 | --- | --- | --- |
 | `HookrRecapture`, created by the whole-pot `HookrRules` in its constructor | [`0x60Efc4a41498e9433be2155b6cc1677AEC31D649`](https://robin.etherscan.io/address/0x60Efc4a41498e9433be2155b6cc1677AEC31D649#code) | [match](https://repo.sourcify.dev/4663/0x60Efc4a41498e9433be2155b6cc1677AEC31D649) |
 | `HookrRules` | [`0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7`](https://robin.etherscan.io/address/0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7#code) | [match](https://repo.sourcify.dev/4663/0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7) |
+
+### Wallet Cap
+
+Deployed on 2026-10-12 (block 87,010,819). The registry admits these Rules on the root next to the release's Rules and the whole-pot Rules. [`wallet-cap/`](./wallet-cap/README.md) has the cap's rules and what differs from the release.
+
+| Contract | Address | Sourcify |
+| --- | --- | --- |
+| `HookrRecapture`, created by `HookrRulesWalletCap` in its constructor | [`0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23`](https://robin.etherscan.io/address/0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23#code) | [match](https://repo.sourcify.dev/4663/0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23) |
+| `HookrRulesWalletCap` | [`0xb67b73E28C522a3AAC438bE970bf94976Deee52a`](https://robin.etherscan.io/address/0xb67b73E28C522a3AAC438bE970bf94976Deee52a#code) | [match](https://repo.sourcify.dev/4663/0xb67b73E28C522a3AAC438bE970bf94976Deee52a) |
 
 ### Hook Blocks
 
@@ -187,7 +197,7 @@ node hookr-1/standard-input.mjs 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc > roo
 solc-0.8.37 --standard-json root.json > root.out.json
 ```
 
-The deployed bytecode in the output, with the linked libraries filled in, equals the code on chain everywhere except the immutables, which the constructor writes. That holds for all 89 contracts in the record, the metadata hash included.
+The deployed bytecode in the output, with the linked libraries filled in, equals the code on chain everywhere except the immutables, which the constructor writes. That holds for all 91 contracts in the record, the metadata hash included.
 
 ### Against the chain
 
@@ -198,7 +208,7 @@ cast code 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc > root.hex   # with ETH_RPC
 node hookr-1/check-runtime.mjs 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc root.out.json root.hex
 ```
 
-It prints `MATCH` or `MISMATCH` and the first differing byte. To check all 89:
+It prints `MATCH` or `MISMATCH` and the first differing byte. To check all 91:
 
 ```sh
 for a in $(node hookr-1/standard-input.mjs --list | cut -d' ' -f1); do
