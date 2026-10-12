@@ -89,6 +89,15 @@ jobs:
         with:
           version: v1.7.1
 
+      # Foundry v1.7.1 matches pragmas against the solc release list built into it, which predates 0.8.37, so a clean
+      # runner finds no compiler for the release's sources. Naming the version installs it from the solc release list,
+      # checksum verified.
+      - name: Solc 0.8.37
+        run: |
+          mkdir -p "$RUNNER_TEMP/solc-probe/src"
+          printf 'pragma solidity 0.8.37;\ncontract Probe {}\n' > "$RUNNER_TEMP/solc-probe/src/Probe.sol"
+          forge build --root "$RUNNER_TEMP/solc-probe" --use 0.8.37
+
       - name: Build the PoolManager fixture
         run: |
           # The via-IR build hit SIGSEGV on the default stack.
