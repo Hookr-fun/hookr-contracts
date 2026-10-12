@@ -23,3 +23,13 @@ The Hook Blocks deployed with Hookr 1 in production waves 0 to 3 on Robinhood Ch
 | 3 | [Zap Relay](./zap-relay/README.md) | 4 | A buy cut of up to 10% on a source pool, credited to the pool's zap vault, and a gated relay on a target pool that accepts buys only from those vaults. |
 
 Blocks that were planned but not deployed in these waves are not here.
+
+## HookrBook connectors
+
+Three connectors that link a family's pools, deployed after the waves on 2026-10-12 (blocks 86,244,980 to 86,244,987): 6 contracts, each in its own folder beside the blocks above. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones. The three were built together from the Family Pinger's folder, so their verified metadata names one another's files, and the Zap Relay files they share, as `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`.
+
+| Connector | Contracts | What it does |
+| --- | --- | --- |
+| [Pool Mesh](./zap-mesh/README.md) | 4 | One zap vault that feeds up to four Zap Relay targets on one quote, from a buy cut of up to 10% on its source pools, split by weight or sent to the target furthest below its weight in quote depth. Its accrual is admitted on the root as an ADVISORY. |
+| [Fee Bridge](./fee-bridge/README.md) | 1 | Takes a royalty or a tax and donates it, a capped drip at a time, to another pool's in-range LPs. |
+| [Family Pinger](./family-pinger/README.md) | 1 | Runs every zap, drip and payout a family has due in one call, for a tip from its own budget. |
