@@ -17,3 +17,6 @@ lcov.info
 .idea/
 .vscode/
 *.swp
+
+# Gas bench: one JSON file per figure, merged into bench/gas-figures.json by gas-figures.mjs
+bench/figures/*.json

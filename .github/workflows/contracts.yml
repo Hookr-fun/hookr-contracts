@@ -83,3 +83,35 @@ jobs:
         run: |
           ulimit -s 65536
           forge test --root labs
+
+  bench:
+    # The bench forks Robinhood Chain, which needs an archive RPC endpoint, and this repository keeps no RPC secret, so
+    # no fork test runs here. CI builds the bench, checks its formatting, and checks the committed figures: their shape,
+    # that the README's table says the same, and that what they were measured with has not changed since. Anyone can
+    # reproduce them with `node bench/gas-figures.mjs` (bench/README.md).
+    name: Gas bench builds and its figures check out
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the package and its submodules
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: v1.7.1
+
+      - name: Check bench formatting
+        run: forge fmt --check --root bench
+
+      - name: Build the bench
+        run: |
+          ulimit -s 65536
+          forge build --root bench
+
+      - name: Check the committed figures
+        run: node bench/gas-figures.mjs --check

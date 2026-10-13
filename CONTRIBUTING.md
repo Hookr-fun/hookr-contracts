@@ -22,6 +22,7 @@ Both share the registry, the catalog, the coordinator, the accounting kernel, th
 ## What lands here through a pull request
 
 - Anything under `labs/`: a prototype under `labs/hooks/<id>/`, an improvement to a template, a test. The CI job builds and tests `labs/` as its own Foundry project. A merged pull request there means the code was reviewed and is worth reading; it does not deploy anything, list anything or admit anything to the registry.
+- The gas bench in `bench/`: a figure for a piece it does not measure yet, or a correction to one. It measures Hookr's live contracts on a fork, so it carries no deployment configuration, and `bench/gas-figures.json` is the output of `node bench/gas-figures.mjs`, never edited by hand.
 - Corrections and additions to `docs/`, `README.md` and `legacy/README.md`.
 - Corrections to `deployments/robinhood-4663.v2.json` that a chain read backs up.
 
@@ -29,7 +30,7 @@ Both share the registry, the catalog, the coordinator, the accounting kernel, th
 
 `src/` is a byte-for-byte export of the sources the deployed bytecode was compiled from, pinned by `SOURCE_MANIFEST.json`, and the workflow on every pull request checks each file against that manifest and every contract's storage layout against `STORAGE_LAYOUT.json`. A change to `src/` here cannot pass that check, by design, and would describe code that is not on chain. New native-block versions and new root profiles are built in Hookr's working repository and arrive here with the release that deploys them.
 
-`labs/` code must not read secrets or carry deployment configuration: the boundary check refuses `vm.env*` readers, `[rpc_endpoints]` blocks and broadcast cheatcodes anywhere in the repository, `labs/` included. A fork test takes its RPC from `--fork-url` on the command line.
+`labs/` code must not read secrets or carry deployment configuration: the boundary check refuses `vm.env*` readers, `[rpc_endpoints]` blocks and broadcast cheatcodes anywhere in the repository, `labs/` included. A fork test in `labs/` takes its RPC from `--fork-url` on the command line. The gas bench in `bench/` forks through an rpc alias named `robinhood`, which each reader defines in their own Foundry config with the URL in an environment variable, so the URL is in no file here and on no command line ([`bench/README.md`](./bench/README.md)).
 
 ## Integrating
 
