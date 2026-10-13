@@ -13,14 +13,14 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 | [`src/`](./src/) | The release's sources, byte-identical to the verified sources of its 35 contracts. |
 | [`foundry.toml`](./foundry.toml) | The release's compiler settings, with remappings to the pinned submodules in [`../lib/`](../lib/). |
 | [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) | A second Rules contract whose King of the Pool pays the round's winner the whole pot. One source file differs from the release. |
-| [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 6 contracts of the three HookrBook connectors, one folder per block or connector. |
-| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 89 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
+| [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 7 contracts of the three HookrBook connectors, one folder per block or connector. |
+| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 90 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
 | [`standard-input.mjs`](./standard-input.mjs) | Writes any of those contracts' solc standard JSON input from the files here. |
 | [`check-runtime.mjs`](./check-runtime.mjs) | Compares a contract's solc output with the code at its address, byte for byte. |
 
 ## Deployed contracts
 
-Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 46 of the Hook Blocks and the 6 of the HookrBook connectors, 89 in all.
+Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 46 of the Hook Blocks and the 7 of the HookrBook connectors, 90 in all.
 
 Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, 37 of the Hook Block contracts and 3 of the connector contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
 
@@ -158,7 +158,7 @@ The 46 contracts of the 17 Hook Blocks deployed in production waves 0 to 3. Each
 
 ### HookrBook connectors
 
-The 6 contracts of the three HookrBook connectors, deployed on 2026-10-12 (blocks 86,244,980 to 86,244,987). Each connector's folder in [`hook-blocks/`](./hook-blocks/README.md#hookrbook-connectors) says what its contracts do. `HookrZapMeshAccrual` is admitted on `HookrRoot` as an ADVISORY.
+The 7 contracts of the three HookrBook connectors: 6 deployed on 2026-10-12 (blocks 86,244,980 to 86,244,987), and the Fee Bridge's keeper-run factory, deployed on 2026-10-13 (block 87,254,611), which replaces the first Fee Bridge factory. Each connector's folder in [`hook-blocks/`](./hook-blocks/README.md#hookrbook-connectors) says what its contracts do. `HookrZapMeshAccrual` is admitted on `HookrRoot` as an ADVISORY.
 
 | Connector | Contract | Address | Sourcify |
 | --- | --- | --- | --- |
@@ -166,7 +166,8 @@ The 6 contracts of the three HookrBook connectors, deployed on 2026-10-12 (block
 | [Pool Mesh](./hook-blocks/zap-mesh/README.md) | `ZapMeshDeployer`, created by `HookrZapMeshAccrual` in its constructor | [`0x3675C3647B3F8b7CAe2f4a3B08C5CCDf9d5c153e`](https://robin.etherscan.io/address/0x3675C3647B3F8b7CAe2f4a3B08C5CCDf9d5c153e#code) | [match](https://repo.sourcify.dev/4663/0x3675C3647B3F8b7CAe2f4a3B08C5CCDf9d5c153e) |
 | [Pool Mesh](./hook-blocks/zap-mesh/README.md) | `ZapMeshLegDeployer`, created by `HookrZapMeshAccrual` in its constructor | [`0xE347ef34ad78b7f1008b1Fd22425f75eD44bCcad`](https://robin.etherscan.io/address/0xE347ef34ad78b7f1008b1Fd22425f75eD44bCcad#code) | [match](https://repo.sourcify.dev/4663/0xE347ef34ad78b7f1008b1Fd22425f75eD44bCcad) |
 | [Pool Mesh](./hook-blocks/zap-mesh/README.md) | `ZapSessionLens`, created by `HookrZapMeshAccrual` in its constructor | [`0x0F48792eed1a8196644540E98E5b508A03cA977c`](https://robin.etherscan.io/address/0x0F48792eed1a8196644540E98E5b508A03cA977c#code) | [match](https://repo.sourcify.dev/4663/0x0F48792eed1a8196644540E98E5b508A03cA977c) |
-| [Fee Bridge](./hook-blocks/fee-bridge/README.md) | `HookrFeeBridgeFactory` | [`0x765cdea443C1688aE7467c2241E4a9a3e636990E`](https://robin.etherscan.io/address/0x765cdea443C1688aE7467c2241E4a9a3e636990E#code) | [match](https://repo.sourcify.dev/4663/0x765cdea443C1688aE7467c2241E4a9a3e636990E) |
+| [Fee Bridge](./hook-blocks/fee-bridge/README.md) | `HookrFeeBridgeFactory`, the first factory, superseded | [`0x765cdea443C1688aE7467c2241E4a9a3e636990E`](https://robin.etherscan.io/address/0x765cdea443C1688aE7467c2241E4a9a3e636990E#code) | [match](https://repo.sourcify.dev/4663/0x765cdea443C1688aE7467c2241E4a9a3e636990E) |
+| [Fee Bridge](./hook-blocks/fee-bridge-v2/README.md) | `HookrFeeBridgeFactory`, keeper-run | [`0x85D2F6c536336C17B79BE740C6bbb6c7d8D9b23D`](https://robin.etherscan.io/address/0x85D2F6c536336C17B79BE740C6bbb6c7d8D9b23D#code) | [match](https://repo.sourcify.dev/4663/0x85D2F6c536336C17B79BE740C6bbb6c7d8D9b23D) |
 | [Family Pinger](./hook-blocks/family-pinger/README.md) | `HookrFamilyPingerFactory` | [`0x3C78cCFB5b5328896A834a5DB96CBaD9ED10EbD1`](https://robin.etherscan.io/address/0x3C78cCFB5b5328896A834a5DB96CBaD9ED10EbD1#code) | [match](https://repo.sourcify.dev/4663/0x3C78cCFB5b5328896A834a5DB96CBaD9ED10EbD1) |
 
 ## Building
