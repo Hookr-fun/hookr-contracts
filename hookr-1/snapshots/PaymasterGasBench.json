@@ -1,0 +1,8 @@
+{
+  "paymaster.postOp.credit.noFee": "82856",
+  "paymaster.postOp.credit.rebate": "82594",
+  "paymaster.postOp.credit.rebate.2x4": "121715",
+  "paymaster.postOp.token.rebate": "117494",
+  "paymaster.validate.credit": "56413",
+  "paymaster.validate.token": "53233"
+}

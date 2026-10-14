@@ -1,0 +1,11 @@
+{
+  "router.snipeDecay.buy": "206194",
+  "router.snipeDecayCapped.buy": "212760",
+  "router.snipeFlat.buy": "205498",
+  "router.snipeFlat.sell": "186934",
+  "router.snipeFlatCapped.buy": "211143",
+  "ur.snipeDecay.buy": "193632",
+  "ur.snipeDecayCapped.buy": "200198",
+  "ur.snipeFlat.buy": "192936",
+  "ur.snipeFlatCapped.buy": "198581"
+}

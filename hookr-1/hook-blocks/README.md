@@ -26,10 +26,11 @@ Blocks that were planned but not deployed in these waves are not here.
 
 ## HookrBook connectors
 
-Three connectors that link a family's pools, deployed after the waves on 2026-10-12 (blocks 86,244,980 to 86,244,987): 6 contracts, each in its own folder beside the blocks above. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones. The three were built together from the Family Pinger's folder, so their verified metadata names one another's files, and the Zap Relay files they share, as `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`.
+Three connectors that link a family's pools, deployed after the waves: 6 contracts on 2026-10-12 (blocks 86,244,980 to 86,244,987) and the Fee Bridge's keeper-run factory on 2026-10-13 (block 87,254,611), each in its own folder beside the blocks above. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones. The three were built together from the Family Pinger's folder, so their verified metadata names one another's files, and the Zap Relay files they share, as `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`.
 
 | Connector | Contracts | What it does |
 | --- | --- | --- |
 | [Pool Mesh](./zap-mesh/README.md) | 4 | One zap vault that feeds up to four Zap Relay targets on one quote, from a buy cut of up to 10% on its source pools, split by weight or sent to the target furthest below its weight in quote depth. Its accrual is admitted on the root as an ADVISORY. |
-| [Fee Bridge](./fee-bridge/README.md) | 1 | Takes a royalty or a tax and donates it, a capped drip at a time, to another pool's in-range LPs. |
-| [Family Pinger](./family-pinger/README.md) | 1 | Runs every zap, drip and payout a family has due in one call, for a tip from its own budget. |
+| [Fee Bridge](./fee-bridge/README.md) | 1 | Takes a royalty or a tax and donates it, a capped drip at a time, to another pool's in-range LPs. Anyone may drip its bridges. Superseded by the keeper-run factory; no bridge was ever made from it. |
+| [Fee Bridge, keeper-run](./fee-bridge-v2/README.md) | 1 | The same bridge, recorded and dripped only by keepers its factory's owner lists, so liquidity added just before a drip takes at most its jump tolerance of it (2% by default). Built in its own folder, so its verified metadata names its files `src/...`. |
+| [Family Pinger](./family-pinger/README.md) | 1 | Runs every zap, drip and payout a family has due in one call, for a tip from its own budget. Its factory names the first Fee Bridge factory, so a pinger's drips reach only that factory's bridges; keeper-run bridges are dripped by their keepers alone. |

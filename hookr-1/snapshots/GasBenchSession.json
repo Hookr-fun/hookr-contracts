@@ -1,0 +1,18 @@
+{
+  "router.feeTiers.buy": "176570",
+  "router.feeTiers.sell": "176288",
+  "router.offFee.buy": "164579",
+  "router.offFee.sell": "164521",
+  "router.offPlain.buy": "151437",
+  "router.offPlain.sell": "151401",
+  "router.session.buy": "169066",
+  "router.session.sell": "169062",
+  "ur.feeTiers.buy": "164261",
+  "ur.feeTiers.sell": "163738",
+  "ur.offFee.buy": "152270",
+  "ur.offFee.sell": "151971",
+  "ur.offPlain.buy": "139127",
+  "ur.offPlain.sell": "138850",
+  "ur.session.buy": "156757",
+  "ur.session.sell": "156512"
+}

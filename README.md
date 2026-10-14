@@ -12,11 +12,11 @@ Everything for Hookr 1 lives in [`hookr-1/`](./hookr-1/README.md):
 | King of the Pool, whole pot: a second Rules contract whose round winner takes the whole pot | [`hookr-1/king-of-the-pool-whole-pot/`](./hookr-1/king-of-the-pool-whole-pot/README.md) |
 | Wallet Cap: Rules that cap how much of a pool's token one wallet can buy while its launch guard lasts, 2 contracts | [`hookr-1/wallet-cap/`](./hookr-1/wallet-cap/README.md) |
 | The Hook Blocks deployed in production waves 0 to 3: 46 contracts in 17 blocks | [`hookr-1/hook-blocks/`](./hookr-1/hook-blocks/README.md) |
-| The HookrBook connectors: Pool Mesh, Fee Bridge and Family Pinger, 6 contracts | [`hookr-1/hook-blocks/`](./hookr-1/hook-blocks/README.md#hookrbook-connectors) |
-| Every production address on chain 4663, all 91 | [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) |
+| The HookrBook connectors: Pool Mesh, Fee Bridge and Family Pinger, 7 contracts | [`hookr-1/hook-blocks/`](./hookr-1/hook-blocks/README.md#hookrbook-connectors) |
+| Every production address on chain 4663, all 92 | [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) |
 | Every address, deployment and build setting, as JSON | [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) |
 
-Every source file there is byte-identical to the verified source of its contract, and all 91 contracts are exact matches on [Sourcify](https://sourcify.dev). Each README links every address on [RobinScan](https://robin.etherscan.io) and Sourcify.
+Every source file there is byte-identical to the verified source of its contract, and all 92 contracts are exact matches on [Sourcify](https://sourcify.dev). Each README links every address on [RobinScan](https://robin.etherscan.io) and Sourcify.
 
 To reproduce a build, use solc 0.8.37 with via-IR, the optimizer at 200 runs and EVM version prague. `node hookr-1/standard-input.mjs <address>` writes a contract's compiler input with the source paths its verified metadata records. solc's output then equals the code on chain, metadata hash included, and `node hookr-1/check-runtime.mjs` checks that byte for byte against `cast code`. `forge build --root hookr-1` builds the release from the same files and matches up to the metadata hashes. [`hookr-1/README.md`](./hookr-1/README.md#building) has the details.
 
