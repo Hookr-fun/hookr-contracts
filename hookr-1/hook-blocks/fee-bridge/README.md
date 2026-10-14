@@ -1,5 +1,7 @@
 # Fee Bridge
 
+> **Superseded on 2026-10-13** by the [keeper-run factory](../fee-bridge-v2/README.md) at `0x85D2F6c536336C17B79BE740C6bbb6c7d8D9b23D`. Here anyone may `record()` and `drip()` a bridge, so one actor could add liquidity just before a drip and take most of it. The app no longer offers this factory, and no bridge was ever made from it. Its record stays because it remains deployed and verified.
+
 Pays another pool's LPs. A bridge is named as a royalty payee or a tax recipient, or sent anything in its currency, and anyone may call `drip()` to donate a capped amount of what it holds to the in-range LPs of the destination pool fixed when it was made, for a tip of at most 1% of what it donates. `HookrFeeBridgeFactory` makes the bridges at CREATE2 addresses keyed by creator and salt. Every term of a bridge is immutable. A bridge is not a module of the hook, so it needs no registry admission, and the factory has none.
 
 Deployed with the HookrBook connectors on Robinhood Chain (chain id 4663) in transaction `0x65db130e431c26c9ec0f94caea7a1d49a669d2bfd0df84cf5fcad4e0fef6b685`, block 86,244,983.
