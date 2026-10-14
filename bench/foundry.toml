@@ -1,0 +1,38 @@
+# The public gas bench: its own Foundry project, `forge test --isolate --root bench`. Every test forks Robinhood Chain
+# (chain id 4663) at the block pinned in test/Fork.sol and measures Hookr's live contracts, so nothing under ../hookr-1
+# is compiled except the interfaces and types the tests import and Market Guard's band library. This repository keeps
+# no RPC table (CONTRIBUTING.md): the tests fork through an rpc alias named `robinhood` that lives in your own Foundry
+# config, with the URL in an environment variable (README.md). Each measured call is its own transaction (`isolate`),
+# so a number is a whole transaction's gas: intrinsic gas, calldata, cold access and refunds included.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+cache_path = "cache"
+libs = ["../lib"]
+allow_paths = ["../hookr-1"]
+remappings = [
+    "forge-std/=../lib/forge-std/src/",
+    "@uniswap/v4-core/=../lib/v4-core/",
+    "@openzeppelin/contracts/=../lib/v4-core/lib/openzeppelin-contracts/contracts/",
+    "hookr/=../hookr-1/src/",
+    "hookr-blocks/=../hookr-1/hook-blocks/",
+]
+auto_detect_remappings = false
+solc = "0.8.30"
+evm_version = "prague"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+ffi = false
+isolate = true
+gas_limit = 9223372036854775807
+memory_limit = 2147483648
+# Each test writes its figures here and nowhere else; gas-figures.mjs merges them into gas-figures.json.
+fs_permissions = [{ access = "read-write", path = "./figures" }]
+
+[fmt]
+line_length = 120
+
+[lint]
+lint_on_build = false

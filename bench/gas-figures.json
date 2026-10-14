@@ -1,0 +1,460 @@
+{
+  "schema": 1,
+  "chainId": 4663,
+  "forkBlock": 87300000,
+  "source": "Hookr-fun/hookr-contracts@2d33aa98a2c90d9a5203a4ee5858b939948d8167 bench",
+  "measuredAt": "2026-10-13",
+  "method": "Whole isolated transactions (forge test --isolate) on a fork of Robinhood Chain 4663 against Hookr's live contracts, after warm-up swaps: a piece's extra gas is the same action on the same pool shape with the piece on minus off, the base is measured over a hookless pool of that shape, and launches, limit orders, the family lock's collect and the ETH claim are whole transactions.",
+  "figures": [
+    {
+      "id": "base.buy",
+      "piece": "base",
+      "label": "A Hookr pool of an existing token with nothing on, over a pool with no hook: a buy",
+      "action": "buy",
+      "gas": 20702,
+      "baseline": "hookless-pool",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Base.t.sol:test_base"
+    },
+    {
+      "id": "base.sell",
+      "piece": "base",
+      "label": "A Hookr pool of an existing token with nothing on, over a pool with no hook: a sell",
+      "action": "sell",
+      "gas": 20680,
+      "baseline": "hookless-pool",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Base.t.sol:test_base"
+    },
+    {
+      "id": "lp-rewards.buy",
+      "piece": "lp-rewards",
+      "label": "LP Rewards, a 1% slice of buys: a buy",
+      "action": "buy",
+      "gas": 51451,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "lp-rewards.with-royalty-and-auto-burn.buy",
+      "piece": "lp-rewards",
+      "label": "LP Rewards, royalty and Auto Burn together: a buy",
+      "action": "buy",
+      "gas": 75949,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "lp-rewards.sell",
+      "piece": "lp-rewards",
+      "label": "LP Rewards, a 1% slice of buys: a sell",
+      "action": "sell",
+      "gas": 27675,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "lp-rewards.with-royalty-and-auto-burn.sell",
+      "piece": "lp-rewards",
+      "label": "LP Rewards, royalty and Auto Burn together: a sell",
+      "action": "sell",
+      "gas": 27675,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "creator-royalty.buy",
+      "piece": "creator-royalty",
+      "label": "Creator royalty, 10% of LP Rewards, over LP Rewards: a buy",
+      "action": "buy",
+      "gas": 7893,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "creator-royalty.sell",
+      "piece": "creator-royalty",
+      "label": "Creator royalty, 10% of LP Rewards, over LP Rewards: a sell",
+      "action": "sell",
+      "gas": 0,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "auto-burn.buy",
+      "piece": "auto-burn",
+      "label": "Auto Burn, a 1% slice of buys: a buy",
+      "action": "buy",
+      "gas": 68084,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "auto-burn.sell",
+      "piece": "auto-burn",
+      "label": "Auto Burn, a 1% slice of buys: a sell",
+      "action": "sell",
+      "gas": 27675,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FeeRules.t.sol:test_feeRules"
+    },
+    {
+      "id": "anti-snipe.first-buy",
+      "piece": "anti-snipe",
+      "label": "Anti-Snipe in the window: a wallet's first buy",
+      "action": "first-buy",
+      "gas": 61141,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/AntiSnipe.t.sol:test_inWindow"
+    },
+    {
+      "id": "anti-snipe.repeat-buy",
+      "piece": "anti-snipe",
+      "label": "Anti-Snipe in the window: the same wallet buys again",
+      "action": "repeat-buy",
+      "gas": 61878,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/AntiSnipe.t.sol:test_inWindow"
+    },
+    {
+      "id": "anti-snipe.sell",
+      "piece": "anti-snipe",
+      "label": "Anti-Snipe in the window: a sell",
+      "action": "sell",
+      "gas": 32268,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/AntiSnipe.t.sol:test_inWindow"
+    },
+    {
+      "id": "anti-snipe.after-window",
+      "piece": "anti-snipe",
+      "label": "Anti-Snipe after the window: a buy",
+      "action": "after-window",
+      "gas": -28,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/AntiSnipe.t.sol:test_afterWindow"
+    },
+    {
+      "id": "anti-snipe.launch",
+      "piece": "anti-snipe",
+      "label": "Anti-Snipe at launch: a new token with a dev buy, over the same launch without a guard",
+      "action": "launch",
+      "gas": 20611,
+      "baseline": "same-pool-without-piece",
+      "router": "direct call",
+      "test": "bench/test/Launch.t.sol:test_launches"
+    },
+    {
+      "id": "wallet-cap.first-buy",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: a wallet's first buy",
+      "action": "first-buy",
+      "gas": 24260,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_curatedRouter"
+    },
+    {
+      "id": "wallet-cap.first-buy.uncurated-router",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: a wallet's first buy, through a router the root does not curate",
+      "action": "first-buy",
+      "gas": 35169,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router (not curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_routerNotCurated"
+    },
+    {
+      "id": "wallet-cap.repeat-buy",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: the same wallet buys again",
+      "action": "repeat-buy",
+      "gas": 6427,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_curatedRouter"
+    },
+    {
+      "id": "wallet-cap.repeat-buy.uncurated-router",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: the same wallet buys again, through a router the root does not curate",
+      "action": "repeat-buy",
+      "gas": 17336,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router (not curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_routerNotCurated"
+    },
+    {
+      "id": "wallet-cap.sell",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: a sell",
+      "action": "sell",
+      "gas": 251,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_curatedRouter"
+    },
+    {
+      "id": "wallet-cap.sell.uncurated-router",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap in the window: a sell, through a router the root does not curate",
+      "action": "sell",
+      "gas": 251,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router (not curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_routerNotCurated"
+    },
+    {
+      "id": "wallet-cap.after-window",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap after the window: a buy",
+      "action": "after-window",
+      "gas": 48,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_curatedRouter"
+    },
+    {
+      "id": "wallet-cap.after-window.uncurated-router",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap after the window: a buy, through a router the root does not curate",
+      "action": "after-window",
+      "gas": 48,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router (not curated by the root)",
+      "test": "bench/test/WalletCap.t.sol:test_routerNotCurated"
+    },
+    {
+      "id": "wallet-cap.launch",
+      "piece": "wallet-cap",
+      "label": "Wallet Cap at launch: over the same launch on the whole-pot Rules with the same guard",
+      "action": "launch",
+      "gas": 528,
+      "baseline": "same-pool-without-piece",
+      "router": "direct call",
+      "test": "bench/test/Launch.t.sol:test_launches"
+    },
+    {
+      "id": "dynamic-fees.large-buy",
+      "piece": "dynamic-fees",
+      "label": "Hookr dynamic fee: a large buy across four ticks",
+      "action": "buy",
+      "gas": 183451,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/DynamicFee.t.sol:test_dynamicFee"
+    },
+    {
+      "id": "dynamic-fees.small-buy",
+      "piece": "dynamic-fees",
+      "label": "Hookr dynamic fee: a small buy, no tick crossed",
+      "action": "buy",
+      "gas": 91970,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/DynamicFee.t.sol:test_dynamicFee"
+    },
+    {
+      "id": "dynamic-fees.large-sell",
+      "piece": "dynamic-fees",
+      "label": "Hookr dynamic fee: a large sell across four ticks",
+      "action": "sell",
+      "gas": 179811,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/DynamicFee.t.sol:test_dynamicFee"
+    },
+    {
+      "id": "dynamic-fees.small-sell",
+      "piece": "dynamic-fees",
+      "label": "Hookr dynamic fee: a small sell, no tick crossed",
+      "action": "sell",
+      "gas": 87082,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/DynamicFee.t.sol:test_dynamicFee"
+    },
+    {
+      "id": "king-of-the-pool.buy",
+      "piece": "king-of-the-pool",
+      "label": "King of the Pool, over the same lane pool without the pot: a buy",
+      "action": "buy",
+      "gas": 21920,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Lane.t.sol:test_lane"
+    },
+    {
+      "id": "king-of-the-pool.sell",
+      "piece": "king-of-the-pool",
+      "label": "King of the Pool, over the same lane pool without the pot: a sell",
+      "action": "sell",
+      "gas": 20201,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Lane.t.sol:test_lane"
+    },
+    {
+      "id": "arb-recapture.buy",
+      "piece": "arb-recapture",
+      "label": "Arb recapture lane with an idle executor: a buy",
+      "action": "buy",
+      "gas": 190028,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Lane.t.sol:test_lane"
+    },
+    {
+      "id": "arb-recapture.sell",
+      "piece": "arb-recapture",
+      "label": "Arb recapture lane with an idle executor: a sell",
+      "action": "sell",
+      "gas": 188218,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/Lane.t.sol:test_lane"
+    },
+    {
+      "id": "limit-orders.place",
+      "piece": "limit-orders",
+      "label": "Limit order: place, escrowing the sell and a bounty",
+      "action": "place",
+      "gas": 262249,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/LimitOrders.t.sol:test_place"
+    },
+    {
+      "id": "limit-orders.cancel",
+      "piece": "limit-orders",
+      "label": "Limit order: cancel, refunding the escrow and the bounty",
+      "action": "cancel",
+      "gas": 75057,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/LimitOrders.t.sol:test_cancel"
+    },
+    {
+      "id": "limit-orders.fill",
+      "piece": "limit-orders",
+      "label": "Limit order: fill, by a keeper, with the swap included",
+      "action": "fill",
+      "gas": 331686,
+      "baseline": "absolute",
+      "router": "direct call to the book, which swaps through HookrRouter",
+      "test": "bench/test/LimitOrders.t.sol:test_fill"
+    },
+    {
+      "id": "limit-orders.per-swap",
+      "piece": "limit-orders",
+      "label": "Limit orders: a buy on a pool whose book holds an open order",
+      "action": "per-swap",
+      "gas": 0,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/LimitOrders.t.sol:test_otherSwaps"
+    },
+    {
+      "id": "liquidity-lock.collect",
+      "piece": "liquidity-lock",
+      "label": "Liquidity lock: the beneficiary collects the LP fees",
+      "action": "collect",
+      "gas": 164574,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/FamilyLock.t.sol:test_collect"
+    },
+    {
+      "id": "liquidity-lock.per-swap",
+      "piece": "liquidity-lock",
+      "label": "Liquidity lock: a buy on a locked pool",
+      "action": "per-swap",
+      "gas": 0,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/FamilyLock.t.sol:test_otherSwaps"
+    },
+    {
+      "id": "market-guard.buy",
+      "piece": "market-guard",
+      "label": "Market Guard, refusing outside a 10% band of the feed: a buy inside the band",
+      "action": "buy",
+      "gas": 55746,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/MarketGuard.t.sol:test_marketGuard"
+    },
+    {
+      "id": "market-guard.sell",
+      "piece": "market-guard",
+      "label": "Market Guard, refusing outside a 10% band of the feed: a sell inside the band",
+      "action": "sell",
+      "gas": 55774,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/MarketGuard.t.sol:test_marketGuard"
+    },
+    {
+      "id": "buy-sell-block.buy",
+      "piece": "buy-sell-block",
+      "label": "Buy/Sell Block, refusing a round trip in a block: a trader's first buy of the block",
+      "action": "buy",
+      "gas": 55607,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/BuySellBlock.t.sol:test_buySellBlock"
+    },
+    {
+      "id": "buy-sell-block.sell",
+      "piece": "buy-sell-block",
+      "label": "Buy/Sell Block, refusing a round trip in a block: a trader's first sell of the block",
+      "action": "sell",
+      "gas": 53845,
+      "baseline": "same-pool-without-piece",
+      "router": "Universal Router 2.1.1 (curated by the root)",
+      "test": "bench/test/BuySellBlock.t.sol:test_buySellBlock"
+    },
+    {
+      "id": "launch.existing-token-fee-only",
+      "piece": "launch",
+      "label": "Launch an existing token with nothing on but the base fee",
+      "action": "launch",
+      "gas": 868265,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/Launch.t.sol:test_launches"
+    },
+    {
+      "id": "launch.new-token-with-anti-snipe",
+      "piece": "launch",
+      "label": "Launch a new token with a dev buy and Anti-Snipe",
+      "action": "launch",
+      "gas": 1924981,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/Launch.t.sol:test_launches"
+    },
+    {
+      "id": "claim.eth",
+      "piece": "claim",
+      "label": "Claim ETH from the Rules (what a royalty recipient takes)",
+      "action": "claim",
+      "gas": 56038,
+      "baseline": "absolute",
+      "router": "direct call",
+      "test": "bench/test/Claim.t.sol:test_claimEth"
+    }
+  ]
+}
