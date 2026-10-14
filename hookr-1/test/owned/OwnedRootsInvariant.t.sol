@@ -137,9 +137,10 @@ contract OwnedRootsHandler is Test {
         ms[0].config.rulesGasLimit = 2_000_000;
         ms[0].rules = c;
         // Any account without code except the trader, whose sells must stay small (an opener receives the new token's
-        // unused supply), and except forge's console address, which has no code but refuses the launcher's refund.
+        // unused supply), the treasury target, whose balance this oracle reserves for fees and collections, and forge's
+        // console address, which has no code but refuses the launcher's refund.
         address opener = someone.code.length == 0 && uint160(someone) > 1024 && someone != trader
-            && someone != address(0x000000000000000000636F6e736F6c652e6c6f67)
+            && someone != treasury.target() && someone != address(0x000000000000000000636F6e736F6c652e6c6f67)
             ? someone
             : address(0x0FE7);
         if (!o.publicOpening) opener = o.owner;
@@ -246,6 +247,18 @@ contract OwnedRootsInvariantTest is OwnedRootsFixture {
         selectors[8] = OwnedRootsHandler.collect.selector;
         selectors[9] = OwnedRootsHandler.collect.selector;
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
+    }
+
+    /// @notice CI's two-call counterexample: the treasury target stays a passive recipient in this oracle, while
+    ///         the handler's fallback opener still opens the pool.
+    function test_theTreasuryTargetCannotBeFundedAsAnOpener() public {
+        handler.deploy(14106, true, false);
+        uint256 beforeOpen = TARGET.balance;
+        handler.open(20692, TARGET);
+        assertEq(handler.deploys(), 1);
+        assertEq(handler.opens(), 1, "the fallback opener still opens the pool");
+        assertEq(TARGET.balance, beforeOpen, "opening cannot fund or refund the treasury target");
+        invariant_noCustodyAndEveryWeiReachesTheTarget();
     }
 
     /// @notice allDeployments is exactly the set of roots the handler deployed; each is an owned root of this factory
