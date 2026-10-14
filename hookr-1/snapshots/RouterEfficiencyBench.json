@@ -1,0 +1,14 @@
+{
+  "quote.detailed.full.buy": "282061",
+  "quote.fee.buy": "116709",
+  "quote.full.buy": "262290",
+  "quote.full.sell": "201257",
+  "quote.single.fee.buy": "115709",
+  "quote.single.full.buy": "261290",
+  "router.fee.buy.noProgram": "151233",
+  "router.fee.buy.steady": "151233",
+  "router.immediateProgram.buy": "248804",
+  "router.immediateProgram.buy.first": "314408",
+  "router.immediateProgram.buy.steady": "248804",
+  "router.immediateProgram.recordCost": "97571"
+}

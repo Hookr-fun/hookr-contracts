@@ -12,6 +12,7 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 | --- | --- |
 | [`src/`](./src/) | The release's sources, byte-identical to the verified sources of its 35 contracts. |
 | [`foundry.toml`](./foundry.toml) | The release's compiler settings, with remappings to the pinned submodules in [`../lib/`](../lib/). |
+| [`test/`](./test/README.md) | The release's unit, fuzz and invariant tests, which CI runs against `src/`. [`script/`](./script/) holds three helpers they import and [`snapshots/`](./snapshots/) the gas figures and code sizes their benches check. |
 | [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) | A second Rules contract whose King of the Pool pays the round's winner the whole pot. One source file differs from the release. |
 | [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 7 contracts of the three HookrBook connectors, one folder per block or connector. |
 | [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 90 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
@@ -219,6 +220,8 @@ forge build --root hookr-1
 ```
 
 This builds the release from the same files with the same settings. Its metadata records this repository's paths instead of the build tree's, so the metadata hashes differ from the deployed code's; the rest of each contract matches. Four contracts embed another contract's creation code (`HookrFamilyLock`, `HookrMilestoneNFTFactory`, `HookrRootFactory` and `HookrTokenDeployer`), and the embedded metadata hash differs too.
+
+That command also compiles the tests in [`test/`](./test/README.md), which takes about 20 minutes and more than 20 GB of memory. To build the release alone, run `forge build src` from `hookr-1/`; its output for every release contract is the same.
 
 ## Status
 
