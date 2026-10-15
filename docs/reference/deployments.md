@@ -1,5 +1,7 @@
 # Deployments
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Every address on this page is live on Robinhood Chain. The Hookr addresses hold the code that `src/` in this repository compiles to; the upstream addresses are Uniswap's own deployments, and one address under the recapture root, WTH's executor, is a partner's contract that Hookr neither wrote nor can verify.
 
 Explorer: [Robinhood Blockscout](https://robinhoodchain.blockscout.com).

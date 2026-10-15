@@ -1,5 +1,7 @@
 # Immutability and ownership
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 A Hookr pool's behaviour is fixed at creation. This page lists exactly what the owner can do, and what nobody can do.
 
 ## What Is Frozen per Pool

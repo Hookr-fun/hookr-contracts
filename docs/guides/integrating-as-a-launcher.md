@@ -1,5 +1,7 @@
 # Integrating as a launcher
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 ## Introduction
 
 A launcher is a contract that opens Hookr markets for its own users. This guide covers what changes when the creator is a contract rather than an EOA, and the two facts that most often surprise integrators.

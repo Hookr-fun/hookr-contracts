@@ -1,5 +1,7 @@
 # Fee model
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 The contracts are the authority. Every formula on this page is written the way `HookrNativeMechanicsBlockV2`, `HookrNativeMechanicsCoordinatorLibV2` and `HookrMarketCoordinatorV5` compute it, in integer arithmetic.
 
 ## 1. The One Sentence

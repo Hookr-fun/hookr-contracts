@@ -1,5 +1,7 @@
 # HookrStackRegistryV2
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/HookrStackRegistryV2.sol`](../../src/HookrStackRegistryV2.sol)
 
 Registry for immutable per-pool stacks admitted under sealed shared-root profiles

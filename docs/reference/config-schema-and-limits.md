@@ -1,5 +1,7 @@
 # Config schema and limits
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 One `HookrNativeMechanicsBlockV2.Config` is frozen per pool. This page is the full field list, every bound the validator enforces, and the combinations the contract accepts or rejects.
 
 ## The Config Struct

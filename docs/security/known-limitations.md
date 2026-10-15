@@ -1,5 +1,7 @@
 # Known limitations
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Facts a reviewer should know before reading anything else as a guarantee.
 
 ## The Protocol Share Ceiling Can Only Go Down

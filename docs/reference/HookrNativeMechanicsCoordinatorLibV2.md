@@ -1,5 +1,7 @@
 # HookrNativeMechanicsCoordinatorLibV2
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/libraries/HookrNativeMechanicsCoordinatorLibV2.sol`](../../src/libraries/HookrNativeMechanicsCoordinatorLibV2.sol)
 
 Coordinator-side admission and fee routing for the native mechanics module

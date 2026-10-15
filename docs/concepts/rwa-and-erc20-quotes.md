@@ -1,5 +1,7 @@
 # RWA and ERC-20 quotes
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Every rule works on every quote currency. This page covers what changes when the quote is not native ETH, and what to know before pairing a tokenized stock.
 
 ## ERC-20 Quotes

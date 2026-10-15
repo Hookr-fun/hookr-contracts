@@ -1,5 +1,7 @@
 # Guard window
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 The guard window is a temporary launch condition on a new-token market. It exists so the first blocks of a launch cannot be swept by one address before anyone else can transact.
 
 It is available only on the new-token lane. Requesting it on an existing-asset market reverts `GuardRequiresLockedFoundingPosition` at admission. The reason is structural: the guard's liquidity lock only means something when the coordinator holds the only position, and on the existing-asset lane it holds none.

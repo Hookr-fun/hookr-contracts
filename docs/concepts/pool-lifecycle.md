@@ -1,5 +1,7 @@
 # Pool lifecycle
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 A Hookr pool is created once and never reconfigured. This page follows one pool from creation to steady state.
 
 ## 1. The Creator Picks a Configuration

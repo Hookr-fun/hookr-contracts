@@ -1,5 +1,7 @@
 # HookrMarketCoordinatorInitialBuyLibV4
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/libraries/HookrMarketCoordinatorInitialBuyLibV4.sol`](../../src/libraries/HookrMarketCoordinatorInitialBuyLibV4.sol)
 
 A linked library. Validates and executes the creator's same-transaction buy

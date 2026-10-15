@@ -1,5 +1,7 @@
 # Architecture
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Thirteen addresses make up the default lineage: one root hook, the accounting kernel it delegates to, one module, the catalog and registry that admit modules and pools, the coordinator that opens markets, three libraries deployed for it (admission, token deployer, creator buy), a router, a quoter, the treasury forwarder, and the CREATE2 factory the root was mined through. Three more libraries were already on chain and are linked where they stand. A second root, the recapture root, joined that graph on 2026-09-12 with three addresses of its own: the root itself, the correction library it links, and the adapter its sealed profile names as the one correction executor. Everything else it uses is shared with the default root. This page says what each one is for and how a swap moves through them.
 
 ## The Pieces

@@ -1,5 +1,7 @@
 # Overview
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Hookr is two Uniswap v4 hooks that serve many pools: a default root that runs the five rules below, and a recapture root that runs the same five rules and adds a partner correction lane (see [Architecture](./architecture.md)). A pool opened through Hookr names one root and freezes a configuration at creation, and the root reads it on every callback. Nothing about that configuration can change afterwards, including by the Hookr owner.
 
 The hook does five things, each independently switchable per pool:

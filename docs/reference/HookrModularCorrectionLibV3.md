@@ -1,5 +1,7 @@
 # HookrModularCorrectionLibV3
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/libraries/HookrModularCorrectionLibV3.sol`](../../src/libraries/HookrModularCorrectionLibV3.sol)
 
 The fail-open correction dispatcher the recapture root links, at [`0x11996B4e04571718d49454fC52830dc7fA0FF99C`](https://robinhoodchain.blockscout.com/address/0x11996B4e04571718d49454fC52830dc7fA0FF99C). An external library: `HookrSwapKernelV5Wth` calls `dispatch` by `DELEGATECALL` inside its `try/catch`, so the library runs in the root's context and a revert in it is a skipped correction. It is linked only into the recapture root; the default root links `HookrModularCorrectionLibV2`, whose lane never runs.

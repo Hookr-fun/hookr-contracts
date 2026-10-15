@@ -1,5 +1,7 @@
 # Open an existing-asset market
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 ## Introduction
 
 An existing-asset market opens a fresh Uniswap v4 pool for a token that already exists, under one of the two Hookr root hooks. The coordinator initializes the pool and stops there: no liquidity, no position, no creator buy, no guard window.
