@@ -1,5 +1,7 @@
 # Swapping and quoting
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 ## Introduction
 
 A Hookr pool is an ordinary Uniswap v4 pool with a dynamic fee. Any v4 caller can trade it. This guide covers what changes when you route through the Universal Router versus the Hookr router, and how to get a quote that matches what the swap will actually cost.

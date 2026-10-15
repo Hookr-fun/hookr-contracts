@@ -1,5 +1,7 @@
 # HookrMarketCoordinatorTokenDeployerV3
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/HookrMarketCoordinatorV3.sol`](../../src/HookrMarketCoordinatorV3.sol)
 
 A linked library. Deploys a new-token market's subject token with CREATE2 and derives its founding band

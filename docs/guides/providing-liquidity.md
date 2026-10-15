@@ -1,5 +1,7 @@
 # Providing liquidity
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 ## Introduction
 
 Hookr pools take liquidity through the ordinary Uniswap v4 `PositionManager`. There is no Hookr-specific liquidity contract and no Hookr position NFT. This guide covers the one restriction the hook adds and the fee behaviour that follows from the fee model.

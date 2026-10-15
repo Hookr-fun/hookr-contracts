@@ -22,13 +22,13 @@ To reproduce a build, use solc 0.8.37 with via-IR, the optimizer at 200 runs and
 
 No independent audit of Hookr 1 has been completed.
 
-The rest of this page describes the V2 release, whose sources sit at the repository root and whose contracts stay live on chain.
+The rest of this page describes V2, the previous release. Its sources sit at the repository root and its documentation under [`docs/`](./docs/concepts/overview.md). Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](./hookr-1/README.md).
 
-## Hookr V2
+## V2, the previous release
 
 Hookr is two Uniswap v4 hooks that serve many pools. Both are roots on one registry and share one accounting kernel, one module, one coordinator, one router, one quoter and one treasury forwarder. The default root, `HookrModularHookV6` at [`0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC`](https://robinhoodchain.blockscout.com/address/0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC), runs five rules and nothing else. The recapture root, `HookrModularHookV6WthV5` at [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC), runs the same five rules and adds a partner correction lane: on every swap of an ETH-quoted pool it asks WTH's arbitrage executor, through a Hookr adapter, to trade the pool's price gap against its other venues and split the realised profit between the pool's creator, the trader, the pool's LPs, WTH and Hookr. A pool opened through Hookr names one root and freezes its configuration at creation; the root reads that frozen record on every callback, so nothing about the pool's rules can change afterwards, including by the Hookr owner. The rules are a surge LP fee that rises with trade size against in-range depth, a temporal guard window on new launches, an auto-burn of subject output on exact-input buys, an in-swap LP-reward donation, and an Nth-buy pot. All five work on any quote currency, native or ERC-20. The protocol's revenue is a share carved out of those opt-in rules and never out of the base LP fee, so a pool that runs on its base fee alone produces no protocol revenue at all.
 
-This repository holds the sources behind the contracts live on Robinhood Chain, the documentation for them, and the addresses. Earlier generations of Hookr stay live on chain and are kept under [`legacy/`](./legacy/README.md).
+The repository root holds V2's sources, its documentation and its addresses. Earlier generations of Hookr stay live on chain and are kept under [`legacy/`](./legacy/README.md).
 
 ## Architecture
 
@@ -76,7 +76,7 @@ graph TD
 
 Both roots delegate every callback to the same accounting kernel and the same native block, so a pool's five rules behave identically on either. The recapture root differs in its swap kernel: `HookrSwapKernelV5Wth` runs a bounded, fail-open correction attempt before and after the delegated swap body, through the linked `HookrModularCorrectionLibV3` to `HookrWthExecutorAdapterV1`, which forwards to WTH's executor. A revert anywhere on that path is a skipped correction, never a failed swap, with one narrow exception described on the [recapture root's page](./docs/reference/HookrModularHookV6WthV5.md).
 
-## Where to read
+## Where to read about V2
 
 | Question | Page |
 | --- | --- |
@@ -97,7 +97,7 @@ Both roots delegate every callback to the same accounting kernel and the same na
 | Properties the contracts hold | [Invariants](./docs/security/invariants.md) |
 | Who can do what, and what fails closed | [Threat model](./docs/security/threat-model.md) |
 | What this system does not do | [Known limitations](./docs/security/known-limitations.md) |
-| Audit scope and open questions | [Audit scope](./docs/security/audit-scope.md) |
+| What a review of V2 covers | [V2 audit scope](./docs/security/audit-scope.md) |
 | How to propose a rule, a module or a hook | [Contributing](./CONTRIBUTING.md) and [`labs/`](./labs/README.md) |
 
 Guides: [open a new-token market](./docs/guides/open-a-new-token-market.md), [open an existing-asset market](./docs/guides/open-an-existing-asset-market.md), [swapping and quoting](./docs/guides/swapping-and-quoting.md), [providing liquidity](./docs/guides/providing-liquidity.md), [collecting fees](./docs/guides/collecting-fees.md), [integrating as a launcher](./docs/guides/integrating-as-a-launcher.md).

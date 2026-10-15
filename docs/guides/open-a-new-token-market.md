@@ -1,5 +1,7 @@
 # Open a new-token market
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 ## Introduction
 
 A new-token market deploys a fixed-supply ERC-20, opens a Uniswap v4 pool for it, places the whole supply in one coordinator-held sell band, and optionally buys some of it back for you in the same transaction. It is the only lane that can use a guard window.

@@ -1,5 +1,7 @@
 # Protocol share and treasury
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 The protocol's revenue is one number per pool, `protocolShareBps`, and one address, the treasury forwarder. This page covers how the number is chosen and how the money moves.
 
 ## Resolving the Share

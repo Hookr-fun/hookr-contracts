@@ -1,5 +1,7 @@
 # Hook permissions
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Hookr has two root hooks, `HookrModularHookV6` (the default root) and `HookrModularHookV6WthV5` (the recapture root). Both addresses are mined so the low fourteen bits equal `0x28cc`, which is six permissions, and both pin the same `REQUIRED_FLAGS`; the registry's `registerKernel` records `0x28cc` for each. Everything on this page applies to both. The recapture root's correction lane runs inside the same two swap callbacks and needs no permission of its own.
 
 ## The Permissions Struct

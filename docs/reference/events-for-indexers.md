@@ -1,5 +1,7 @@
 # Events for indexers
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Which contract emits what, and how to keep the streams apart. Every event below is on a contract in this repository; the PoolManager's own `Swap`, `Initialize` and `ModifyLiquidity` are unchanged and still the source of truth for price and depth. There are two root hooks, and a pool's `PoolKey.hooks` says which one it is on: the default root `0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC` or the recapture root `0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`. Index both.
 
 ## Stream Separation

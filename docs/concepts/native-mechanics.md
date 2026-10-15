@@ -1,5 +1,7 @@
 # Native mechanics
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 `HookrNativeMechanicsBlockV2` holds all five rules in one module. They ship together because splitting them would change the fee rounding that the tests and the audit cover: one hook cut is computed across the LP reward and the pot, the royalty is removed once, and the protocol absorbs the shared rounding residue.
 
 Each rule is switchable per pool by setting its rate to zero. A pool with every rate at zero still carries the module; it just does nothing.

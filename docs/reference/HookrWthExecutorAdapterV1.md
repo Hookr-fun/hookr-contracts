@@ -1,5 +1,7 @@
 # HookrWthExecutorAdapterV1
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/HookrWthExecutorAdapterV1.sol`](../../src/HookrWthExecutorAdapterV1.sol)
 
 **Implements:** `IHookrArbExecutorV3`, `IHookrKernelIntegrationV1`

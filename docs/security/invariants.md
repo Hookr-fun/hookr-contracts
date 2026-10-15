@@ -1,5 +1,7 @@
 # Invariants
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Properties the contracts hold. Each one names where it is enforced, so a reviewer can go straight to the check.
 
 ## Admission

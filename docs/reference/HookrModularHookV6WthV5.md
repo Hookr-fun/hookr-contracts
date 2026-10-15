@@ -1,5 +1,7 @@
 # HookrModularHookV6WthV5
 
+> This page describes V2, Hookr's previous release. Its contracts stay on chain to serve the pools already opened on them; hookr.fun opens new pools only on the contracts in [`hookr-1/`](../../hookr-1/README.md).
+
 Source: [`src/HookrModularHookV6WthV5.sol`](../../src/HookrModularHookV6WthV5.sol), base [`src/HookrSwapKernelV5Wth.sol`](../../src/HookrSwapKernelV5Wth.sol)
 
 **Inherits:** `HookrSwapKernelV5Wth`
