@@ -1,0 +1,49 @@
+No files changed, compilation skipped
+
+Ran 3 tests for hooks/drawdown-burn/test/DrawdownBurnFork.t.sol:DrawdownBurnFork
+[PASS] test_fork_engineOnALiveHookrPool() (gas: 6297469)
+Logs:
+  token (RHUBX stand-in) 0xc0ab252f8f827ef713a4d5E76Ab5f6278CE12284
+  pool id
+  0xbe69ab1c0ddf0873a3470577f61127201af57da60376306050ff810a19f6a091
+  pool fee field 8388608
+  launch liquidity 149161657700275735304679
+  opening token price tick -177240
+  gas: checkpoint() 59809
+  buy 4 ETH -> tokens 161702554885655275465980024
+  buy 4 ETH -> tokens 117620605905313140447454110
+  buy 4 ETH -> tokens 89402221474753245860614148
+  buy 4 ETH -> tokens 70251002156773727116118000
+  buy 4 ETH -> tokens 56658136621113775603675371
+  buy 4 ETH -> tokens 46662392657080547260687989
+  buy 4 ETH -> tokens 39097431182657760215702741
+  buy 4 ETH -> tokens 33234187987777032460439038
+  buy 4 ETH -> tokens 28597868259700934289616871
+  buy 4 ETH -> tokens 24868470096012469121009993
+  token price tick after buys -156125
+  records the clamp took to reach the new price 43
+  high (ticks) after a full hour at the new price -156125
+  token price tick after sells -159725
+  sell queue pending (ETH wei) 330227865204599703
+  drawdown bps / tier 3024 2
+  gas: run() with collect + buyback 368673
+  engine ETH before / after run 0 214182292163679764
+  burn budget / wall reserve after run 82091146081839882 132091146081839882
+  tokens to the dead address in run() (buyback burn + Auto Burn on it) 426927273738245054986217
+  wall reserve before / after 132091146081839882 1
+  tokens burned by the wall 4589347848698987418789188
+
+[PASS] test_fork_pumpPokeDumpCost() (gas: 8780378)
+Logs:
+  pump ETH in 8900717610444530689
+  record written (ticks over the pre-pump price) 500
+  round trip ETH lost 572120370725597710
+  lost / pumped (bps) 642
+
+[PASS] test_fork_sandwichedRunBuysNothing() (gas: 9285239)
+Logs:
+  burn budget held through the pump (ETH wei) 67501379287994007
+
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 25.12ms (48.97ms CPU time)
+
+Ran 1 test suite in 186.71ms (25.12ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)
