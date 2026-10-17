@@ -58,7 +58,8 @@ contract HookrBuybackBurn is HookrGoverned {
     uint32 public constant DEFAULT_WINDOW = 1_800;
     /// @notice The short window read beside `referenceWindow`. The floor is set off whichever of the two means values
     ///         the buyback's spend higher, so a move the long mean still lags (a sell-off minutes ago) raises the floor
-    ///         instead of becoming room for whoever triggers the buyback. Both means end now, and a record weighs
+    ///         instead of becoming room for whoever triggers the buyback, as far as the log's records have followed
+    ///         it (one clamp step a record). Both means end now, and a record weighs
     ///         nothing in a window that ends when it is written, so no price set in the current second, by a swap
     ///         earlier in the same transaction or any other, enters either mean.
     uint32 public constant SPOT_WINDOW = 60;

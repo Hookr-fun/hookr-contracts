@@ -1,0 +1,33 @@
+Ran 7 tests for hooks/price-log/test/PriceLogAttack.t.sol:PriceLogAttackTest
+[PASS] test_attack_flashPumpInsideAnUnlockIsRefused() (gas: 586618)
+[PASS] test_attack_idSquatIsAnotherLog() (gas: 108613)
+[PASS] test_attack_jitLiquidityAroundEachRecordDefeatsTheThinFlag() (gas: 1165451)
+Logs:
+  JIT around each record on a pulled pool: 1800 s mean (ticks) 1750
+[PASS] test_attack_meanUntilIgnoresLaterRecords() (gas: 404525)
+[PASS] test_attack_owningEveryRecordWalksTheMeanAtMostOneClampAnInterval() (gas: 493900)
+Logs:
+  six owned records: newest record (ticks) 3000
+  six owned records: 1800 s mean (ticks) 1748
+[PASS] test_attack_pumpRecordDumpMovesTheMeanByOneClampedStepForOneInterval() (gas: 343544)
+Logs:
+  pumped +5000, recorded +500, honest record next interval: 1800 s mean moved (ticks) 83
+[PASS] test_attack_recordSpamWritesOncePerInterval() (gas: 113453)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 2.49ms (3.10ms CPU time)
+Ran 7 tests for hooks/price-log/test/PriceLogAttack.t.sol:PriceLogAttackFallingTest
+[PASS] test_attack_flashPumpInsideAnUnlockIsRefused() (gas: 591799)
+[PASS] test_attack_idSquatIsAnotherLog() (gas: 108710)
+[PASS] test_attack_jitLiquidityAroundEachRecordDefeatsTheThinFlag() (gas: 1170500)
+Logs:
+  JIT around each record on a pulled pool: 1800 s mean (ticks) -1750
+[PASS] test_attack_meanUntilIgnoresLaterRecords() (gas: 409571)
+[PASS] test_attack_owningEveryRecordWalksTheMeanAtMostOneClampAnInterval() (gas: 502370)
+Logs:
+  six owned records: newest record (ticks) -3000
+  six owned records: 1800 s mean (ticks) -1748
+[PASS] test_attack_pumpRecordDumpMovesTheMeanByOneClampedStepForOneInterval() (gas: 352052)
+Logs:
+  pumped +5000, recorded +500, honest record next interval: 1800 s mean moved (ticks) -83
+[PASS] test_attack_recordSpamWritesOncePerInterval() (gas: 113453)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 2.59ms (2.95ms CPU time)
+Ran 2 test suites in 6.17ms (5.08ms CPU time): 14 tests passed, 0 failed, 0 skipped (14 total tests)

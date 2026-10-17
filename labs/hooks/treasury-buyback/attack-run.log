@@ -1,0 +1,41 @@
+Ran 8 tests for hooks/treasury-buyback/test/BuybackAttack.t.sol:BuybackAttackTest
+[PASS] test_attack_dumpBeforeTheBuybackPaysTheBuyback() (gas: 307615)
+[PASS] test_attack_heldPriceBuysOneCapAPeriod() (gas: 685195)
+Logs:
+  held +2000 for a window: HOOKR short of fair on one cap (bps) 1844
+[PASS] test_attack_lonePumpedRecordIsRefusedAsStale() (gas: 335495)
+[PASS] test_attack_oneOwnedRecordAddsAtMostItsWeightToTheFloor() (gas: 3049764)
+Logs:
+  one owned record standing 299 s lifts the 1800 s mean by (ticks) 83
+  highest held price the buyback took, ticks over the reference 347
+  HOOKR short of fair on one cap (bps) 379
+[PASS] test_attack_pumpRecordDumpRecordsLiftTheFloorWithoutAHold() (gas: 3751981)
+Logs:
+  six pump-record-dump records: 1800 s mean (pool ticks) 1748
+  sandwich price the buyback took, ticks over the truth 2013
+  HOOKR short of fair on one cap (bps) 1855
+[PASS] test_attack_recordSpamCannotShortenTheWarmUp() (gas: 43008)
+[PASS] test_attack_sameTransactionPumpIsRefused() (gas: 299942)
+[PASS] test_attack_staleReferenceIsRefused() (gas: 623488)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 5.13ms (8.81ms CPU time)
+Ran 8 tests for hooks/treasury-buyback/test/BuybackAttack.t.sol:BuybackAttackFlippedTest
+[PASS] test_attack_dumpBeforeTheBuybackPaysTheBuyback() (gas: 302921)
+[PASS] test_attack_heldPriceBuysOneCapAPeriod() (gas: 691139)
+Logs:
+  held +2000 for a window: HOOKR short of fair on one cap (bps) 1844
+[PASS] test_attack_lonePumpedRecordIsRefusedAsStale() (gas: 343805)
+[PASS] test_attack_oneOwnedRecordAddsAtMostItsWeightToTheFloor() (gas: 3063135)
+Logs:
+  one owned record standing 299 s lifts the 1800 s mean by (ticks) 83
+  highest held price the buyback took, ticks over the reference 347
+  HOOKR short of fair on one cap (bps) 379
+[PASS] test_attack_pumpRecordDumpRecordsLiftTheFloorWithoutAHold() (gas: 3896276)
+Logs:
+  six pump-record-dump records: 1800 s mean (pool ticks) -1748
+  sandwich price the buyback took, ticks over the truth 2013
+  HOOKR short of fair on one cap (bps) 1855
+[PASS] test_attack_recordSpamCannotShortenTheWarmUp() (gas: 43008)
+[PASS] test_attack_sameTransactionPumpIsRefused() (gas: 305583)
+[PASS] test_attack_staleReferenceIsRefused() (gas: 619013)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 5.35ms (9.22ms CPU time)
+Ran 2 test suites in 6.48ms (10.48ms CPU time): 16 tests passed, 0 failed, 0 skipped (16 total tests)

@@ -24,8 +24,8 @@ Kept as they were:
 - The router's pinned code hash, the pause brake, the transient reentrancy lock, `collect`.
 
 `HookrGoverned`, `HookrDelegation` and `IHookrGoverned` are vendored from `hookr-1/src` (the live release's source,
-identical to the app lab's copy) under `vendor/hookr-1/`, with only the pragma relaxed from `^0.8.34` to `^0.8.26` to
-build in this project's compiler.
+identical to the app lab's copy) under `vendor/hookr-1/`. The first two have only their pragma relaxed from `^0.8.34`
+to `^0.8.26` to build in this project's compiler; `IHookrGoverned` is byte for byte the same.
 
 ## What changed
 
@@ -33,7 +33,7 @@ build in this project's compiler.
 |---|---|---|
 | Reference | `HookrOracleRead.consult` on the Rules' recorder | `HookrPriceLog.meanFresh` on the pool's log, pinned at construction (`priceLog`, immutable) |
 | Bind | pool + Rules; the recorder must record the pool, no arb recapture lane, ring holds the window | pool + log id; the log must record that pool and serve the window with at least `MIN_RECORDS_PER_WINDOW` (4) intervals in it, at most 48 |
-| Freshness | refuses a newest observation older than 300 s (`StaleReference`) | refuses (`NoHealthyReference`) when any record weighing in either mean stood longer than `MAX_STAND_INTERVALS` (2) intervals, so the log must be kept recorded (a keeper, 45k gas a record). The buyback also records when one is due; that record weighs nothing in either mean |
+| Freshness | refuses a newest observation older than 300 s (`StaleReference`) | refuses (`NoHealthyReference`) when any record weighing in either mean stood longer than `MAX_STAND_INTERVALS` (2) intervals, so the log must be recorded at least every two intervals (a keeper, 45k gas a record). The buyback also records when one is due; that record weighs nothing in either mean |
 | Router | any router with code | also swaps on the PoolManager the log reads (`RouterManagerMismatch`), at construction and on `SET_ROUTER` |
 | Inside an unlock | the router's unlock reverts | refuses first (`ManagerUnlocked`) |
 | Before the pool exists | constructor reverts (`InvalidPool`) | deploys; `buyback` reverts `NoHealthyReference` until the log covers the window |
@@ -54,8 +54,8 @@ before it. The log never records inside an unlock, so a leg is never recorded; t
 
 ## Tests
 
-`forge test --root labs --match-path 'hooks/treasury-buyback/test/*'`: 54 pass, each suite with HOOKR as currency0 and
-as currency1; the three fork tests skip without an RPC.
+`forge test --root labs --match-path 'hooks/treasury-buyback/test/*'`: 54 pass, each local suite with HOOKR as currency0
+and as currency1; the three fork tests skip without an RPC. The attack suite's figures are in `attack-run.log`.
 
 | Suite | What it shows |
 |---|---|
@@ -97,7 +97,18 @@ Each carries over from the app lab's HANDOFF unless marked new; none is fixed by
   reference pool's depth and fees in view. A keeper recording the moment each record is due takes the records from
   the attacker. The spend cap bounds the rate, never the loss per cap; pause stops it.
 - **New: liveness needs a keeper.** `meanFresh` refuses a reference with a record that stood over two intervals, so
-  the buyback works only while someone records the log every interval (anyone may; 45k gas a record).
+  the buyback works only while someone records the log at least every two intervals (anyone may; 45k gas a record).
+  One longer gap blocks buybacks for a full reference window after records resume. A buyback that reverts also rolls
+  back the record it wrote, so failed buybacks never warm the log.
+- **New: recorded dumps can block buybacks.** The 60 s spot mean is nearly always the newest record. A dump, the
+  record and the pump back in one transaction write a record about one clamp step (500 ticks) under the truth, and the
+  floor then follows that higher expected output to about 102% of fair, so every buyback reverts until the next record.
+  It fails closed, but repeated every interval it blocks the buyback for as long as the attacker pays: about 0.0047 ETH
+  a round trip on the fork pool, about 1.35 ETH a day. A keeper does not stop it; the attacker only has to win each due
+  record. Pause and re-pin are the response.
+- **New: the spot window follows a crash one clamp step a record.** A real 3,000-tick sell-off moves the next record
+  500 ticks, so for several intervals both means sit over the price and the floor is that far under fair; a sandwich
+  can take most of that gap on each cap.
 - **JIT liquidity defeats the thin flag** (the log's pinned limitation, the recorder's S2-1). The reference pool's
   liquidity must be locked.
 - **The bucket bursts to about two caps inside one period (SL-3)**, **a re-pin keeps the raw cap (SL-4)**, **the queue

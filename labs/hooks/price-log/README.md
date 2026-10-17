@@ -77,7 +77,7 @@ same slots.
 ## Tests
 
 `forge test --root labs --match-path 'hooks/price-log/test/*'`: 60 pass, every suite on rising and on falling pool
-ticks.
+ticks. The attack suite's figures are in `attack-run.log`.
 
 | Suite | What it shows |
 |---|---|
@@ -97,7 +97,8 @@ ticks.
   interval. One clamped step per interval, so six owned records put the 1,800 s mean 1,748 ticks (~19%) over the
   truth on the local pool. Readers bound what a moved mean can buy (the buyback's spend cap; the engine's rise cap), and
   a keeper that records the moment each record is due takes the records from the attacker.
-- **It lags fast real moves**: at 500 ticks a record every 5 minutes, an 8x rally took 43 records (3.6 h) on the fork.
+- **It lags fast real moves, both ways**: at 500 ticks a record every 5 minutes, an 8x rally took 43 records (3.6 h) on
+  the fork, and a crash registers just as slowly.
 - **One log per parameter set.** Readers that ask for different parameters on one pool record separately; a reader
   should take the defaults unless it has a reason not to.
 - Not run: an independent review or attack round, a log read by two different blocks on one fork pool at once.
