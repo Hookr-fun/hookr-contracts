@@ -267,6 +267,30 @@ contract HookrPriceLogTest is PriceLogBase {
         assertTrue(ok, "past the window again");
     }
 
+    function test_meanFresh_refusesARecordThatStoodTooLong() public {
+        plog.record(id);
+        steps(6);
+        (bool ok,) = plog.meanFresh(id, 1800, 600);
+        assertTrue(ok, "recorded every interval");
+        wait(601);
+        (ok,) = plog.meanFresh(id, 1800, 600);
+        assertFalse(ok, "the newest record has stood 601 s");
+        (bool plain,) = plog.mean(id, 1800);
+        assertTrue(plain, "mean has no stand limit");
+        // A record written now ends the old one's stand at 601 s; it is still too long while it weighs.
+        plog.record(id);
+        (ok,) = plog.meanFresh(id, 1800, 600);
+        assertFalse(ok);
+        // Once the long-standing record leaves the window, fresh again.
+        steps(6);
+        (ok,) = plog.meanFresh(id, 1800, 600);
+        assertTrue(ok);
+        (bool okFresh, int24 a) = plog.meanFresh(id, 1800, 600);
+        (, int24 b) = plog.mean(id, 1800);
+        assertTrue(okFresh);
+        assertEq(a, b, "same mean when fresh");
+    }
+
     function test_meanUntil_endsInThePast() public {
         plog.record(id);
         steps(3);

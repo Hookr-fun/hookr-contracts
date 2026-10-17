@@ -1,5 +1,5 @@
-Ran 2 tests for hooks/treasury-buyback/test/BuybackFork.t.sol:BuybackFork
-[PASS] test_fork_buybackThroughTheLiveRouterAndRoot() (gas: 1358273)
+Ran 3 tests for hooks/treasury-buyback/test/BuybackFork.t.sol:BuybackFork
+[PASS] test_fork_buybackThroughTheLiveRouterAndRoot() (gas: 1532269)
 Logs:
   first record (pool tick) 177230
   spot (pool tick) 177230
@@ -7,18 +7,34 @@ Logs:
   pool id
   0xf3b81edcc1d9aa9e75a140e65898a5f834cc29feb673fd0345e7250e6b8e18fa
   records the clamp took to reach the traded price 2
-  gas: record on the live pool (cold slots) 45385
-  gas: mean window / cold / warm 1800 25523 9402
-  gas: mean window / cold / warm 60 7413 3292
-  gas: buyback through the live router (log slots cold) 243055
+  gas: record on the live pool (cold slots) 45407
+  gas: mean window / cold / warm 1800 26411 10290
+  gas: mean window / cold / warm 60 7557 3436
+  gas: buyback through the live router (log slots cold) 244078
   reference pool tick 176310
   HOOKR bought and burned / fair at the reference 451584683992121658662917 453589699487750041644806
   short of fair (bps) 44
-[PASS] test_fork_sameTransactionPumpIsRefused() (gas: 5531008)
+[PASS] test_fork_pumpRecordDumpThenSandwich() (gas: 10367321)
+Logs:
+  first record (pool tick) 177230
+  spot (pool tick) 177230
+  pool tick before the round trips 176310
+  pool tick after the round trips 176300
+  1800 s mean moved (pool ticks; down = HOOKR pricier) -531
+  six pump-record-dump round trips cost the attacker (ETH wei) 28439421451331029
+  sandwich pump (ETH wei) 887052575126290320
+  HOOKR bought 417229525555629521059239
+  HOOKR fair at the true reference 453589699487750041644806
+  short of fair (bps) 801
+  sandwich net to the attacker (ETH wei, signed)
+  -6229220856386604
+  attacker net over the whole attack (ETH wei, signed)
+  -34668642307717633
+[PASS] test_fork_sameTransactionPumpIsRefused() (gas: 5535099)
 Logs:
   first record (pool tick) 177230
   spot (pool tick) 177230
   pump: ETH in 562021783744057755
   pump: pool ticks moved -500
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 10.28ms (8.71ms CPU time)
-Ran 1 test suite in 274.10ms (10.28ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 18.70ms (24.94ms CPU time)
+Ran 1 test suite in 109.54ms (18.70ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)

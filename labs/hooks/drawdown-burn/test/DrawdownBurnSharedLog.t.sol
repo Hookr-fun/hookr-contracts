@@ -52,6 +52,20 @@ contract DrawdownBurnSharedLogTest is DrawdownBurnBase {
         assertApproxEqAbs(int256(engine.ath()), 0, 1);
     }
 
+    /// @notice Review finding: with an athWindow that is not a multiple of the interval, the high must still rise.
+    function test_highRisesWhenTheWindowIsNotAMultipleOfTheInterval() public {
+        HookrDrawdownBurn.Config memory c = defaults();
+        c.log = new HookrPriceLog(IPoolManager(address(manager)));
+        c.athWindow = 500;
+        c.athMinCheckpoints = 2;
+        HookrDrawdownBurn e = new HookrDrawdownBurn(c);
+        for (uint256 i; i < 3; ++i) {
+            vm.warp(vm.getBlockTimestamp() + 300);
+            e.checkpoint();
+        }
+        assertTrue(e.athSet(), "records 300 s apart span 500 s after three");
+    }
+
     function test_engineSeedsItsLogsFirstRecordInTheSubjectsOrientation() public {
         HookrDrawdownBurn.Config memory c = defaults();
         c.log = new HookrPriceLog(IPoolManager(address(manager)));

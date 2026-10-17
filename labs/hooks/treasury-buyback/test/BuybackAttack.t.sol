@@ -83,6 +83,70 @@ contract BuybackAttackTest is BuybackBase {
         assertEq(quote.balanceOf(address(buyback)), 100e18 - CAP, "the rest of the balance is untouched");
     }
 
+    /// @notice 3b. The same lift without holding anything: each owned record is a pump, record and dump in one
+    ///         transaction (one round trip of fees), so the pool sits at the true price between records and arbitrage
+    ///         has nothing to correct. The lifted floor then lets a sandwich sell the buyback HOOKR up to it.
+    function test_attack_pumpRecordDumpRecordsLiftTheFloorWithoutAHold() public {
+        uint256 fair = expectedAt(CAP, 0);
+        for (uint256 i; i < 6; ++i) {
+            wait(300);
+            moveTo(5000);
+            plog.record(logId);
+            moveTo(0);
+        }
+        wait(299);
+        assertApproxEqAbs(int256(hookrTick()), 0, 1, "the pool is at the true price between records");
+        (, int24 m) = plog.mean(logId, 1800);
+        console2.log("six pump-record-dump records: 1800 s mean (pool ticks)", int256(m));
+        // The sandwich: the highest price the lifted floor accepts.
+        int24 lo = 0;
+        int24 hi = 4000;
+        for (uint256 i; i < 13; ++i) {
+            int24 mid = (lo + hi) / 2;
+            uint256 snap = vm.snapshotState();
+            moveTo(mid);
+            bool ok;
+            try buyback.buyback(CAP) {
+                ok = true;
+            } catch {}
+            vm.revertToState(snap);
+            if (ok) lo = mid;
+            else hi = mid;
+        }
+        moveTo(lo);
+        uint256 out = buyback.buyback(CAP);
+        console2.log("sandwich price the buyback took, ticks over the truth", int256(lo));
+        console2.log("HOOKR short of fair on one cap (bps)", (fair - out) * 10_000 / fair);
+        assertGt(lo, 1000, "limitation: owned records lift the floor with no price held");
+    }
+
+    /// @notice 3c. A reference nobody kept recording is refused, not read stale (review finding: the record the buyback
+    ///         writes weighs nothing, so without `meanFresh` the floor would be the last record however old).
+    function test_attack_staleReferenceIsRefused() public {
+        wait(3600);
+        moveTo(-2000); // HOOKR fell ~18% while nobody recorded
+        vm.expectRevert(abi.encodeWithSelector(HookrBuybackBurn.NoHealthyReference.selector, poolId, 1800));
+        buyback.buyback(CAP);
+        // Once records resume for a window, the buyback reads the new price.
+        for (uint256 i; i < 7; ++i) {
+            wait(300);
+            plog.record(logId);
+        }
+        assertGt(buyback.buyback(CAP), expectedAt(CAP, 0), "priced at the fallen price, not the stale one");
+    }
+
+    /// @notice 3d. One pumped record right after a buyback, then nobody records: refused as stale a window later,
+    ///         instead of reading the pumped record as the whole mean.
+    function test_attack_lonePumpedRecordIsRefusedAsStale() public {
+        wait(300);
+        moveTo(5000);
+        plog.record(logId);
+        moveTo(0);
+        wait(1800);
+        vm.expectRevert(abi.encodeWithSelector(HookrBuybackBurn.NoHealthyReference.selector, poolId, 1800));
+        buyback.buyback(CAP);
+    }
+
     /// @notice 4. Dumping HOOKR before the buyback only hands it more HOOKR per quote.
     function test_attack_dumpBeforeTheBuybackPaysTheBuyback() public {
         uint256 fair = expectedAt(CAP, 0);

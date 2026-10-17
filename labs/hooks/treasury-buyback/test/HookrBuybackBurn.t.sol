@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
@@ -12,7 +13,7 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {HookrPriceLog} from "../../price-log/src/HookrPriceLog.sol";
 import {HookrBuybackBurn} from "../src/HookrBuybackBurn.sol";
 import {IHookrGoverned} from "../vendor/hookr-1/interfaces/IHookrGoverned.sol";
-import {BuybackBase, InUnlockBuyer} from "./BuybackBase.sol";
+import {BuybackBase, InUnlockBuyer, TestBuybackRouter} from "./BuybackBase.sol";
 
 contract HookrBuybackBurnTest is BuybackBase {
     using PoolIdLibrary for PoolKey;
@@ -95,6 +96,15 @@ contract HookrBuybackBurnTest is BuybackBase {
         new HookrBuybackBurn(
             address(this), address(hookr), address(router), HookrPriceLog(address(0xBEEF)), key, logId, CAP
         );
+    }
+
+    function test_bind_refusesARouterOnAnotherManager() public {
+        TestBuybackRouter elsewhere = new TestBuybackRouter(IPoolManager(address(new PoolManager(address(this)))));
+        vm.expectRevert(abi.encodeWithSelector(HookrBuybackBurn.RouterManagerMismatch.selector, address(elsewhere)));
+        new HookrBuybackBurn(address(this), address(hookr), address(elsewhere), plog, key, logId, CAP);
+        bytes32 kind = buyback.SET_ROUTER();
+        vm.expectRevert(abi.encodeWithSelector(HookrBuybackBurn.RouterManagerMismatch.selector, address(elsewhere)));
+        buyback.queue(kind, abi.encode(address(elsewhere)));
     }
 
     // -----------------------------------------------------------------------------------------------------------------

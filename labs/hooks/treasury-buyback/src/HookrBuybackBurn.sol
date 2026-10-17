@@ -25,17 +25,20 @@ import {IHookrBuybackClaims} from "./interfaces/IHookrBuybackClaims.sol";
 ///      price, at most one per interval, each clamped to a step from the last and refused inside an unlock, and a
 ///      record weighs nothing in a window that ends when it is written. The pool is bound together with the id of
 ///      its log there, and only when the log records that pool and serves the window with at least
-///      `MIN_RECORDS_PER_WINDOW` intervals in it, so no single record moves the mean by more than a fraction of one
-///      clamped step. `buyback` first records the price itself when a record is due, so the newest record is never
-///      more than one interval old, and reverts `NoHealthyReference` when the log does not reach back the window (a
-///      pool not yet launched, a log not yet seeded, a thin record still weighing), rather than swap blind. There is
-///      no secondary "deepest pool" fallback.
+///      `MIN_RECORDS_PER_WINDOW` intervals in it. Both means are read with `meanFresh`: every record that weighs in
+///      them must have stood at most `MAX_STAND_INTERVALS` intervals, so while the log is recorded every interval one
+///      record carries at most that share of the window, and a reference nobody kept recording is refused rather than
+///      read stale. `buyback` records the price itself first when a record is due (that record weighs nothing in
+///      either mean), and reverts `NoHealthyReference` when the log does not serve both means (a pool not yet
+///      launched, a log not yet seeded or not kept recorded, a thin record still weighing), rather than swap blind.
+///      There is no secondary "deepest pool" fallback.
 ///      The bind needs no pool: the buyback can be deployed before its reference pool launches and stays inert until
 ///      the log covers the window.
-///      The reference is the pool's own history, so on a pool nobody arbitrages a price someone holds there for a
-///      reference window becomes the reference, and the floor follows it. What a held price can buy is bounded by the
-///      spend limit, not by the floor: `buyback` spends at most `spendCap` over any `spendPeriod` seconds, so a hold
-///      buys one cap a period at most, never the whole balance in one transaction, and `pause` stops it at once.
+///      The reference is the log's records, so whoever writes every record for a reference window sets the
+///      reference: one clamped step per interval, and a record needs no price held, only a pump, the record and the
+///      dump in one transaction. The floor follows it. What a moved reference can buy is bounded by the spend limit,
+///      not by the floor: `buyback` spends at most `spendCap` over any `spendPeriod` seconds, so it buys one cap a
+///      period at most, never the whole balance in one transaction, and `pause` stops it at once.
 contract HookrBuybackBurn is HookrGoverned {
     using PoolIdLibrary for PoolKey;
 
@@ -47,9 +50,11 @@ contract HookrBuybackBurn is HookrGoverned {
     uint16 public constant DEFAULT_SLIPPAGE_BPS = 300; // 3%
     uint16 public constant BPS_DENOMINATOR = 10_000;
 
-    /// @notice The fewest log intervals a reference window spans: one record standing a whole interval then moves
-    ///         the mean by at most a quarter of one clamped step.
+    /// @notice The fewest log intervals a reference window spans.
     uint32 public constant MIN_RECORDS_PER_WINDOW = 4;
+    /// @notice The longest any record weighing in either mean may have stood, in log intervals: with the log recorded
+    ///         every interval, one record then carries at most 2 / 4 of the shortest window, 2 / 6 of the default.
+    uint32 public constant MAX_STAND_INTERVALS = 2;
     uint32 public constant DEFAULT_WINDOW = 1_800;
     /// @notice The short window read beside `referenceWindow`. The floor is set off whichever of the two means values
     ///         the buyback's spend higher, so a move the long mean still lags (a sell-off minutes ago) raises the floor
@@ -91,6 +96,8 @@ contract HookrBuybackBurn is HookrGoverned {
     ///         wired.
     PoolKey public pool;
     bytes32 public logId;
+    /// @notice `logId`'s record interval, set with it.
+    uint32 public logInterval;
 
     uint16 public maxSlippageBps;
     uint32 public referenceWindow;
@@ -117,6 +124,7 @@ contract HookrBuybackBurn is HookrGoverned {
     error InvalidWindow(uint32 window);
     error NoHealthyReference(PoolId id, uint32 window);
     error ManagerUnlocked();
+    error RouterManagerMismatch(address router);
     error NothingToBuyWith(address currency);
     error Slippage(uint256 minOut, uint256 got);
     error TransferFailed(address currency, address to, uint256 amount);
@@ -229,11 +237,12 @@ contract HookrBuybackBurn is HookrGoverned {
             // on the log itself.
             if (log_.count(lid) == 0) revert NoHealthyReference(id, referenceWindow);
             log_.record(lid);
+            uint32 maxStand = logInterval * MAX_STAND_INTERVALS;
             bool ok;
-            (ok, meanTick) = log_.mean(lid, referenceWindow);
+            (ok, meanTick) = log_.meanFresh(lid, referenceWindow, maxStand);
             if (!ok) revert NoHealthyReference(id, referenceWindow);
             bool spotOk;
-            (spotOk, spotTick) = log_.mean(lid, SPOT_WINDOW);
+            (spotOk, spotTick) = log_.meanFresh(lid, SPOT_WINDOW, maxStand);
             if (!spotOk) revert NoHealthyReference(id, SPOT_WINDOW);
         }
 
@@ -369,7 +378,7 @@ contract HookrBuybackBurn is HookrGoverned {
     function _checkQueue(bytes32 kind, bytes calldata arguments) internal view override {
         if (kind == SET_ROUTER) {
             address next = abi.decode(arguments, (address));
-            if (next == address(0) || next.code.length == 0) revert InvalidAddress(next);
+            _checkRouter(next);
             return;
         }
         if (kind == SET_POOL) {
@@ -417,11 +426,19 @@ contract HookrBuybackBurn is HookrGoverned {
     }
 
     function _setRouter(address next) private {
-        if (next == address(0) || next.code.length == 0) revert InvalidAddress(next);
+        _checkRouter(next);
         bytes32 codeHash = next.codehash;
         emit RouterSet(router, next, codeHash);
         router = next;
         routerCodeHash = codeHash;
+    }
+
+    /// @dev A router with code that swaps on the PoolManager the log reads, so the reference and the swap are one pool.
+    function _checkRouter(address next) private view {
+        if (next == address(0) || next.code.length == 0) revert InvalidAddress(next);
+        if (address(IHookrBuybackRouter(next).poolManager()) != address(priceLog.manager())) {
+            revert RouterManagerMismatch(next);
+        }
     }
 
     function _setPool(PoolKey memory next, bytes32 logId_) private {
@@ -429,6 +446,7 @@ contract HookrBuybackBurn is HookrGoverned {
         PoolId previous = pool.toId();
         pool = next;
         logId = logId_;
+        logInterval = priceLog.params(logId_).interval;
         emit PoolSet(previous, next.toId(), logId_);
     }
 
@@ -446,7 +464,7 @@ contract HookrBuybackBurn is HookrGoverned {
     }
 
     /// @dev A reference window spans at least `MIN_RECORDS_PER_WINDOW` of the log's intervals and is servable by it (at
-    ///      most its `MAX_WINDOW_INTERVALS`), so one record weighs at most a quarter of it.
+    ///      most its `MAX_WINDOW_INTERVALS`).
     function _checkWindow(bytes32 logId_, uint32 window) private view {
         uint256 interval = priceLog.params(logId_).interval;
         if (uint256(window) < interval * MIN_RECORDS_PER_WINDOW || !priceLog.servable(logId_, window)) {

@@ -31,13 +31,16 @@ both, so:
 `mean(id, window)` and `meanUntil(id, window, end)` are time-weighted over the step function of the records:
 
 - a record weighs nothing in a window that ends when it is written, so a pumped record counts only for the time it
-  stands, which is at least one interval in which anyone may record the true price over it;
+  stands, until the next record replaces it, at least one interval later;
 - a mean fails closed (`ok = false`) when the ring does not reach back to the window's start, when a record that weighs
   in it is thin, or when the window is longer than `MAX_WINDOW_INTERVALS` (48) intervals;
+- `meanFresh(id, window, maxStand)` also fails closed when a record that weighs in the window stood longer than
+  `maxStand` seconds (until the next record, or now), so a reader can refuse a mean one old or pumped record dominates
+  because nobody recorded after it;
 - ticks are the pool's own (currency0's price in currency1); a reader whose subject is currency1 negates them, which is
   exact because the mean rounds toward zero.
 
-Other views: `latest`, `recordAt`, `recent(n)`, `params`, `poolOf`, `count`, `isOpen`, `servable`, `logId`.
+Other views: `meanFresh`, `latest`, `recordAt`, `recent(n)`, `params`, `poolOf`, `count`, `isOpen`, `servable`, `logId`.
 
 ## Parameters
 
@@ -61,23 +64,24 @@ Local pool (`test_gas_readsColdAndWarm`, `gas.log`); "cold" is storage slots not
 
 | Call | Cold | Warm |
 |---|---|---|
-| `record` | 41,394 | |
-| `mean` 900 s (4 records) | 16,465 | 6,238 |
-| `mean` 1,800 s (7 records) | 25,520 | 9,295 |
-| `mean` 3,600 s (13 records) | 43,632 | 15,407 |
+| `record` | 41,416 | |
+| `mean` 900 s (4 records) | 16,981 | 6,754 |
+| `mean` 1,800 s (7 records) | 26,408 | 10,183 |
+| `mean` 3,600 s (13 records) | 45,264 | 17,039 |
 | `recent(13)` | 53,286 | |
 
-On the live 4663 pool (`labs/hooks/treasury-buyback/fork-run.log`): `record` 45,385 with the log's and the
-PoolManager's slots cold; `mean` 1,800 s 25,523 cold / 9,402 warm; `mean` 60 s 7,413 / 3,292.
+On the live 4663 pool (`labs/hooks/treasury-buyback/fork-run.log`): `record` 45,407 with the log's and the
+PoolManager's slots cold; `mean` 1,800 s 26,411 cold / 10,290 warm; `mean` 60 s 7,557 / 3,436. `meanFresh` reads the
+same slots.
 
 ## Tests
 
-`forge test --root labs --match-path 'hooks/price-log/test/*'`: 58 pass, every suite on rising and on falling pool
+`forge test --root labs --match-path 'hooks/price-log/test/*'`: 60 pass, every suite on rising and on falling pool
 ticks.
 
 | Suite | What it shows |
 |---|---|
-| `HookrPriceLog.t.sol` (19 × 2) | Opening: idempotent, keyed by parameters, every bound; unknown logs revert; the first record waits for the pool and for liquidity, clamps to the seed, is the spot without one, and is refused inside an unlock; once per interval; the clamp; refusal inside an unlock only when a record is due; the thin flag; the ring wrapping at 64; the newest record weighing nothing; exact time weighting; failing closed; a thin record failing a mean only while it weighs; past-ending means; a fuzz of price paths against an independent model of the step function; gas |
+| `HookrPriceLog.t.sol` (20 × 2) | Opening: idempotent, keyed by parameters, every bound; unknown logs revert; the first record waits for the pool and for liquidity, clamps to the seed, is the spot without one, and is refused inside an unlock; once per interval; the clamp; refusal inside an unlock only when a record is due; the thin flag; the ring wrapping at 64; the newest record weighing nothing; exact time weighting; failing closed; a thin record failing a mean only while it weighs; past-ending means; `meanFresh` refusing a record that stood too long and matching `mean` otherwise; a fuzz of price paths against an independent model of the step function; gas |
 | `PriceLogInvariant.t.sol` (3 × 2) | Over random swaps, waits, records, records from inside an unlock and liquidity pulls: records move at most the clamp and come at least an interval apart; nothing is ever written from inside an unlock; every mean equals the model and stays inside the records it weighs |
 | `PriceLogAttack.t.sol` (7 × 2) | A flash pump inside an unlock (refused); pump, record, dump in one transaction (recorded +500 of +5,000, weighs nothing that block, moves the 1,800 s mean 83 ticks after one interval); owning every record for a window (the newest at +3,000 after six, the mean +1,748, exactly the clamp's triangle); a hostile seed (another log); record spam (one per interval); JIT liquidity around each record (defeats the thin flag: pinned limitation); a past-ending mean ignores later records |
 
@@ -87,10 +91,12 @@ ticks.
   pull a pool's liquidity can add a position around each record and remove it after, so a thin pool reads deep and moves
   for dust; only the clamp bounds it. The Oracle Recorder's S2-1 in this design. Read logs only on pools whose liquidity
   is locked.
-- **An attacker who owns every record for a window moves the mean.** One clamped step per interval, so six owned records
-  put the 1,800 s mean 1,748 ticks (~19%) over the truth. Each step needs the pool held at that price outside an unlock,
-  a paid move anyone may arbitrage; on a pool nobody arbitrages, it is cheap. Readers bound what a moved mean can buy
-  (the buyback's spend cap; the engine's rise cap).
+- **An attacker who owns every record for a window moves the mean, with no price held.** A record needs only a pump,
+  the record and the dump in one transaction, so the pool sits at the true price between records and arbitrage has
+  nothing to correct. The cost is one round trip of fees per record, and the attacker has to be first to record each
+  interval. One clamped step per interval, so six owned records put the 1,800 s mean 1,748 ticks (~19%) over the
+  truth on the local pool. Readers bound what a moved mean can buy (the buyback's spend cap; the engine's rise cap), and
+  a keeper that records the moment each record is due takes the records from the attacker.
 - **It lags fast real moves**: at 500 ticks a record every 5 minutes, an 8x rally took 43 records (3.6 h) on the fork.
 - **One log per parameter set.** Readers that ask for different parameters on one pool record separately; a reader
   should take the defaults unless it has a reason not to.

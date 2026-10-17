@@ -23,8 +23,11 @@ import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 ///         - A record taken while the pool's in-range liquidity is under `minLiquidity` is marked thin; a mean that
 ///           weighs a thin record fails closed.
 ///         - Means are time-weighted over the step function of the records, and a record weighs nothing in a window
-///           that ends when it is written: a pumped record counts only for the time it stands, which is at least one
-///           interval in which anyone may record the true price over it.
+///           that ends when it is written: a pumped record counts only for the time it stands, until the next record
+///           replaces it, at least one interval later.
+///         - `meanFresh` also fails closed when any record weighing in the window stood longer than `maxStand`
+///           seconds, so a reader can refuse a mean that one old or pumped record dominates because nobody recorded
+///           after it.
 ///         Ticks are the pool's own (the price of currency0 in currency1); a reader whose subject is currency1 negates
 ///         them. The ring holds 64 records, and a reader's window may span at most `MAX_WINDOW_INTERVALS` intervals,
 ///         so a servable window always fits the ring.
@@ -219,13 +222,19 @@ contract HookrPriceLog {
 
     /// @notice The time-weighted mean pool tick over the `window` seconds ending now, and whether it is usable.
     function mean(bytes32 id, uint32 window) external view returns (bool ok, int24 tick) {
-        return _mean(_log(id), window, block.timestamp);
+        return _mean(_log(id), window, block.timestamp, type(uint256).max);
+    }
+
+    /// @notice `mean`, failing closed when a record that weighs in the window stood (from its time until the next
+    ///         record, or until now) longer than `maxStand` seconds.
+    function meanFresh(bytes32 id, uint32 window, uint32 maxStand) external view returns (bool ok, int24 tick) {
+        return _mean(_log(id), window, block.timestamp, maxStand);
     }
 
     /// @notice The time-weighted mean pool tick over the `window` seconds ending at `end` (not after now).
     function meanUntil(bytes32 id, uint32 window, uint32 end) external view returns (bool ok, int24 tick) {
         if (end > block.timestamp) return (false, 0);
-        return _mean(_log(id), window, end);
+        return _mean(_log(id), window, end, type(uint256).max);
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -245,9 +254,13 @@ contract HookrPriceLog {
     }
 
     /// @dev The time-weighted mean of the records' step function over [end - window, end]. A record written at or after
-    ///      `end` weighs nothing. Fails closed when the ring does not reach back to the window's start or a record that
-    ///      carries weight in it is thin.
-    function _mean(Log storage l, uint32 window, uint256 end) internal view returns (bool ok, int24 tick) {
+    ///      `end` weighs nothing. Fails closed when the ring does not reach back to the window's start, a record that
+    ///      carries weight in it is thin, or such a record stood longer than `maxStand` (until the next record or `end`).
+    function _mean(Log storage l, uint32 window, uint256 end, uint256 maxStand)
+        internal
+        view
+        returns (bool ok, int24 tick)
+    {
         uint256 c = l.count;
         if (c == 0 || window == 0 || end < window) return (false, 0);
         if (uint256(window) > uint256(l.interval) * MAX_WINDOW_INTERVALS) return (false, 0);
@@ -259,7 +272,7 @@ contract HookrPriceLog {
             Record memory cp = l.ring[(head + CAPACITY - i) % CAPACITY];
             uint256 segStart = cp.time > from ? cp.time : from;
             if (segEnd > segStart) {
-                if (cp.thin) return (false, 0);
+                if (cp.thin || segEnd - cp.time > maxStand) return (false, 0);
                 acc += int256(cp.tick) * int256(segEnd - segStart);
             }
             if (cp.time <= from) return (true, int24(acc / int256(uint256(window))));

@@ -408,8 +408,11 @@ contract BuybackFork is Test {
         // The deploy-day cap: one 0.01 ETH chunk now, the next as it refills.
         vm.expectRevert(abi.encodeWithSelector(HookrBuybackBurn.SpendLimitExceeded.selector, 0.01 ether, 0));
         buyback.buyback(0.01 ether);
-        wait(1800);
-        settle(0);
+        // A keeper records every interval through the period (the buyback refuses a reference nobody kept recording).
+        for (uint256 i; i < 6; ++i) {
+            wait(300);
+            plog.record(logId);
+        }
         assertGt(buyback.buyback(0.01 ether), 0, "a period later");
     }
 
@@ -437,8 +440,67 @@ contract BuybackFork is Test {
         console2.log("pump: ETH in", hi);
         console2.log("pump: pool ticks moved", int256(spot()) - before);
         uint256 deadBefore = IERC20Min(token).balanceOf(DEAD);
-        vm.expectRevert();
+        // The live router refuses the swap under its amountBound, the buyback's floor (HookrRouter's Slippage()).
+        vm.expectRevert(bytes4(keccak256("Slippage()")));
         buyback.buyback(0.01 ether);
         assertEq(IERC20Min(token).balanceOf(DEAD), deadBefore);
+    }
+
+    /// @notice Owned records with no price held, on the live pool with its real fees: six pump-record-dump round trips
+    ///         lift the reference, then a sandwich sells the buyback one cap at the lifted floor. Measures what the
+    ///         attacker pays and what it nets.
+    function test_fork_pumpRecordDumpThenSandwich() public {
+        if (!onFork) vm.skip(true);
+        for (uint256 i; i < 5; ++i) {
+            buy(trader, 0.2 ether);
+        }
+        settle(7);
+        int24 truth = spot();
+        (, int24 ref0) = plog.mean(logId, 1800);
+        uint256 fair = expectedAt(0.01 ether, ref0);
+        uint256 start = address(attacker).balance;
+        uint256 pumpEth = 0.6 ether; // moves the pool a little over 500 ticks here
+        for (uint256 i; i < 6; ++i) {
+            wait(300);
+            uint256 got = buy(attacker, pumpEth);
+            plog.record(logId);
+            attacker.swap(false, got, 0);
+        }
+        uint256 recordsCost = start - address(attacker).balance;
+        wait(299);
+        (, int24 lifted) = plog.mean(logId, 1800);
+        console2.log("pool tick before the round trips", int256(truth));
+        console2.log("pool tick after the round trips", int256(spot()));
+        console2.log("1800 s mean moved (pool ticks; down = HOOKR pricier)", int256(lifted) - ref0);
+        console2.log("six pump-record-dump round trips cost the attacker (ETH wei)", recordsCost);
+
+        // The sandwich: the biggest pump the lifted floor still accepts.
+        uint256 lo;
+        uint256 hi = 10 ether;
+        for (uint256 i; i < 30; ++i) {
+            uint256 mid = (lo + hi) / 2;
+            uint256 snap = vm.snapshotState();
+            buy(attacker, mid);
+            bool ok;
+            try buyback.buyback(0.01 ether) {
+                ok = true;
+            } catch {}
+            vm.revertToState(snap);
+            if (ok) lo = mid;
+            else hi = mid;
+        }
+        uint256 before = address(attacker).balance;
+        uint256 got2 = buy(attacker, lo);
+        uint256 out = buyback.buyback(0.01 ether);
+        attacker.swap(false, got2, 0);
+        int256 sandwichNet = int256(address(attacker).balance) - int256(before);
+        console2.log("sandwich pump (ETH wei)", lo);
+        console2.log("HOOKR bought", out);
+        console2.log("HOOKR fair at the true reference", fair);
+        console2.log("short of fair (bps)", fair > out ? (fair - out) * 10_000 / fair : 0);
+        console2.log("sandwich net to the attacker (ETH wei, signed)");
+        console2.logInt(sandwichNet);
+        console2.log("attacker net over the whole attack (ETH wei, signed)");
+        console2.logInt(sandwichNet - int256(recordsCost));
     }
 }

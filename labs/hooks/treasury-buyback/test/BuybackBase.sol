@@ -34,6 +34,10 @@ contract TestBuybackRouter is IUnlockCallback {
         manager = m;
     }
 
+    function poolManager() external view returns (IPoolManager) {
+        return manager;
+    }
+
     function swap(IHookrBuybackRouter.Swap calldata p, address, uint256[] calldata)
         external
         payable

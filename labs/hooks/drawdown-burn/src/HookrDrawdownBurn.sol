@@ -56,8 +56,8 @@ interface IDrawdownBurnToken {
 ///           and is refused while the PoolManager is unlocked, so a free in-unlock pump cannot be recorded and a paid
 ///           pump moves one record by a bounded step.
 ///         - Means are time-weighted over the step function of the records, and the newest record weighs nothing
-///           when it is written: a pumped record only counts for the time it stands, which is at least one interval in
-///           which anyone may record the true price over it.
+///           when it is written: a pumped record only counts for the time it stands, until the next record replaces
+///           it, at least one interval later.
 ///         - The all-time high ratchets up only when every record across at least `athWindow` seconds, and at least
 ///           `athMinCheckpoints` of them, sits above it, to the lowest of those records, and never by more than the
 ///           rise cap allows for the time since the last rise. It never goes down.
@@ -474,7 +474,8 @@ contract HookrDrawdownBurn is IUnlockCallback {
     function _ratchet() internal {
         int256 st = _supplyTick();
         // Records are at least one interval apart, so a run spanning `athWindow` holds at most this many.
-        HookrPriceLog.Record[] memory recs = log.recent(logId, uint256(cfg.athWindow) / cfg.checkpointInterval + 1);
+        uint256 interval = cfg.checkpointInterval;
+        HookrPriceLog.Record[] memory recs = log.recent(logId, (uint256(cfg.athWindow) + interval - 1) / interval + 1);
         uint32 newestTime = recs[0].time;
         int256 low = type(int256).max;
         uint256 n;

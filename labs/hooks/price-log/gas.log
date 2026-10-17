@@ -1,6 +1,6 @@
-[PASS] test_gas_readsColdAndWarm() (gas: 1073825)
-  gas: record (cold slots) 41394
-  gas: mean window / cold / warm 900 16465 6238
-  gas: mean window / cold / warm 1800 25520 9295
-  gas: mean window / cold / warm 3600 43632 15407
+[PASS] test_gas_readsColdAndWarm() (gas: 1080403)
+  gas: record (cold slots) 41416
+  gas: mean window / cold / warm 900 16981 6754
+  gas: mean window / cold / warm 1800 26408 10183
+  gas: mean window / cold / warm 3600 45264 17039
   gas: recent(13) cold 53286
