@@ -16,6 +16,7 @@ import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {LiquidityAmounts} from "@uniswap/v4-core/test/utils/LiquidityAmounts.sol";
 
 import {HookrDrawdownBurn} from "../src/HookrDrawdownBurn.sol";
+import {HookrPriceLog} from "../../price-log/src/HookrPriceLog.sol";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // The live Hookr 1 surface this run touches, copied by ABI from hookr-1/src (HookrTypes, IHookrLauncher) and
@@ -252,6 +253,7 @@ contract DrawdownBurnFork is Test {
     PoolId internal id;
     address internal token;
     HookrDrawdownBurn internal engine;
+    HookrPriceLog internal priceLog;
     Trader internal trader;
     Trader internal attacker;
     uint128 internal launchLiquidity;
@@ -283,6 +285,7 @@ contract DrawdownBurnFork is Test {
         PoolKey memory k = key;
         vm.revertToState(snap);
 
+        priceLog = new HookrPriceLog(MANAGER);
         engine = new HookrDrawdownBurn(_config(k));
         assertEq(engine.count(), 0, "deployed before its pool");
         _launch(address(engine));
@@ -304,6 +307,7 @@ contract DrawdownBurnFork is Test {
 
     function _config(PoolKey memory k) internal view returns (HookrDrawdownBurn.Config memory c) {
         c.manager = MANAGER;
+        c.log = priceLog;
         c.key = k;
         c.subjectIsCurrency0 = false; // native ETH sorts first
         // The first record is clamped to the opening price (the token's price tick is minus the pool tick).

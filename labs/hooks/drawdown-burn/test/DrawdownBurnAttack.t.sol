@@ -13,6 +13,7 @@ import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {ModifyLiquidityParams, SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 
 import {HookrDrawdownBurn} from "../src/HookrDrawdownBurn.sol";
+import {HookrPriceLog} from "../../price-log/src/HookrPriceLog.sol";
 import {DrawdownBurnBase} from "./DrawdownBurnBase.sol";
 
 /// @dev The free pump: inside one unlock, swap the price up (owing the PoolManager, paying nothing yet), record, then
@@ -134,6 +135,8 @@ contract DrawdownBurnAttackTest is DrawdownBurnBase {
         // Same attack with a 5%/h rise cap.
         HookrDrawdownBurn.Config memory c = defaults();
         c.athRiseCapBpsPerHour = 500;
+        // A fresh log: on the same log the second engine would read the pumped history the first attack left.
+        c.log = new HookrPriceLog(IPoolManager(address(manager)));
         engine = new HookrDrawdownBurn(c);
         steps(12);
         uint256 t0 = vm.getBlockTimestamp();
@@ -232,6 +235,7 @@ contract DrawdownBurnAttackTest is DrawdownBurnBase {
         moveTo(0);
         HookrDrawdownBurn.Config memory c = defaults();
         c.athRiseCapBpsPerHour = 500;
+        c.log = new HookrPriceLog(IPoolManager(address(manager)));
         engine = new HookrDrawdownBurn(c);
         steps(12);
         int32 a0 = engine.ath();

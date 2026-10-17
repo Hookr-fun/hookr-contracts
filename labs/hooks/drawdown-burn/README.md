@@ -32,10 +32,14 @@ inside the run, and `claim(to)` pays them, so a frozen recipient that refuses a 
 
 ## How it prices without an oracle
 
-Every price it acts on comes from its own records, never from the spot of the transaction that calls it: a floor built
-from same-transaction spot moves with whoever pushes the price in that transaction.
+Every price it acts on comes from the pool's records in the shared price log (`labs/hooks/price-log`, `HookrPriceLog`),
+never from the spot of the transaction that calls it: a floor built from same-transaction spot moves with whoever pushes
+the price in that transaction. The engine opens its pool's log there at deployment with its own checkpoint parameters
+(`checkpointInterval`, `maxMoveTicks`, `minLiquidity`, `seedTick`), or finds it already open, so every block that asks for
+the same parameters on the same pool reads the same records.
 
-- **Records.** `checkpoint()` is permissionless and writes the pool's spot tick at most once per `checkpointInterval`.
+- **Records.** `checkpoint()` is permissionless and records into the log at most once per `checkpointInterval`; anyone
+  may also call the log's `record` directly, and those records count the same.
   Each record is clamped to `maxMoveTicks` from the previous one, and refused while the PoolManager is unlocked, so a
   free pump inside one unlock cannot be recorded and a paid pump moves one record by a bounded step. The ring holds 64.
   The first record has nothing to clamp against, so `start()` (or the constructor, on a live pool) refuses it inside an
@@ -51,8 +55,8 @@ from same-transaction spot moves with whoever pushes the price in that transacti
 - **Thin records.** A record taken while in-range liquidity is under `minLiquidity` is marked thin. A window that weighs
   one cannot raise the high, set a tier, price a buyback or close an epoch.
 - **Flow epochs.** Ika's switch, without counting swaps: in a pool whose liquidity did not move, net quote in or out
-  over an epoch is fixed by where the price started and ended. At each epoch's first record the engine compares the mean
-  over `epochWindow` with the epoch's open: up by more than the dead band accumulates (net in), down by more spends
+  over an epoch is fixed by where the price started and ended. On its first call in a new epoch the engine compares the
+  mean over `epochWindow` ending at the epoch's boundary with the epoch's open: up by more than the dead band accumulates (net in), down by more spends
   (net out), inside it keeps the mode. Construction refuses a dead band that one clamped record could cross.
 
 ## Parameters
@@ -82,7 +86,7 @@ Every one is fixed in the constructor, checked against its bounds there, and can
 | `tipBps` (run caller) / `checkpointReward` | 0 / 0 | ≤ 50 / ≤ 1% of the spend cap, paid only from unallocated quote |
 | `coAuthorBps` / `coAuthor` | 0 (decision 9) | ≤ 2,000 of what the engine spends |
 
-Fixed, not knobs: the dead address, no owner, the 64-record ring, the refusal inside an unlock, no buy under 1% of the
+Fixed, not knobs: the dead address, no owner, the log's 64-record ring, the refusal inside an unlock, no buy under 1% of the
 spend cap, four checkpoint rewards kept unallocated when the reward is on, and the buy sizing below.
 
 **Buy sizing.** A Hookr root refuses an unauthenticated exact-input buy that stops at its price limit with fees to
@@ -91,7 +95,7 @@ tick's liquidity and halves it up to three times if it still stops there.
 
 ## Tests
 
-`forge test --root labs --match-path 'hooks/drawdown-burn/test/*'`: 98 pass, each suite in both orientations (the token
+`forge test --root labs --match-path 'hooks/drawdown-burn/test/*'`: 108 pass, each suite in both orientations (the token
 as currency0 and as currency1). The three fork tests skip without an RPC.
 
 | Suite | What it shows |
@@ -99,6 +103,7 @@ as currency0 and as currency1). The three fork tests skip without an RPC.
 | `HookrDrawdownBurn.t.sol` (35 × 2) | Bounds; seeding and `start()` (refused inside an unlock or thin; a pump around it moves the first record one step at most; MARKET_CAP measured at start); a refusing co-author cannot stop a run; rate limit; clamp; refusal inside an unlock; thin records; time-weighted means; the high's first set, ratchet, rise cap, never falling; Ika's tiers; split and burn; the spend cap refilling; no buy above reference + slippage; the wall buying only under its price; SINK; tip and co-author; collecting from a queue; both epoch modes and the net-out sink; market-cap drawdown deepening with burns; fuzz on tick math, tier order, clamp and spend |
 | `DrawdownBurnInvariant.t.sol` (6 × 2) | Over random swaps, waits, records, runs, donations and liquidity pulls: the high never falls and never exceeds what records held; records move at most the clamp; budgets stay backed; the engine never holds the token; spend stays within the cap |
 | `DrawdownBurnAttack.t.sol` (8 × 2) | One-block pump around a record (records +500 of +5,000, high unmoved); free pump inside an unlock (refused); owning every record for 2 hours (lifts the high, and the rise cap bounds it); dump before a run (tier unchanged); sandwich (no buy); epoch boundary (one paid record cannot flip the mode, three can); liquidity pull (thin, no high, no spend); JIT liquidity around each record (passes the floor: a pinned limitation, below) |
+| `DrawdownBurnSharedLog.t.sol` (5 × 2) | Reading the shared log: two engines with the same parameters share one log (no warm-up for the second); the log's pool ticks read in the subject's orientation, seed tick included; records written straight to the log raise the high; an epoch closes on the mean ending at its boundary even when the engine is called two hours late |
 | `DrawdownBurnFork.t.sol` (3) | On Robinhood Chain 4663, below |
 
 ### Fork run (4663, L2 block 91,088,307, parent 26,213,644)
@@ -112,13 +117,31 @@ PoolManager by runtime keccak, launches a new token through the live Launcher wi
 
 | Step | Result |
 |---|---|
-| `checkpoint()` on the live pool | 63,138 gas |
+| `checkpoint()` on the live pool | 82,789 gas (63,138 before the shared log) |
 | 40 ETH of buys move the price 21,108 ticks | the clamp took 43 records (3.6 h) to catch up; the high then equals the held price |
 | Sells take 30.2% off | 0.330 ETH pending on the live sell queue; tier 2 |
-| `run()`: collect + split + buyback through the live root | 371,881 gas; 0.264 ETH collected (80% after Hookr's share), half to the burn budget, half to the wall; 0.05 ETH (the cap) spent; 426,799 tokens to the dead address (the buyback plus Auto Burn on the engine's own buy) |
+| `run()`: collect + split + buyback through the live root | 377,013 gas (371,881 before the shared log); 0.264 ETH collected (80% after Hookr's share), half to the burn budget, half to the wall; 0.05 ETH (the cap) spent; 426,799 tokens to the dead address (the buyback plus Auto Burn on the engine's own buy) |
 | Through the wall (60% under the high) | the wall reserve filled to 1 wei over six runs; 4.59M tokens burned; the price never above the wall price |
 | Pump +5,000 ticks, record, dump (one transaction) | record +500; round trip lost 0.572 ETH of 8.90 ETH pumped (642 bps: Auto Burn, sell tax, LP fee) |
 | Pump 1,000 ticks over the reference before a run | no buyback; 0.0675 ETH budget held for the next run |
+
+## Reading the shared log (2026-10-17)
+
+The engine's ring, clamp, unlock refusal, thin flag, seed clamp and mean moved to `HookrPriceLog`; the engine reads it.
+The fork run's every price, tier, budget and burn figure is unchanged from the engine's own ring (`fork-run.log`); only
+gas moved. What changes:
+
+- **The log is the pool's, not the engine's.** An engine deployed on a pool whose log already has history starts from
+  it, with no warm-up, and inherits whatever was recorded there, pumped records included. The attack suite's second,
+  rise-capped engines open a fresh log for that reason.
+- **The high is measured on the newest record**, once per new record, whenever the engine is next called, rather than
+  as each record is written. It still rises only when every record across `athWindow` sits above it, and never faster
+  than the rise cap allows for the time since the last rise; a late measurement can miss a high that the price has
+  already left.
+- **An epoch closes at its boundary.** The close is the mean over `epochWindow` ending at the boundary, so a late call
+  reads the same close as a prompt one while the log still reaches back over it. A log that no longer does (the ring
+  wrapped) fails closed, and the mode is kept.
+- **Gas.** `checkpoint()` costs ~20k more (the external calls and the `recent` copy); `run()` ~5k more.
 
 ## What the tests do not show
 

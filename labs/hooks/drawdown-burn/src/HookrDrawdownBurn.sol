@@ -14,6 +14,8 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 
+import {HookrPriceLog} from "../../price-log/src/HookrPriceLog.sol";
+
 /// @notice The one call the engine makes on a Tax + Conversion queue: pay the creator share, as quote, to the queue's
 ///         frozen asset recipient (this engine). Permissionless on the queue itself.
 interface IDrawdownBurnTaxQueue {
@@ -45,11 +47,14 @@ interface IDrawdownBurnToken {
 ///         holds (normally the sell side of Tax + Conversion, paid to it by the pool's queue) on buybacks that burn the
 ///         pool's subject token, with a burn share set by how far the price sits under its all-time high, and keeps the
 ///         rest as a wall: a buy order at a fixed distance under the all-time high whose fills are burned too.
-/// @dev    Every price the engine acts on comes from its own checkpoints, never from the spot price of the current
-///         transaction:
-///         - `checkpoint()` is permissionless and records the pool's spot tick at most once per `checkpointInterval`.
-///           Each record is clamped to `maxMoveTicks` from the previous record and is refused while the PoolManager is
-///           unlocked, so a free in-unlock pump cannot be recorded and a paid pump moves one record by a bounded step.
+/// @dev    Every price the engine acts on comes from the pool's shared price log (`HookrPriceLog`), never from the spot
+///         price of the current transaction. The engine opens (or finds) the log of its pool with its own checkpoint
+///         parameters at deployment, so every block that asks for the same parameters on the same pool reads the
+///         same records:
+///         - `checkpoint()` is permissionless and records into the log at most once per `checkpointInterval` (anyone
+///           may also record into the log directly). Each record is clamped to `maxMoveTicks` from the previous record
+///           and is refused while the PoolManager is unlocked, so a free in-unlock pump cannot be recorded and a paid
+///           pump moves one record by a bounded step.
 ///         - Means are time-weighted over the step function of the records, and the newest record weighs nothing
 ///           when it is written: a pumped record only counts for the time it stands, which is at least one interval in
 ///           which anyone may record the true price over it.
@@ -94,6 +99,9 @@ contract HookrDrawdownBurn is IUnlockCallback {
     /// @notice Everything a creator sets at launch. Bounds are in `_validate`.
     struct Config {
         IPoolManager manager;
+        /// @notice The shared price log, on `manager`. The engine opens its pool's log there with the checkpoint
+        ///         parameters below, or finds it already open.
+        HookrPriceLog log;
         PoolKey key;
         /// @notice Whether the subject (the token bought back and burned) is currency0. The other side is the quote.
         bool subjectIsCurrency0;
@@ -101,7 +109,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
         ///         read from the advisory on each run, so the engine can be deployed before the pool (it must be: the
         ///         queue's recipient is frozen at launch). Anyone may also fund the engine directly.
         address taxAdvisory;
-        // Checkpoints
+        // Checkpoints: the parameters of the pool's price log
         uint32 checkpointInterval;
         uint24 maxMoveTicks;
         uint128 minLiquidity;
@@ -144,8 +152,9 @@ contract HookrDrawdownBurn is IUnlockCallback {
         uint16 coAuthorBps;
     }
 
-    /// @notice One record. `tick` is the subject's price as a tick (higher is pricier, whichever currency it is),
-    ///         clamped against the previous record; `liquidity` is the pool's in-range liquidity when recorded.
+    /// @notice One record of the log, as the engine reads it. `tick` is the subject's price as a tick (higher is
+    ///         pricier, whichever currency it is), clamped against the previous record; `liquidity` is the pool's
+    ///         in-range liquidity when recorded.
     struct Checkpoint {
         uint32 time;
         int24 tick;
@@ -158,7 +167,6 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // ---------------------------------------------------------------------------------------------------------------
 
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
-    uint256 public constant CAPACITY = 64;
     uint256 internal constant BPS = 10_000;
 
     // Bounds
@@ -192,6 +200,9 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // ---------------------------------------------------------------------------------------------------------------
 
     IPoolManager public immutable manager;
+    HookrPriceLog public immutable log;
+    /// @notice The id of the pool's log in `log`.
+    bytes32 public immutable logId;
     PoolId public immutable poolId;
     bool public immutable subjectIsCurrency0;
     Currency public immutable subject;
@@ -214,11 +225,10 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // State
     // ---------------------------------------------------------------------------------------------------------------
 
-    Checkpoint[64] internal ring;
-    /// @notice The slot of the newest record.
-    uint8 public head;
-    /// @notice How many records the ring holds (at most CAPACITY).
-    uint8 public count;
+    /// @notice Whether the engine has started: the log holds a record and the engine's state is seeded from it.
+    bool public started;
+    /// @notice The time of the newest record the high was last measured against.
+    uint32 internal ratchetedAt;
 
     /// @notice The all-time high, in reference ticks (price ticks, plus the supply tick under MARKET_CAP).
     int32 public ath;
@@ -247,7 +257,6 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // ---------------------------------------------------------------------------------------------------------------
 
     event Started(uint32 time, int24 tick, uint128 liquidity);
-    event Checkpointed(uint32 time, int24 spotTick, int24 recordedTick, uint128 liquidity, bool thin);
     event AthRaised(int32 previous, int32 ath, bool capped);
     event EpochClosed(uint32 epoch, int24 open, int24 close, Mode mode);
     event Allocated(uint256 income, uint8 tier, uint256 toBurn, uint256 toWall);
@@ -284,6 +293,20 @@ contract HookrDrawdownBurn is IUnlockCallback {
         subject = c.subjectIsCurrency0 ? c.key.currency0 : c.key.currency1;
         quote = c.subjectIsCurrency0 ? c.key.currency1 : c.key.currency0;
         if (subject.isAddressZero()) revert InvalidConfig("subject native");
+        if (address(c.log) == address(0) || c.log.manager() != c.manager) revert InvalidConfig("log");
+        log = c.log;
+        // The log keeps the pool's own ticks: the subject's seed tick is negated when the subject is currency1.
+        logId = c.log
+            .open(
+                poolId,
+                HookrPriceLog.Params({
+                    interval: c.checkpointInterval,
+                    maxMoveTicks: c.maxMoveTicks,
+                    minLiquidity: c.minLiquidity,
+                    hasSeedTick: c.hasSeedTick,
+                    seedTick: c.hasSeedTick ? (c.subjectIsCurrency0 ? c.seedTick : -c.seedTick) : int24(0)
+                })
+            );
 
         slippageTicks = _ratioTicks(BPS + c.maxSlippageBps);
         wallTicks = -_ratioTicks(BPS - c.wallOffsetBps);
@@ -303,22 +326,23 @@ contract HookrDrawdownBurn is IUnlockCallback {
         cfg = c;
 
         (uint160 sqrtPriceX96,,,) = c.manager.getSlot0(c.key.toId());
-        if (sqrtPriceX96 != 0) _seed();
+        if (sqrtPriceX96 != 0) _start();
     }
 
-    /// @notice Writes the first record for an engine deployed before its pool was initialized. Once.
+    /// @notice Starts an engine deployed before its pool was initialized: writes the log's first record if it has
+    ///         none, and seeds the engine from the newest record. Once.
     function start() external nonReentrant {
-        if (count != 0) revert AlreadyStarted();
-        _seed();
+        if (started) revert AlreadyStarted();
+        _start();
     }
 
     // ---------------------------------------------------------------------------------------------------------------
     // Permissionless calls
     // ---------------------------------------------------------------------------------------------------------------
 
-    /// @notice Records the pool's price if `checkpointInterval` has passed since the last record, then rolls the epoch
-    ///         and tries to raise the all-time high. Pays the caller `checkpointReward` from unallocated quote when a
-    ///         record was written and the engine holds enough.
+    /// @notice Records the pool's price into the log if `checkpointInterval` has passed since the last record, then
+    ///         rolls the epoch and tries to raise the all-time high. Pays the caller `checkpointReward` from unallocated
+    ///         quote when this call wrote a record and the engine holds enough.
     function checkpoint() external nonReentrant returns (bool recorded) {
         recorded = _checkpoint();
         if (recorded && cfg.checkpointReward != 0) {
@@ -331,7 +355,6 @@ contract HookrDrawdownBurn is IUnlockCallback {
     ///         tier, work the wall, then spend the burn budget (unless the epoch is accumulating). Both buys share
     ///         the spend cap.
     function run() external nonReentrant {
-        if (count == 0) revert NotStarted();
         _checkpoint();
         _collect();
 
@@ -360,10 +383,14 @@ contract HookrDrawdownBurn is IUnlockCallback {
         return cfg;
     }
 
-    /// @notice The record `back` steps before the newest (0 = newest).
+    /// @notice How many records the pool's log holds (at most the log's capacity).
+    function count() external view returns (uint8) {
+        return uint8(log.count(logId));
+    }
+
+    /// @notice The log's record `back` steps before the newest (0 = newest), with the subject's price as its tick.
     function checkpointAt(uint256 back) external view returns (Checkpoint memory) {
-        require(back < count, "out of range");
-        return ring[(uint256(head) + CAPACITY - back) % CAPACITY];
+        return _orient(log.recordAt(logId, back));
     }
 
     /// @notice The time-weighted mean price tick over `window` seconds ending now, and whether it is usable.
@@ -402,76 +429,58 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // Checkpoints, the high and epochs
     // ---------------------------------------------------------------------------------------------------------------
 
-    function _seed() internal {
-        // The first record has no previous one to clamp against: refuse it inside an unlock, refuse it thin, and clamp it
-        // to the seed tick the creator set (the opening price) when there is one, so a pump around `start()` moves it by
-        // at most one clamp step.
+    function _start() internal {
+        // The log refuses a first record inside an unlock or thin, and clamps it to the seed tick when there is one.
+        // An engine that starts on a log another block already started reads its newest record, which must not be
+        // thin, and never starts inside an unlock either.
         if (manager.isUnlocked()) revert ManagerUnlocked();
-        (int24 tick, uint128 liquidity) = _observe();
-        if (liquidity < cfg.minLiquidity) revert ThinStart();
-        if (cfg.hasSeedTick) {
-            int256 lo = int256(cfg.seedTick) - int256(uint256(cfg.maxMoveTicks));
-            int256 hi = int256(cfg.seedTick) + int256(uint256(cfg.maxMoveTicks));
-            tick = _clampTick(tick < lo ? lo : (tick > hi ? hi : int256(tick)));
-        }
+        log.record(logId);
+        Checkpoint memory first = _orient(log.latest(logId));
+        if (first.thin) revert ThinStart();
         if (cfg.measure == Reference.MARKET_CAP) {
             circulatingAtStart = _circulating(cfg.excluded);
             if (circulatingAtStart == 0) revert ThinStart();
         }
         uint32 now32 = uint32(block.timestamp);
-        ring[0] = Checkpoint(now32, tick, liquidity, false);
-        head = 0;
-        count = 1;
+        started = true;
         lastRise = now32;
+        ratchetedAt = first.time;
         if (cfg.hasInitialAth) {
             ath = cfg.initialAth;
             athSet = true;
         }
         epoch = uint32(block.timestamp / cfg.epochLength);
-        epochOpen = tick;
+        epochOpen = first.tick;
         bucketLevel = cfg.spendCap;
         bucketTime = now32;
-        emit Started(now32, tick, liquidity);
+        emit Started(first.time, first.tick, first.liquidity);
     }
 
-    function _checkpoint() internal returns (bool) {
-        if (count == 0) revert NotStarted();
-        Checkpoint memory last = ring[head];
-        if (block.timestamp < uint256(last.time) + cfg.checkpointInterval) return false;
-        // Inside an unlock a pump is free until the unlock settles; refuse to record there.
-        if (manager.isUnlocked()) revert ManagerUnlocked();
-
-        (int24 spot, uint128 liquidity) = _observe();
-        int256 lo = int256(last.tick) - int256(uint256(cfg.maxMoveTicks));
-        int256 hi = int256(last.tick) + int256(uint256(cfg.maxMoveTicks));
-        int256 clamped = spot < lo ? lo : (spot > hi ? hi : int256(spot));
-        int24 recorded = _clampTick(clamped);
-
-        // The epoch closes on the history before this record; the new record would weigh nothing in it anyway.
+    /// @dev Records into the log if due, then closes the epoch if one ended and measures the high against the newest
+    ///      record if it is new. Both read the log, so records written by anyone else count the same.
+    function _checkpoint() internal returns (bool recorded) {
+        if (!started) revert NotStarted();
+        recorded = log.record(logId);
         _rollEpoch();
-
-        uint32 now32 = uint32(block.timestamp);
-        uint8 next = uint8((uint256(head) + 1) % CAPACITY);
-        bool thin = liquidity < cfg.minLiquidity;
-        ring[next] = Checkpoint(now32, recorded, liquidity, thin);
-        head = next;
-        if (count < CAPACITY) count++;
-        emit Checkpointed(now32, spot, recorded, liquidity, thin);
-
-        _ratchet();
-        return true;
+        uint32 newest = log.latest(logId).time;
+        if (newest != ratchetedAt) {
+            ratchetedAt = newest;
+            _ratchet();
+        }
     }
 
     /// @dev Raises the high to the lowest record of the newest run of records that spans `athWindow`, when that run
     ///      has at least `athMinCheckpoints` records, none thin and all above the high, within the rise cap.
     function _ratchet() internal {
         int256 st = _supplyTick();
-        uint32 newestTime = ring[head].time;
+        // Records are at least one interval apart, so a run spanning `athWindow` holds at most this many.
+        HookrPriceLog.Record[] memory recs = log.recent(logId, uint256(cfg.athWindow) / cfg.checkpointInterval + 1);
+        uint32 newestTime = recs[0].time;
         int256 low = type(int256).max;
         uint256 n;
         bool spans;
-        for (uint256 i; i < count; ++i) {
-            Checkpoint memory cp = ring[(uint256(head) + CAPACITY - i) % CAPACITY];
+        for (uint256 i; i < recs.length; ++i) {
+            Checkpoint memory cp = _orient(recs[i]);
             if (cp.thin) return;
             int256 v = int256(cp.tick) + st;
             if (athSet && v <= int256(ath)) return;
@@ -500,13 +509,15 @@ contract HookrDrawdownBurn is IUnlockCallback {
         emit AthRaised(previous, ath, capped);
     }
 
-    /// @dev On the first record of a new epoch: compares the mean at the epoch's close with its open. Up by more than
-    ///      the dead band (net quote in) accumulates; down by more (net quote out) spends; inside it keeps the mode.
+    /// @dev On the first call in a new epoch: compares the mean over `epochWindow` ending at the epoch's boundary with
+    ///      the epoch's open. Up by more than the dead band (net quote in) accumulates; down by more (net quote out)
+    ///      spends; inside it keeps the mode. The close ends at the boundary, so a late call reads the same close as a
+    ///      prompt one while the log still reaches back over it, and no record written after the boundary weighs in it.
     function _rollEpoch() internal {
         if (!cfg.epochSwitch) return;
         uint32 e = uint32(block.timestamp / cfg.epochLength);
         if (e == epoch) return;
-        (bool ok, int24 close) = _mean(cfg.epochWindow);
+        (bool ok, int24 close) = _meanUntil(cfg.epochWindow, uint32(uint256(e) * cfg.epochLength));
         if (ok) {
             int256 delta = int256(close) - int256(epochOpen);
             if (delta > deadBandTicks) mode = Mode.ACCUMULATE;
@@ -517,28 +528,21 @@ contract HookrDrawdownBurn is IUnlockCallback {
         epoch = e;
     }
 
-    /// @dev The time-weighted mean of the records' step function over [now - window, now]. Fails closed when the ring
-    ///      does not reach back to the window's start or a record that carries weight in it is thin.
+    /// @dev The log's time-weighted mean over [now - window, now], as the subject's price tick. Fails closed when the
+    ///      log does not reach back to the window's start or a record that carries weight in it is thin.
     function _mean(uint32 window) internal view returns (bool ok, int24 tick) {
-        if (count == 0) return (false, 0);
-        uint256 end = block.timestamp;
-        if (end < window) return (false, 0);
-        uint256 from = end - window;
-        uint256 segEnd = end;
-        int256 acc;
-        for (uint256 i; i < count; ++i) {
-            Checkpoint memory cp = ring[(uint256(head) + CAPACITY - i) % CAPACITY];
-            uint256 segStart = cp.time > from ? cp.time : from;
-            if (segEnd > segStart) {
-                if (cp.thin) return (false, 0);
-                acc += int256(cp.tick) * int256(segEnd - segStart);
-            }
-            if (cp.time <= from) {
-                return (true, int24(acc / int256(uint256(window))));
-            }
-            segEnd = cp.time;
-        }
-        return (false, 0);
+        (ok, tick) = log.mean(logId, window);
+        if (!subjectIsCurrency0) tick = -tick;
+    }
+
+    function _meanUntil(uint32 window, uint32 end) internal view returns (bool ok, int24 tick) {
+        (ok, tick) = log.meanUntil(logId, window, end);
+        if (!subjectIsCurrency0) tick = -tick;
+    }
+
+    /// @dev A log record (the pool's tick) as the subject's price tick.
+    function _orient(HookrPriceLog.Record memory r) internal view returns (Checkpoint memory) {
+        return Checkpoint(r.time, subjectIsCurrency0 ? r.tick : -r.tick, r.liquidity, r.thin);
     }
 
     function _tier(int256 refValue) internal view returns (uint8) {
@@ -548,13 +552,6 @@ contract HookrDrawdownBurn is IUnlockCallback {
         if (dd >= edgeTicks1) return 3;
         if (dd >= edgeTicks0) return 2;
         return 1;
-    }
-
-    function _observe() internal view returns (int24 tick, uint128 liquidity) {
-        (uint160 sqrtPriceX96, int24 poolTick,,) = manager.getSlot0(poolId);
-        if (sqrtPriceX96 == 0) revert PoolNotInitialized();
-        liquidity = manager.getLiquidity(poolId);
-        tick = subjectIsCurrency0 ? poolTick : -poolTick;
     }
 
     // ---------------------------------------------------------------------------------------------------------------

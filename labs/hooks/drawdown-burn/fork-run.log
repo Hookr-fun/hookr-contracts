@@ -1,8 +1,5 @@
-   --> hooks/drawdown-burn/test/DrawdownBurnFork.t.sol:305:5:
-
-
 Ran 3 tests for hooks/drawdown-burn/test/DrawdownBurnFork.t.sol:DrawdownBurnFork
-[PASS] test_fork_engineOnALiveHookrPool() (gas: 6266893)
+[PASS] test_fork_engineOnALiveHookrPool() (gas: 8903141)
 Logs:
   token (RHUBX stand-in) 0xc0ab252f8f827ef713a4d5E76Ab5f6278CE12284
   pool id
@@ -10,7 +7,7 @@ Logs:
   pool fee field 8388608
   launch liquidity 149161657700275735304679
   opening token price tick -177230
-  gas: checkpoint() 63138
+  gas: checkpoint() 82789
   buy 4 ETH -> tokens 161563093069630997733114620
   buy 4 ETH -> tokens 117534166441263230512483685
   buy 4 ETH -> tokens 89344973314902445685544540
@@ -27,24 +24,20 @@ Logs:
   token price tick after sells -159722
   sell queue pending (ETH wei) 330303479025599036
   drawdown bps / tier 3024 2
-  gas: run() with collect + buyback 371881
+  gas: run() with collect + buyback 377013
   engine ETH before / after run 0 214242783220479230
   burn budget / wall reserve after run 82121391610239615 132121391610239615
   tokens to the dead address in run() (buyback burn + Auto Burn on it) 426799283504571676840654
   wall reserve before / after 132121391610239615 1
   tokens burned by the wall 4587976682940798654708306
-
-[PASS] test_fork_pumpPokeDumpCost() (gas: 8731044)
+[PASS] test_fork_pumpPokeDumpCost() (gas: 9597592)
 Logs:
   pump ETH in 8904805655504333114
   record written (ticks over the pre-pump price) 500
   round trip ETH lost 572377202751223332
   lost / pumped (bps) 642
-
-[PASS] test_fork_sandwichedRunBuysNothing() (gas: 9233052)
+[PASS] test_fork_sandwichedRunBuysNothing() (gas: 10418305)
 Logs:
   burn budget held through the pump (ETH wei) 67512294954016080
-
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 23.91ms (45.62ms CPU time)
-
-Ran 1 test suite in 114.91ms (23.91ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 17.96ms (39.72ms CPU time)
+Ran 1 test suite in 127.31ms (17.96ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)

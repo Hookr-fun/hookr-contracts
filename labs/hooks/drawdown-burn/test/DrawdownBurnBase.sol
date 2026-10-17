@@ -17,6 +17,7 @@ import {ModifyLiquidityParams, SwapParams} from "@uniswap/v4-core/src/types/Pool
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
 import {HookrDrawdownBurn} from "../src/HookrDrawdownBurn.sol";
+import {HookrPriceLog} from "../../price-log/src/HookrPriceLog.sol";
 
 /// @dev A plain v4 pool (no hook, 0.30% LP fee, full-range liquidity at price 1) and an engine on it with Ika's numbers
 ///      as defaults. `subjectIs0()` picks which currency is the subject, so every suite runs in both orientations.
@@ -39,12 +40,14 @@ abstract contract DrawdownBurnBase is Test {
     PoolKey internal key;
     PoolId internal id;
     HookrDrawdownBurn internal engine;
+    HookrPriceLog internal priceLog;
 
     function subjectIs0() internal pure virtual returns (bool);
 
     function setUp() public virtual {
         vm.warp(T0);
         manager = new PoolManager(address(this));
+        priceLog = new HookrPriceLog(IPoolManager(address(manager)));
         swapRouter = new PoolSwapTest(manager);
         liquidityRouter = new PoolModifyLiquidityTest(manager);
 
@@ -76,6 +79,7 @@ abstract contract DrawdownBurnBase is Test {
     /// @notice Ika's numbers (X post 2026-10-16, TG rhub x WTH) with the oracle-less checkpoint knobs at their defaults.
     function defaults() internal view virtual returns (HookrDrawdownBurn.Config memory c) {
         c.manager = IPoolManager(address(manager));
+        c.log = priceLog;
         c.key = key;
         c.subjectIsCurrency0 = subjectIs0();
         c.checkpointInterval = 300;

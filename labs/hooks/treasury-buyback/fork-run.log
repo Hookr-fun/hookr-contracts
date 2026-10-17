@@ -1,0 +1,24 @@
+Ran 2 tests for hooks/treasury-buyback/test/BuybackFork.t.sol:BuybackFork
+[PASS] test_fork_buybackThroughTheLiveRouterAndRoot() (gas: 1358273)
+Logs:
+  first record (pool tick) 177230
+  spot (pool tick) 177230
+  token (HOOKR stand-in) 0x8BA6842a392bAE7458fD11e151E1Ae1b29ff4D46
+  pool id
+  0xf3b81edcc1d9aa9e75a140e65898a5f834cc29feb673fd0345e7250e6b8e18fa
+  records the clamp took to reach the traded price 2
+  gas: record on the live pool (cold slots) 45385
+  gas: mean window / cold / warm 1800 25523 9402
+  gas: mean window / cold / warm 60 7413 3292
+  gas: buyback through the live router (log slots cold) 243055
+  reference pool tick 176310
+  HOOKR bought and burned / fair at the reference 451584683992121658662917 453589699487750041644806
+  short of fair (bps) 44
+[PASS] test_fork_sameTransactionPumpIsRefused() (gas: 5531008)
+Logs:
+  first record (pool tick) 177230
+  spot (pool tick) 177230
+  pump: ETH in 562021783744057755
+  pump: pool ticks moved -500
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 10.28ms (8.71ms CPU time)
+Ran 1 test suite in 274.10ms (10.28ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)
