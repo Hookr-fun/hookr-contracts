@@ -4,7 +4,8 @@ pragma solidity 0.8.26;
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
 import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
+import {PoolSwapTest} from "@uniswap/v4-core/src/test/PoolSwapTest.sol";
+import {ModifyLiquidityParams, SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 
 import {HookrDrawdownBurn} from "../src/HookrDrawdownBurn.sol";
 import {DrawdownBurnBase} from "./DrawdownBurnBase.sol";
@@ -39,6 +40,33 @@ contract UnlockPoker is IUnlockCallback {
     function unlockCallback(bytes calldata) external returns (bytes memory) {
         engine.checkpoint();
         return "";
+    }
+}
+
+/// @dev Calls the engine's start from inside an unlock.
+contract StartPoker is IUnlockCallback {
+    IPoolManager internal immutable manager;
+    HookrDrawdownBurn internal immutable engine;
+
+    constructor(IPoolManager m, HookrDrawdownBurn e) {
+        manager = m;
+        engine = e;
+    }
+
+    function go() external {
+        manager.unlock("");
+    }
+
+    function unlockCallback(bytes calldata) external returns (bytes memory) {
+        engine.start();
+        return "";
+    }
+}
+
+/// @dev A recipient that refuses every payment.
+contract Refuser {
+    fallback() external payable {
+        revert("no");
     }
 }
 
@@ -125,9 +153,77 @@ contract HookrDrawdownBurnTest is DrawdownBurnBase {
         vm.expectRevert(HookrDrawdownBurn.PoolNotInitialized.selector);
         early.start();
         manager.initialize(c.key, TickMath.getSqrtPriceAtTick(120));
+        vm.expectRevert(HookrDrawdownBurn.ThinStart.selector);
+        early.start();
+        liquidityRouter.modifyLiquidity(c.key, ModifyLiquidityParams(-887_270, 887_270, LIQ, 0), "");
         early.start();
         assertEq(early.count(), 1);
         assertEq(early.checkpointAt(0).tick, subjectIs0() ? int24(120) : int24(-120));
+    }
+
+    /// @dev Review finding 1: a pump around `start()` used to write the first record unclamped. With the seed tick (the
+    ///      opening price) it moves the first record by one clamp step at most.
+    function test_pumpAroundStartMovesTheFirstRecordOneStepAtMost() public {
+        HookrDrawdownBurn.Config memory c = defaults();
+        c.key.tickSpacing = 10;
+        c.hasSeedTick = true;
+        c.seedTick = 0;
+        HookrDrawdownBurn early = new HookrDrawdownBurn(c);
+        manager.initialize(c.key, TickMath.getSqrtPriceAtTick(0));
+        liquidityRouter.modifyLiquidity(c.key, ModifyLiquidityParams(-887_270, 887_270, LIQ, 0), "");
+        // Pump the new pool +20,000 ticks for the subject, start, dump.
+        int24 poolTarget = subjectIs0() ? int24(20_000) : int24(-20_000);
+        swapRouter.swap(
+            c.key,
+            SwapParams(!subjectIs0(), -1e30, TickMath.getSqrtPriceAtTick(poolTarget)),
+            PoolSwapTest.TestSettings(false, false),
+            ""
+        );
+        early.start();
+        assertEq(early.checkpointAt(0).tick, 500, "clamped to the seed tick + one step");
+    }
+
+    function test_startRefusedInsideAnUnlock() public {
+        HookrDrawdownBurn.Config memory c = defaults();
+        c.key.tickSpacing = 10;
+        HookrDrawdownBurn early = new HookrDrawdownBurn(c);
+        manager.initialize(c.key, TickMath.getSqrtPriceAtTick(0));
+        liquidityRouter.modifyLiquidity(c.key, ModifyLiquidityParams(-887_270, 887_270, LIQ, 0), "");
+        StartPoker poker = new StartPoker(manager, early);
+        vm.expectRevert(HookrDrawdownBurn.ManagerUnlocked.selector);
+        poker.go();
+    }
+
+    /// @dev Review finding 2: MARKET_CAP measured its baseline in the constructor, before a launched token exists.
+    function test_marketCapEngineDeployedBeforeItsToken() public {
+        HookrDrawdownBurn.Config memory c = defaults();
+        c.measure = HookrDrawdownBurn.Reference.MARKET_CAP;
+        c.key.tickSpacing = 10;
+        HookrDrawdownBurn early = new HookrDrawdownBurn(c);
+        assertEq(early.circulatingAtStart(), 0);
+        manager.initialize(c.key, TickMath.getSqrtPriceAtTick(0));
+        liquidityRouter.modifyLiquidity(c.key, ModifyLiquidityParams(-887_270, 887_270, LIQ, 0), "");
+        early.start();
+        assertEq(early.circulatingAtStart(), subjectToken.totalSupply() - subjectToken.balanceOf(DEAD));
+    }
+
+    /// @dev Review note: frozen recipients are paid by `claim`, never inside a run, so one that refuses payment (a native
+    ///      transfer that reverts, a blocklisted token recipient) cannot stop the engine.
+    function test_refusingCoAuthorDoesNotStopTheEngine() public {
+        HookrDrawdownBurn.Config memory c = defaults();
+        c.coAuthor = address(new Refuser());
+        c.coAuthorBps = 1000;
+        engine = new HookrDrawdownBurn(c);
+        _withAth0();
+        holdAt(-10_000, 30);
+        fund(1e18);
+        uint256 deadBefore = deadBalance();
+        engine.run();
+        assertGt(deadBalance(), deadBefore);
+        // The run never paid the recipient directly; its share waits for `claim`.
+        assertGt(engine.owed(c.coAuthor), 0);
+        assertEq(quoteBal(c.coAuthor), 0);
+        assertGe(quoteBal(address(engine)), engine.burnBudget() + engine.wallReserve() + engine.totalOwed());
     }
 
     function test_initialAth() public {
@@ -453,7 +549,10 @@ contract HookrDrawdownBurnTest is DrawdownBurnBase {
         holdAt(-3000, 9);
         fund(4e18);
         engine.run();
+        assertEq(engine.owed(sink), 2e18);
+        engine.claim(sink);
         assertEq(quoteBal(sink), 2e18);
+        assertEq(engine.totalOwed(), 0);
         assertEq(engine.wallReserve(), 0);
     }
 
@@ -472,6 +571,8 @@ contract HookrDrawdownBurnTest is DrawdownBurnBase {
         // 1.1e18 at 100% burn: swapIn = 1.1e18 / 1.105, tip 0.5% and co-author 10% of it.
         uint256 swapIn = uint256(1.1e18) * 10_000 / 11_050;
         assertEq(quoteBal(keeper), swapIn * 50 / 10_000);
+        assertEq(engine.owed(c.coAuthor), swapIn * 1000 / 10_000);
+        engine.claim(c.coAuthor);
         assertEq(quoteBal(c.coAuthor), swapIn * 1000 / 10_000);
         assertLe(quoteBal(address(engine)), 2);
     }
@@ -535,6 +636,8 @@ contract HookrDrawdownBurnTest is DrawdownBurnBase {
         fund(4e18);
         engine.run();
         // SPEND from the start: 2e18 burn budget, half to the net-out sink, half bought back.
+        assertEq(engine.owed(lp), 1e18);
+        engine.claim(lp);
         assertEq(quoteBal(lp), 1e18);
         assertEq(engine.burnBudget(), 0);
     }

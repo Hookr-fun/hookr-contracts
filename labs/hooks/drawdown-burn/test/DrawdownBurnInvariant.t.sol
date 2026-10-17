@@ -183,7 +183,7 @@ contract DrawdownBurnInvariantTest is DrawdownBurnBase {
     /// forge-config: default.invariant.runs = 64
     /// forge-config: default.invariant.depth = 80
     function invariant_budgetsBacked() public view {
-        assertGe(quoteToken.balanceOf(address(engine)), engine.burnBudget() + engine.wallReserve());
+        assertGe(quoteToken.balanceOf(address(engine)), engine.burnBudget() + engine.wallReserve() + engine.totalOwed());
     }
 
     /// forge-config: default.invariant.runs = 64

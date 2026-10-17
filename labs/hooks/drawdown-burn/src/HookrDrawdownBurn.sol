@@ -109,6 +109,10 @@ contract HookrDrawdownBurn is IUnlockCallback {
         uint32 athWindow;
         uint8 athMinCheckpoints;
         uint16 athRiseCapBpsPerHour;
+        /// @notice The price tick the first record is clamped to, within `maxMoveTicks`: the pool's opening price for
+        ///         an engine deployed before its pool. Without it, the first record is the spot when it is written.
+        bool hasSeedTick;
+        int24 seedTick;
         bool hasInitialAth;
         int32 initialAth;
         Reference measure;
@@ -192,8 +196,8 @@ contract HookrDrawdownBurn is IUnlockCallback {
     bool public immutable subjectIsCurrency0;
     Currency public immutable subject;
     Currency public immutable quote;
-    /// @notice The circulating supply at deployment; MARKET_CAP measures against it.
-    uint256 public immutable circulatingAtStart;
+    /// @notice The circulating supply when the first record was written; MARKET_CAP measures against it.
+    uint256 public circulatingAtStart;
 
     // Tunings converted to ticks once, at deployment.
     int24 internal immutable slippageTicks;
@@ -229,6 +233,10 @@ contract HookrDrawdownBurn is IUnlockCallback {
     uint256 public burnBudget;
     /// @notice Quote set aside for the wall (RESERVE mode).
     uint256 public wallReserve;
+    /// @notice Quote owed to the frozen recipients (co-author, wall sink, net-out sink), paid by `claim`, so a recipient
+    ///         that refuses a payment cannot stop the engine.
+    mapping(address => uint256) public owed;
+    uint256 public totalOwed;
 
     uint128 internal bucketLevel;
     uint32 internal bucketTime;
@@ -245,6 +253,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
     event Allocated(uint256 income, uint8 tier, uint256 toBurn, uint256 toWall);
     event BoughtBack(uint256 quoteIn, uint256 subjectBurned, bool wall);
     event PaidOut(address indexed to, uint256 amount, bytes32 indexed what);
+    event Owed(address indexed to, uint256 amount, bytes32 indexed what);
     event RunSkipped(bytes32 reason);
 
     error InvalidConfig(bytes32 what);
@@ -254,6 +263,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
     error ManagerUnlocked();
     error NotManager();
     error Reentered();
+    error ThinStart();
 
     modifier nonReentrant() {
         if (entered) revert Reentered();
@@ -291,8 +301,6 @@ contract HookrDrawdownBurn is IUnlockCallback {
         ) revert InvalidConfig("deadBand/epochWindow");
 
         cfg = c;
-        circulatingAtStart = c.measure == Reference.MARKET_CAP ? _circulating(c.excluded) : 0;
-        if (c.measure == Reference.MARKET_CAP && circulatingAtStart == 0) revert InvalidConfig("no circulating");
 
         (uint160 sqrtPriceX96,,,) = c.manager.getSlot0(c.key.toId());
         if (sqrtPriceX96 != 0) _seed();
@@ -395,9 +403,23 @@ contract HookrDrawdownBurn is IUnlockCallback {
     // ---------------------------------------------------------------------------------------------------------------
 
     function _seed() internal {
+        // The first record has no previous one to clamp against: refuse it inside an unlock, refuse it thin, and clamp it
+        // to the seed tick the creator set (the opening price) when there is one, so a pump around `start()` moves it by
+        // at most one clamp step.
+        if (manager.isUnlocked()) revert ManagerUnlocked();
         (int24 tick, uint128 liquidity) = _observe();
+        if (liquidity < cfg.minLiquidity) revert ThinStart();
+        if (cfg.hasSeedTick) {
+            int256 lo = int256(cfg.seedTick) - int256(uint256(cfg.maxMoveTicks));
+            int256 hi = int256(cfg.seedTick) + int256(uint256(cfg.maxMoveTicks));
+            tick = _clampTick(tick < lo ? lo : (tick > hi ? hi : int256(tick)));
+        }
+        if (cfg.measure == Reference.MARKET_CAP) {
+            circulatingAtStart = _circulating(cfg.excluded);
+            if (circulatingAtStart == 0) revert ThinStart();
+        }
         uint32 now32 = uint32(block.timestamp);
-        ring[0] = Checkpoint(now32, tick, liquidity, liquidity < cfg.minLiquidity);
+        ring[0] = Checkpoint(now32, tick, liquidity, false);
         head = 0;
         count = 1;
         lastRise = now32;
@@ -577,7 +599,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
             if (toSink != 0) {
                 burnBudget -= toSink;
                 _debitBucket(toSink);
-                _pay(cfg.netOutSink, toSink, "netOutSink");
+                _owe(cfg.netOutSink, toSink, "netOutSink");
                 amount -= toSink;
             }
         }
@@ -593,7 +615,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
         if (reserve == 0) return;
         if (cfg.wall == Wall.SINK) {
             wallReserve = 0;
-            _pay(cfg.wallSink, reserve, "wallSink");
+            _owe(cfg.wallSink, reserve, "wallSink");
             return;
         }
         // The wall price, as a price tick: the high less the wall offset, less the supply tick under MARKET_CAP.
@@ -650,7 +672,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
         used = paid + tip + coAuthorShare;
         _debitBucket(used);
         if (tip != 0) _pay(msg.sender, tip, "tip");
-        if (coAuthorShare != 0) _pay(cfg.coAuthor, coAuthorShare, "coAuthor");
+        if (coAuthorShare != 0) _owe(cfg.coAuthor, coAuthorShare, "coAuthor");
         emit BoughtBack(paid, burned, isWall);
     }
 
@@ -678,6 +700,21 @@ contract HookrDrawdownBurn is IUnlockCallback {
         return abi.encode(paid, got);
     }
 
+    /// @notice Pays `to` what the engine owes it. Anyone may call it; the quote goes only to `to`.
+    function claim(address to) external nonReentrant returns (uint256 amount) {
+        amount = owed[to];
+        if (amount == 0) return 0;
+        owed[to] = 0;
+        totalOwed -= amount;
+        _pay(to, amount, "claim");
+    }
+
+    function _owe(address to, uint256 amount, bytes32 what) internal {
+        owed[to] += amount;
+        totalOwed += amount;
+        emit Owed(to, amount, what);
+    }
+
     function _pay(address to, uint256 amount, bytes32 what) internal {
         quote.transfer(to, amount);
         emit PaidOut(to, amount, what);
@@ -685,7 +722,7 @@ contract HookrDrawdownBurn is IUnlockCallback {
 
     function _unallocated() internal view returns (uint256) {
         uint256 balance = quote.balanceOfSelf();
-        uint256 held = burnBudget + wallReserve;
+        uint256 held = burnBudget + wallReserve + totalOwed;
         return balance > held ? balance - held : 0;
     }
 
@@ -751,6 +788,9 @@ contract HookrDrawdownBurn is IUnlockCallback {
             revert InvalidConfig("initialAth");
         }
         if (c.measure == Reference.PRICE && c.excluded.length != 0) revert InvalidConfig("excluded");
+        if (c.hasSeedTick && (c.seedTick <= TickMath.MIN_TICK || c.seedTick >= TickMath.MAX_TICK)) {
+            revert InvalidConfig("seedTick");
+        }
         if (c.excluded.length > MAX_EXCLUDED) revert InvalidConfig("excluded");
         if (c.tierEdgesBps[0] == 0 || c.tierEdgesBps[0] >= c.tierEdgesBps[1] || c.tierEdgesBps[1] >= c.tierEdgesBps[2])
         {

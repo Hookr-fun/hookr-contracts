@@ -3,7 +3,9 @@
 A burn engine for one Hookr pool that spends what the pool's sell tax collects on buybacks that burn the token, with a
 burn share set by how far the price sits under its all-time high, and keeps the rest as a wall: a buy order at a fixed
 distance under the high whose fills are burned too. It needs no oracle, no new core and no owner. Built for Ika's RHUB
-burn (X post 2026-10-16 08:35Z; TG rhub x WTH 10-06 21:27Z and 10-17 13:41-13:42Z), with Ika's numbers as defaults.
+burn (X post 2026-10-16 08:35Z; TG rhub x WTH 10-06 21:27Z and 10-17 13:41-13:42Z), with Ika's tiers, wall and spend
+cap as defaults. Two defaults differ from spec v0: the reference is the price, not the market cap, and the epoch switch
+is off (Ika's live RHUB design); both are knobs (COMPARISON.md, decisions 6 and 1).
 
 Nothing here is deployed, listed or admitted. It is a lab: step 1 of the contract lifecycle.
 
@@ -25,21 +27,27 @@ Anyone may also fund it directly, so a pool whose tax already pays a treasury ca
    `maxSlippageBps`, and burns it.
 
 Both buys share one spend cap that refills over `refillSeconds` (Ika: 200 ARB per ~12 s). A run pays its caller
-`tipBps` of what it spent, and the co-author `coAuthorBps` (decision 9).
+`tipBps` of what it spent. The co-author's `coAuthorBps` (decision 9) and anything bound for a sink are owed, not paid
+inside the run, and `claim(to)` pays them, so a frozen recipient that refuses a payment cannot stop the engine.
 
 ## How it prices without an oracle
 
-Every price it acts on comes from its own records, never from the spot of the transaction that calls it (the OpenZaps
-v3.1 relative-floor bug, KupiaSec 10-15, was a floor built from same-transaction spot).
+Every price it acts on comes from its own records, never from the spot of the transaction that calls it: a floor built
+from same-transaction spot moves with whoever pushes the price in that transaction.
 
 - **Records.** `checkpoint()` is permissionless and writes the pool's spot tick at most once per `checkpointInterval`.
   Each record is clamped to `maxMoveTicks` from the previous one, and refused while the PoolManager is unlocked, so a
   free pump inside one unlock cannot be recorded and a paid pump moves one record by a bounded step. The ring holds 64.
+  The first record has nothing to clamp against, so `start()` (or the constructor, on a live pool) refuses it inside an
+  unlock or under `minLiquidity`, and clamps it to `seedTick` (the creator's opening price) when one is set.
+  A fresh launch's position is token-only and sits just under the opening price, so the pool has no in-range liquidity
+  until its first buy; `start()` waits for that buy (fork run).
 - **Means.** Time-weighted over the step function of the records; the newest record weighs nothing when written, so a
   pumped record counts only for the time it stands, which is a whole interval in which anyone may record over it.
 - **The high.** Ratchets up only when every record across `athWindow` seconds (at least `athMinCheckpoints` of them)
-  sits above it, to the lowest of those records, never by more than `athRiseCapBpsPerHour` for the time since the last
-  rise. It never goes down. Nobody can set it after launch; `initialAth` may seed it at launch (RHUB today: 9.69M ARB).
+  sits above it, to the lowest of those records, and after its first setting never by more than
+  `athRiseCapBpsPerHour` for the time since the last rise (the first setting, when no `initialAth` is given, is not
+  capped). It never goes down. Nobody can set it after launch; `initialAth` may seed it at launch (RHUB today: 9.69M ARB).
 - **Thin records.** A record taken while in-range liquidity is under `minLiquidity` is marked thin. A window that weighs
   one cannot raise the high, set a tier, price a buyback or close an epoch.
 - **Flow epochs.** Ika's switch, without counting swaps: in a pool whose liquidity did not move, net quote in or out
@@ -59,7 +67,8 @@ Every one is fixed in the constructor, checked against its bounds there, and can
 | `athWindow` | 3,600 s | 300 s to 24 h, at most 48 intervals |
 | `athMinCheckpoints` | 6 | 2 to 48, fitting the window |
 | `athRiseCapBpsPerHour` | 0 (off); see decisions | 0, or 500 to 10,000 |
-| `initialAth` | unset | any tick |
+| `seedTick` | the opening price tick (fork: set) | inside the tick range |
+| `initialAth` | unset | ±2 × the max tick |
 | `measure` | PRICE | PRICE or MARKET_CAP (circulating = supply less dead, zero and up to 4 excluded holders) |
 | `tierEdgesBps` | 2,000 / 4,000 / 6,000 | rising, first > 0, last ≤ 9,500 |
 | `tierBurnBps` (at/above high, then per band) | 0 / 2,500 / 5,000 / 7,500 / 10,000 | ≤ 10,000, never falling |
@@ -67,14 +76,14 @@ Every one is fixed in the constructor, checked against its bounds there, and can
 | `spendCap` / `refillSeconds` | per pool (fork: 0.05 ETH) / 12 s | > 0 / 12 s to 7 days |
 | `maxSlippageBps` over the reference | 300 | 10 to 1,000 |
 | `wall` / `wallOffsetBps` | RESERVE / 6,000 | RESERVE or SINK (pays `wallSink`, e.g. a Floor bid vault) / 1,000 to 9,000 |
-| `epochSwitch` / `epochLength` / `epochWindow` | off (Ika's live RHUB design) / 24 h / 3,600 s | on/off / 1 h to 7 days / 300 s to the epoch |
-| `deadBandBps` | 100 | ≤ 2,000 and wider than one record can move the epoch mean |
+| `epochSwitch` / `epochLength` / `epochWindow` | off (Ika's live RHUB design) / 24 h / 3,600 s | on/off / 1 h to 7 days / 300 s to the epoch and at most 48 intervals (0 when the switch is off) |
+| `deadBandBps` | 100 | ≤ 2,000; with the switch on, also wider than one record can move the epoch mean |
 | `netOutSinkBps` / `netOutSink` | 0 | share of a net-out spend sent to a sink (add LP) instead of bought back |
 | `tipBps` (run caller) / `checkpointReward` | 0 / 0 | ≤ 50 / ≤ 1% of the spend cap, paid only from unallocated quote |
 | `coAuthorBps` / `coAuthor` | 0 (decision 9) | ≤ 2,000 of what the engine spends |
 
 Fixed, not knobs: the dead address, no owner, the 64-record ring, the refusal inside an unlock, no buy under 1% of the
-spend cap, and the buy sizing below.
+spend cap, four checkpoint rewards kept unallocated when the reward is on, and the buy sizing below.
 
 **Buy sizing.** A Hookr root refuses an unauthenticated exact-input buy that stops at its price limit with fees to
 refund (`UnauthenticatedRefund`, HookrRoot.sol:557). The engine sizes each buy to reach at most the limit at the current
@@ -82,12 +91,12 @@ tick's liquidity and halves it up to three times if it still stops there.
 
 ## Tests
 
-`forge test --root labs --match-path 'hooks/drawdown-burn/test/*'`: 107 pass, each suite in both orientations (the token
+`forge test --root labs --match-path 'hooks/drawdown-burn/test/*'`: 98 pass, each suite in both orientations (the token
 as currency0 and as currency1). The three fork tests skip without an RPC.
 
 | Suite | What it shows |
 |---|---|
-| `HookrDrawdownBurn.t.sol` (31 × 2) | Bounds; seeding and `start()`; rate limit; clamp; refusal inside an unlock; thin records; time-weighted means; the high's first set, ratchet, rise cap, never falling; Ika's tiers; split and burn; the spend cap refilling; no buy above reference + slippage; the wall buying only under its price; SINK; tip and co-author; collecting from a queue; both epoch modes and the net-out sink; market-cap drawdown deepening with burns; fuzz on tick math, tier order, clamp and spend |
+| `HookrDrawdownBurn.t.sol` (35 × 2) | Bounds; seeding and `start()` (refused inside an unlock or thin; a pump around it moves the first record one step at most; MARKET_CAP measured at start); a refusing co-author cannot stop a run; rate limit; clamp; refusal inside an unlock; thin records; time-weighted means; the high's first set, ratchet, rise cap, never falling; Ika's tiers; split and burn; the spend cap refilling; no buy above reference + slippage; the wall buying only under its price; SINK; tip and co-author; collecting from a queue; both epoch modes and the net-out sink; market-cap drawdown deepening with burns; fuzz on tick math, tier order, clamp and spend |
 | `DrawdownBurnInvariant.t.sol` (6 × 2) | Over random swaps, waits, records, runs, donations and liquidity pulls: the high never falls and never exceeds what records held; records move at most the clamp; budgets stay backed; the engine never holds the token; spend stays within the cap |
 | `DrawdownBurnAttack.t.sol` (8 × 2) | One-block pump around a record (records +500 of +5,000, high unmoved); free pump inside an unlock (refused); owning every record for 2 hours (lifts the high, and the rise cap bounds it); dump before a run (tier unchanged); sandwich (no buy); epoch boundary (one paid record cannot flip the mode, three can); liquidity pull (thin, no high, no spend); JIT liquidity around each record (passes the floor: a pinned limitation, below) |
 | `DrawdownBurnFork.t.sol` (3) | On Robinhood Chain 4663, below |
@@ -103,10 +112,10 @@ PoolManager by runtime keccak, launches a new token through the live Launcher wi
 
 | Step | Result |
 |---|---|
-| `checkpoint()` on the live pool | 59,809 gas |
-| 40 ETH of buys move the price 21,115 ticks | the clamp took 43 records (3.6 h) to catch up; the high then equals the held price |
+| `checkpoint()` on the live pool | 63,138 gas |
+| 40 ETH of buys move the price 21,108 ticks | the clamp took 43 records (3.6 h) to catch up; the high then equals the held price |
 | Sells take 30.2% off | 0.330 ETH pending on the live sell queue; tier 2 |
-| `run()`: collect + split + buyback through the live root | 368,673 gas; 0.264 ETH collected (80% after Hookr's share), half to the burn budget, half to the wall; 0.05 ETH (the cap) spent; 426,927 tokens to the dead address |
+| `run()`: collect + split + buyback through the live root | 371,881 gas; 0.264 ETH collected (80% after Hookr's share), half to the burn budget, half to the wall; 0.05 ETH (the cap) spent; 426,799 tokens to the dead address (the buyback plus Auto Burn on the engine's own buy) |
 | Through the wall (60% under the high) | the wall reserve filled to 1 wei over six runs; 4.59M tokens burned; the price never above the wall price |
 | Pump +5,000 ticks, record, dump (one transaction) | record +500; round trip lost 0.572 ETH of 8.90 ETH pumped (642 bps: Auto Burn, sell tax, LP fee) |
 | Pump 1,000 ticks over the reference before a run | no buyback; 0.0675 ETH budget held for the next run |
@@ -117,17 +126,18 @@ PoolManager by runtime keccak, launches a new token through the live Launcher wi
   pool's liquidity can add a position around each record and remove it after, so a thin pool reads deep and moves for
   dust. This is the Oracle Recorder's S2-1 in this engine. Only the clamp and the rise cap bound the high then. The
   engine belongs on pools whose liquidity is locked (Launcher principal lock), with the rise cap on.
-- **An attacker who owns every record for a window can lift the high.** Each record costs a paid round trip (642 bps of
-  the pump on the fork pool), and 24 pumped records over two hours lifted it
-  the full 5,000 ticks (local suite). The rise cap bounds it.
+- **An attacker who owns every record for a window can lift the high.** Each record costs a paid round trip: 642 bps of
+  the ETH pumped on the fork pool (Auto Burn, sell tax, LP fee). On the local suite's plain 0.30% pool, 24 pumped records
+  over two hours lifted the high the full 5,000 ticks; a 5%/h rise cap held it to ~940.
   Records come at most every interval, so an attacker needs to win one record per interval. The recorder makes them
   hold the price every second (COMPARISON.md).
-- **A real move registers slowly.** At 500 ticks a record every 5 minutes, an 8x rally (21,115 ticks) took 43 records. Tiers and the
+- **A real move registers slowly.** At 500 ticks a record every 5 minutes, an 8x rally (21,108 ticks) took 43 records. Tiers and the
   high lag the price by that much; buybacks wait (the price is over the reference) and the wall is unaffected (it reads
   spot against its own fixed price).
 - **The wall fills only when someone runs the engine.** It is a limit buy, not a resting liquidity position: it pays the
   swap fees instead of earning them, and keeper latency is its fill latency.
-- **Size.** 27,605 bytes of runtime. Fine on 4663 (98,304-byte limit), over EIP-170 (24,576) for Ethereum or Monad.
+- **One record and a late keeper.** One paid record cannot flip an epoch while records come every interval. If nobody
+  records for a long time after a pumped record, that record weighs more of the window and can.
 - Not run: a pool with arb recapture on (the lane gas floor applies to the engine's own buys there), a native-quote pool
   in local tests (the fork covers native ETH), MARKET_CAP or epochs on the fork, an independent review.
 

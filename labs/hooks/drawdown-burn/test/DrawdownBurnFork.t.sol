@@ -287,9 +287,15 @@ contract DrawdownBurnFork is Test {
         assertEq(engine.count(), 0, "deployed before its pool");
         _launch(address(engine));
         assertEq(keccak256(abi.encode(key)), keccak256(abi.encode(k)));
-        engine.start();
         trader.setKey(key);
         attacker.setKey(key);
+        // The launch position is token-only and sits just under the opening price, so the pool has no in-range
+        // liquidity until the first buy: start() refuses a thin first record and waits for it.
+        vm.expectRevert(HookrDrawdownBurn.ThinStart.selector);
+        engine.start();
+        buy(trader, 0.01 ether);
+        engine.start();
+        assertEq(engine.checkpointAt(0).tick, spot(), "first record within one step of the opening price");
         // Sellers' inventory: tokens held from before this run (a storage write on the token's balance).
         deal(token, address(trader), 300_000_000e18);
     }
@@ -300,6 +306,9 @@ contract DrawdownBurnFork is Test {
         c.manager = MANAGER;
         c.key = k;
         c.subjectIsCurrency0 = false; // native ETH sorts first
+        // The first record is clamped to the opening price (the token's price tick is minus the pool tick).
+        c.hasSeedTick = true;
+        c.seedTick = -OPEN_TICK;
         c.taxAdvisory = address(TAX);
         c.checkpointInterval = 300;
         c.maxMoveTicks = 500;
