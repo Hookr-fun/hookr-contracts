@@ -88,6 +88,8 @@ Each of the thirteen CREATE3 deployments above leaves the factory's 8-byte proxy
 
 When a tokenized stream does not already pay Hookr through its hook (a Fee Beneficiary NFT, a position off the root, a v3 position, an outside source), the tokenizer mints 5% of the supply to `HookrLegCollector` (`HOOKR_LEG_BPS_OUTSIDE`, 500). When it does (a launch or a new pool on the root, positions that all sit on the root), Hookr's leg is zero (`HOOKR_LEG_BPS_HOOKR`, 0). Both are constants, fixed per token when it is minted. The collector never transfers its shares; anyone can sweep what they earn to `HookrTreasury`'s current `target()`.
 
+Hookr passes 1 point of that 5% leg, 1% of the supply minted, on to What The Hook (WTH). The contracts do not do this: the collector sweeps the whole leg to the treasury's target, and Hookr sends WTH its point from there.
+
 ## Where the files are
 
 | Folder | Holds | Build tree name |
