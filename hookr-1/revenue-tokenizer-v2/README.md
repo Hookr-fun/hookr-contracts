@@ -74,6 +74,8 @@ Each of the sixteen CREATE3 deployments leaves the factory's 8-byte proxy (`0x36
 
 Hookr's leg is 5% (`HOOKR_LEG_BPS_OUTSIDE`, 500) of what each door outside the Hookr root delivers: a Fee Beneficiary NFT door, v4 positions off the root, a v3 position door and an outside source. The token sends it to `HookrLegCollector` in the sync that pulls the door, in each listed asset that arrived. A door that already pays Hookr through its hook (a Rules ledger, a family door, v4 positions that sit on the root) and a revenue token door carry no leg (`HOOKR_LEG_BPS_HOOKR`, 0). Both are constants, fixed per door when it is added. The first tokenizer minted its leg as shares of each revenue token; this one mints none to the collector.
 
+Hookr passes 1 point of that 5% leg on to What The Hook (WTH). The contracts do not do this: the collector sweeps the whole leg to the treasury's target, and Hookr sends WTH its point from there.
+
 The collector keeps nothing for itself: anyone can sweep what it holds to `HookrTreasury`'s current `target()`.
 
 ## Not in this release
