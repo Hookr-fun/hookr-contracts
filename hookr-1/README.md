@@ -16,16 +16,17 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 | [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) | A second Rules contract whose King of the Pool pays the round's winner the whole pot. One source file differs from the release. |
 | [`wallet-cap/`](./wallet-cap/README.md) | The Wallet Cap Rules: the whole-pot Rules plus a cap on how much of a pool's token one wallet can buy while the pool's launch guard lasts. One source file is added to the whole-pot Rules' sources. |
 | [`revenue-tokenizer/`](./revenue-tokenizer/README.md) | The Revenue Tokenizer and its add-ons: lock a fee right and mint a fixed-supply revenue token whose holders share its income, 16 contracts. Their sources are added to the release's. |
+| [`revenue-tokenizer-v2/`](./revenue-tokenizer-v2/README.md) | Revenue Tokenizer v2: lock fee rights, mint a fixed-supply revenue token whose holders share their income, and add streams to it later, 17 contracts. Their sources are added to the release's. |
 | [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 7 contracts of the three HookrBook connectors, one folder per block or connector. |
-| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 108 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
+| [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 125 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
 | [`standard-input.mjs`](./standard-input.mjs) | Writes any of those contracts' solc standard JSON input from the files here. |
 | [`check-runtime.mjs`](./check-runtime.mjs) | Compares a contract's solc output with the code at its address, byte for byte. |
 
 ## Deployed contracts
 
-Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 2 of Wallet Cap, the 46 of the Hook Blocks, the 7 of the HookrBook connectors and the 16 of the Revenue Tokenizer, 108 in all.
+Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 2 of Wallet Cap, the 46 of the Hook Blocks, the 7 of the HookrBook connectors, the 16 of the Revenue Tokenizer and the 17 of Revenue Tokenizer v2, 125 in all.
 
-Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, `HookrRulesWalletCap`, 37 of the Hook Block contracts, 3 of the connector contracts and 13 of the Revenue Tokenizer contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
+Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, `HookrRulesWalletCap`, 37 of the Hook Block contracts, 3 of the connector contracts, 13 of the Revenue Tokenizer contracts and 16 of Revenue Tokenizer v2's go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below but two is an exact match on Sourcify; the two halves of Revenue Tokenizer v2's revenue token code are data, and their creation code matches exactly. Every address's runtime code hashes to the value in the record.
 
 ### Hook and rules
 
@@ -205,6 +206,30 @@ The tokenizer and its libraries, deployed on 2026-10-19 (blocks 92,671,571 to 92
 | `HookrCompounderLens`, add-on | [`0xE6a08A2056aa617aCF669d96646dd91700D38bcB`](https://robin.etherscan.io/address/0xE6a08A2056aa617aCF669d96646dd91700D38bcB#code) | [match](https://repo.sourcify.dev/4663/0xE6a08A2056aa617aCF669d96646dd91700D38bcB) |
 | `HookrDopplerAdapterFactory`, add-on | [`0xA863D22772efC34E5E331AbfAb9a1B126C1b5663`](https://robin.etherscan.io/address/0xA863D22772efC34E5E331AbfAb9a1B126C1b5663#code) | [match](https://repo.sourcify.dev/4663/0xA863D22772efC34E5E331AbfAb9a1B126C1b5663) |
 
+### Revenue Tokenizer v2
+
+The second tokenizer, its leg collector, its six libraries, its door factories, its state view and the two halves of its revenue token's code, deployed on 2026-10-24 (blocks 96,932,339 to 96,932,399). The libraries are linked at deploy. Nothing here has an owner. The first tokenizer and everything it made are unchanged. [`revenue-tokenizer-v2/`](./revenue-tokenizer-v2/README.md) says what each contract does.
+
+| Contract | Address | Sourcify |
+| --- | --- | --- |
+| `HookrRevenueTokenizer` | [`0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c`](https://robin.etherscan.io/address/0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c#code) | [match](https://repo.sourcify.dev/4663/0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c) |
+| `HookrLegCollector`, created by `HookrRevenueTokenizer` in its constructor | [`0xAb5cBbC2C5b98F9b9E8f800eaa735E49C7f7A625`](https://robin.etherscan.io/address/0xAb5cBbC2C5b98F9b9E8f800eaa735E49C7f7A625#code) | [match](https://repo.sourcify.dev/4663/0xAb5cBbC2C5b98F9b9E8f800eaa735E49C7f7A625) |
+| `HookrRevenueStreams` | [`0x8AF409136d1C6F036F47638EeaDA3AE7f3Fad490`](https://robin.etherscan.io/address/0x8AF409136d1C6F036F47638EeaDA3AE7f3Fad490#code) | [match](https://repo.sourcify.dev/4663/0x8AF409136d1C6F036F47638EeaDA3AE7f3Fad490) |
+| `HookrRevenueMarketOpener` | [`0x7689cd313A0eAb4d3Fb4549D22A653D04b27cd3f`](https://robin.etherscan.io/address/0x7689cd313A0eAb4d3Fb4549D22A653D04b27cd3f#code) | [match](https://repo.sourcify.dev/4663/0x7689cd313A0eAb4d3Fb4549D22A653D04b27cd3f) |
+| `HookrRevenueDoorDeployer` | [`0x122e24aF927A4E762167665A06a8f34682E86465`](https://robin.etherscan.io/address/0x122e24aF927A4E762167665A06a8f34682E86465#code) | [match](https://repo.sourcify.dev/4663/0x122e24aF927A4E762167665A06a8f34682E86465) |
+| `HookrSignatures` | [`0x0A0F8bE151846B848122214Ee2F9861a828036eA`](https://robin.etherscan.io/address/0x0A0F8bE151846B848122214Ee2F9861a828036eA#code) | [match](https://repo.sourcify.dev/4663/0x0A0F8bE151846B848122214Ee2F9861a828036eA) |
+| `HookrIncomeRecovery` | [`0x425c8b42502B9BA2d96b4C56e6962DCA0E3c5785`](https://robin.etherscan.io/address/0x425c8b42502B9BA2d96b4C56e6962DCA0E3c5785#code) | [match](https://repo.sourcify.dev/4663/0x425c8b42502B9BA2d96b4C56e6962DCA0E3c5785) |
+| `HookrDropBoxDeployer` | [`0x25844bA027af0b25132209B58d399196E350DE22`](https://robin.etherscan.io/address/0x25844bA027af0b25132209B58d399196E350DE22#code) | [match](https://repo.sourcify.dev/4663/0x25844bA027af0b25132209B58d399196E350DE22) |
+| `HookrRevenueTokenCode`, half 0 of the revenue token's code, data | [`0x99b498Aa5f073b70De35e317A8bFB1BB8386a78A`](https://robin.etherscan.io/address/0x99b498Aa5f073b70De35e317A8bFB1BB8386a78A#code) | [creation match](https://repo.sourcify.dev/4663/0x99b498Aa5f073b70De35e317A8bFB1BB8386a78A) |
+| `HookrRevenueTokenCode`, half 1 of the revenue token's code, data | [`0xcccD15Ac6aA42d77874Af26b7b73DF634512d6e0`](https://robin.etherscan.io/address/0xcccD15Ac6aA42d77874Af26b7b73DF634512d6e0#code) | [creation match](https://repo.sourcify.dev/4663/0xcccD15Ac6aA42d77874Af26b7b73DF634512d6e0) |
+| `HookrPositionNftDoorFactory` | [`0x78aBe03F35FD9B0D6D72aB74E1f65cB2cB3A49c1`](https://robin.etherscan.io/address/0x78aBe03F35FD9B0D6D72aB74E1f65cB2cB3A49c1#code) | [match](https://repo.sourcify.dev/4663/0x78aBe03F35FD9B0D6D72aB74E1f65cB2cB3A49c1) |
+| `HookrV3PositionNftDoorFactory` | [`0xBefB5aAa1c18Cb298643421dF191BFd06bB00325`](https://robin.etherscan.io/address/0xBefB5aAa1c18Cb298643421dF191BFd06bB00325#code) | [match](https://repo.sourcify.dev/4663/0xBefB5aAa1c18Cb298643421dF191BFd06bB00325) |
+| `HookrFeebAdapterFactory` | [`0x517AB33C67b7855eC0514818918eb2A857feAE4a`](https://robin.etherscan.io/address/0x517AB33C67b7855eC0514818918eb2A857feAE4a#code) | [match](https://repo.sourcify.dev/4663/0x517AB33C67b7855eC0514818918eb2A857feAE4a) |
+| `HookrRevenueTokenDoorFactory` | [`0x51049eB3254B4b218fd41f5b91A7010F0Ea0B049`](https://robin.etherscan.io/address/0x51049eB3254B4b218fd41f5b91A7010F0Ea0B049#code) | [match](https://repo.sourcify.dev/4663/0x51049eB3254B4b218fd41f5b91A7010F0Ea0B049) |
+| `HookrPonsAdapterFactory` | [`0x6DDDd86F71717CAFcf0CeFeeFC6E79b50775B7f0`](https://robin.etherscan.io/address/0x6DDDd86F71717CAFcf0CeFeeFC6E79b50775B7f0#code) | [match](https://repo.sourcify.dev/4663/0x6DDDd86F71717CAFcf0CeFeeFC6E79b50775B7f0) |
+| `HookrDopplerAdapterFactory` | [`0xC1D50AF2FDFdD37B5B7c95A3dd5175B661bD7142`](https://robin.etherscan.io/address/0xC1D50AF2FDFdD37B5B7c95A3dd5175B661bD7142#code) | [match](https://repo.sourcify.dev/4663/0xC1D50AF2FDFdD37B5B7c95A3dd5175B661bD7142) |
+| `HookrRevenueStateView` | [`0xe3280D57E4a1F9a07997E3C34499d728dc9fa275`](https://robin.etherscan.io/address/0xe3280D57E4a1F9a07997E3C34499d728dc9fa275#code) | [match](https://repo.sourcify.dev/4663/0xe3280D57E4a1F9a07997E3C34499d728dc9fa275) |
+
 ## Building
 
 The release compiles with solc 0.8.37 (`0.8.37+commit.f401782d`), via-IR, the optimizer at 200 runs, EVM version prague, and the IPFS metadata hash. The official binaries hash to `a27396e7732aa52e80ff89ad7bd8a2e46fec2a6dcc4ef20cd16e5e0c502d6821` (macOS amd64) and `5de843c2c93563cc66425c99a4fb13fdbf32b4c4ae07469480faaf126e14404a` (Linux amd64). The dependencies are the submodules in `lib/`: v4-core at `46c6834698c48bc4a463a86d8420f4eb1d7f3b75`, with its own OpenZeppelin and solmate pins, and forge-std at `c179529c064588ede54a0661ec3cc98219460d07`.
@@ -215,7 +240,7 @@ git submodule update --init --recursive
 
 ### Byte for byte
 
-The verified metadata records each source by the path it had in the release's build tree: `src/...` for the release, `../hookr-phase-one/src/...` for a release file a Hook Block imports, and `../../../contracts/lib/...` for a dependency. The connectors were built from the Family Pinger's folder, so their metadata also names `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`, the folders beside it in `hook-blocks/`. The Revenue Tokenizer's add-ons were built from folders beside the tokenizer's, so their metadata names its sources `../fee-tokenizer/src/...`; [`revenue-tokenizer/`](./revenue-tokenizer/README.md#where-the-files-are) has the mapping. Those paths are part of the metadata hash in the deployed code. `standard-input.mjs` rebuilds a contract's compiler input with those exact names, reading each file from where it sits here:
+The verified metadata records each source by the path it had in the release's build tree: `src/...` for the release, `../hookr-phase-one/src/...` for a release file a Hook Block imports, and `../../../contracts/lib/...` for a dependency. The connectors were built from the Family Pinger's folder, so their metadata also names `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`, the folders beside it in `hook-blocks/`. The Revenue Tokenizer's add-ons were built from folders beside the tokenizer's, so their metadata names its sources `../fee-tokenizer/src/...`; [`revenue-tokenizer/`](./revenue-tokenizer/README.md#where-the-files-are) has the mapping. Revenue Tokenizer v2 was built from a folder of its own, so its `src/...` names are the files in [`revenue-tokenizer-v2/src/`](./revenue-tokenizer-v2/README.md#where-the-files-are), and it compiles with the optimizer at 50 runs instead of 200. Those paths are part of the metadata hash in the deployed code. `standard-input.mjs` rebuilds a contract's compiler input with those exact names, reading each file from where it sits here:
 
 ```sh
 node hookr-1/standard-input.mjs --list
@@ -223,7 +248,7 @@ node hookr-1/standard-input.mjs 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc > roo
 solc-0.8.37 --standard-json root.json > root.out.json
 ```
 
-The deployed bytecode in the output, with the linked libraries filled in, equals the code on chain everywhere except the immutables, which the constructor writes. That holds for all 108 contracts in the record, the metadata hash included.
+The deployed bytecode in the output, with the linked libraries filled in, equals the code on chain everywhere except the immutables, which the constructor writes. That holds for all 123 contracts in the record's list, the metadata hash included. The two halves of Revenue Tokenizer v2's revenue token code are listed under its tokenizer as data contracts; [`revenue-tokenizer-v2/check-token-code.mjs`](./revenue-tokenizer-v2/README.md#building-it) checks them.
 
 ### Against the chain
 
@@ -234,7 +259,7 @@ cast code 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc > root.hex   # with ETH_RPC
 node hookr-1/check-runtime.mjs 0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc root.out.json root.hex
 ```
 
-It prints `MATCH` or `MISMATCH` and the first differing byte. To check all 108:
+It prints `MATCH` or `MISMATCH` and the first differing byte. To check all 123 in the list:
 
 ```sh
 for a in $(node hookr-1/standard-input.mjs --list | cut -d' ' -f1); do
