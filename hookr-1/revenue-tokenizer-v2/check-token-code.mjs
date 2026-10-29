@@ -11,6 +11,11 @@
 //   cast code 0xcccD15Ac6aA42d77874Af26b7b73DF634512d6e0 > half1.hex
 //   node hookr-1/revenue-tokenizer-v2/check-token-code.mjs output.json half0.hex half1.hex
 //
+// The second tokenizer, 0x522723A7a09684515881568Ab8247f3846D66F43, has halves of its own, built from the same input and
+// linked to its own libraries; name it after the hex files to check them:
+//
+//   node hookr-1/revenue-tokenizer-v2/check-token-code.mjs output.json half0.hex half1.hex 0x522723A7a09684515881568Ab8247f3846D66F43
+//
 // `--input` writes the halves' solc standard JSON input from the files in this repository, as standard-input.mjs does
 // for a contract in the record. The check then needs three things to hold: the halves joined are HookrRevenueToken's
 // creation code linked to the libraries the record names, the first half holds exactly SPLIT bytes of it, and the
@@ -28,10 +33,16 @@ const SPLIT = 14_000;
 const TOKEN = ["src/HookrRevenueToken.sol", "HookrRevenueToken"];
 const CODE = ["src/HookrRevenueTokenCode.sol", "HookrRevenueTokenCode"];
 
-const tokenizer = record.contracts.find((c) => c.group === "revenue-tokenizer-v2" && c.name === "HookrRevenueTokenizer");
-const halves = (tokenizer?.dataContracts ?? []).filter((d) => d.name === "HookrRevenueTokenCode");
+const tokenizers = record.contracts.filter((c) => c.group === "revenue-tokenizer-v2" && c.name === "HookrRevenueTokenizer");
+const chosen = process.argv[5];
+const tokenizer = chosen ? tokenizers.find((c) => c.address.toLowerCase() === chosen.toLowerCase()) : tokenizers[0];
+if (!tokenizer) {
+  console.error(`${chosen} is not a revenue-tokenizer-v2 tokenizer in the record`);
+  process.exit(1);
+}
+const halves = (tokenizer.dataContracts ?? []).filter((d) => d.name === "HookrRevenueTokenCode");
 if (halves.length !== 2) {
-  console.error("the record lists no two HookrRevenueTokenCode halves under the revenue-tokenizer-v2 tokenizer");
+  console.error(`the record lists no two HookrRevenueTokenCode halves under the tokenizer ${tokenizer.address}`);
   process.exit(1);
 }
 for (const key of ["sources", "settings", "libraries", "metadataIpfs"]) {
@@ -45,7 +56,7 @@ const [half] = halves;
 const argument = process.argv[2];
 if (!argument || argument === "--help") {
   console.error("usage: node hookr-1/revenue-tokenizer-v2/check-token-code.mjs --input");
-  console.error("       node hookr-1/revenue-tokenizer-v2/check-token-code.mjs <solc output.json> <half 0 hex file> <half 1 hex file>");
+  console.error("       node hookr-1/revenue-tokenizer-v2/check-token-code.mjs <solc output.json> <half 0 hex file> <half 1 hex file> [tokenizer]");
   process.exit(2);
 }
 
@@ -69,12 +80,12 @@ if (argument === "--input") {
   // No process.exit here: on a pipe it would cut the input short before stdout drains.
   process.stdout.write(JSON.stringify(input) + "\n");
 } else {
-  check(process.argv.slice(2));
+  check(process.argv.slice(2, 5));
 }
 
 function check([outputPath, ...halfPaths]) {
   if (halfPaths.length !== 2) {
-    console.error("usage: node hookr-1/revenue-tokenizer-v2/check-token-code.mjs <solc output.json> <half 0 hex file> <half 1 hex file>");
+    console.error("usage: node hookr-1/revenue-tokenizer-v2/check-token-code.mjs <solc output.json> <half 0 hex file> <half 1 hex file> [tokenizer]");
     process.exit(2);
   }
 
@@ -151,6 +162,6 @@ function check([outputPath, ...halfPaths]) {
 
   console.log(
     `MATCH HookrRevenueToken creation code: ${stored.length} bytes in 2 halves (${pieces.map((p) => p.length).join(" + ")}), ` +
-      `${links} libraries linked; HookrRevenueTokenCode metadata ${cid}`,
+      `${links} libraries linked; HookrRevenueTokenCode metadata ${cid}; tokenizer ${tokenizer.address}`,
   );
 }
