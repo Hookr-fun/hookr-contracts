@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-// Compares one contract's solc output with the code at its address on chain 4663, byte for byte.
+// Compares one contract's solc output with the code at its address on chain 4663, byte for byte, or on Arbitrum One
+// (chain id 42161) with `--chain 42161` first, from the record in deployments/arbitrum-42161.json.
 // The linked libraries come from the record. The immutables are the only bytes taken from the chain
 // code, at the offsets solc reports for them; every other byte, the metadata hash included, must match.
 //
@@ -14,11 +15,18 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const record = JSON.parse(readFileSync(join(here, "deployments", "robinhood-4663.json"), "utf8"));
+const RECORDS = { 4663: "robinhood-4663.json", 42161: "arbitrum-42161.json" };
+const args = process.argv.slice(2);
+const chainId = args[0] === "--chain" ? args.splice(0, 2)[1] : "4663";
+if (!RECORDS[chainId]) {
+  console.error(`no record for chain ${chainId}; the records are for ${Object.keys(RECORDS).join(" and ")}`);
+  process.exit(2);
+}
+const record = JSON.parse(readFileSync(join(here, "deployments", RECORDS[chainId]), "utf8"));
 
-const [address, outputPath, chainPath] = process.argv.slice(2);
+const [address, outputPath, chainPath] = args;
 if (!address || !outputPath || !chainPath) {
-  console.error("usage: node hookr-1/check-runtime.mjs <address> <solc output.json> <chain code hex file>");
+  console.error("usage: node hookr-1/check-runtime.mjs [--chain 42161] <address> <solc output.json> <chain code hex file>");
   process.exit(2);
 }
 

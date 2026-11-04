@@ -14,6 +14,11 @@
 //
 //   node hookr-1/standard-input.mjs <address> <build root> > input.json
 //
+// The same release is deployed on Arbitrum One (chain id 42161) at the same addresses, recorded in
+// deployments/arbitrum-42161.json. Pass `--chain 42161` first to read that record instead:
+//
+//   node hookr-1/standard-input.mjs --chain 42161 <address> > input.json
+//
 // Run `git submodule update --init --recursive` first: the dependency sources come from lib/.
 
 import { readFileSync } from "node:fs";
@@ -22,11 +27,18 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-const record = JSON.parse(readFileSync(join(here, "deployments", "robinhood-4663.json"), "utf8"));
+const RECORDS = { 4663: "robinhood-4663.json", 42161: "arbitrum-42161.json" };
+const args = process.argv.slice(2);
+const chainId = args[0] === "--chain" ? args.splice(0, 2)[1] : "4663";
+if (!RECORDS[chainId]) {
+  console.error(`no record for chain ${chainId}; the records are for ${Object.keys(RECORDS).join(" and ")}`);
+  process.exit(2);
+}
+const record = JSON.parse(readFileSync(join(here, "deployments", RECORDS[chainId]), "utf8"));
 
-const argument = process.argv[2];
+const argument = args[0];
 if (!argument || argument === "--help") {
-  console.error("usage: node hookr-1/standard-input.mjs <address> [build root] | --list");
+  console.error("usage: node hookr-1/standard-input.mjs [--chain 42161] <address> [build root] | --list");
   process.exit(2);
 }
 
@@ -45,7 +57,7 @@ if (!contract) {
 }
 
 const PLACEHOLDER = "<build-root>";
-const buildRoot = process.argv[3];
+const buildRoot = args[1];
 const settings = JSON.stringify(record.settings[contract.settings]);
 if ((settings.includes(PLACEHOLDER) || Object.keys(contract.sources).some((u) => u.includes(PLACEHOLDER))) && !buildRoot) {
   console.error(`${contract.name}'s metadata records its dependencies under an absolute path, written ${PLACEHOLDER} here;`);
