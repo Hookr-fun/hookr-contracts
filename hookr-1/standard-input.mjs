@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Writes the solc standard JSON input of one deployed Hookr 1 contract, rebuilt from the files in this
+// Writes the solc standard JSON input of one deployed contract, rebuilt from the files in this
 // repository and the record in deployments/robinhood-4663.json. Compiling it with solc 0.8.37 gives the
 // contract's verified bytecode, metadata hash included.
 //

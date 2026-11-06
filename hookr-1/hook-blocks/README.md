@@ -1,6 +1,6 @@
 # Hook Blocks
 
-The Hook Blocks deployed with Hookr 1 in production waves 0 to 3 on Robinhood Chain (chain id 4663): 46 contracts in 17 blocks, each in its own folder with its sources and addresses. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones.
+The Hook Blocks deployed beside the release in production waves 0 to 3 on Robinhood Chain (chain id 4663): 46 contracts in 17 blocks, each in its own folder with its sources and addresses. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones.
 
 | Wave | Block | Contracts | What it does |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ The Hook Blocks deployed with Hookr 1 in production waves 0 to 3 on Robinhood Ch
 | 1 | [Recovery Reserve](./recovery-reserve/README.md) | 1 | A small per-pool reserve, funded by a bounded slice of the pool's claims, that tops up LPs or traders after a verified incident, behind a 30-minute timelock, a reviewer attestation per claim and per-incident and per-pool caps. |
 | 1 | [Revenue Router](./revenue-router/README.md) | 1 | An ownerless CREATE2 factory and directory of revenue splits. |
 | 2 | [Limit Orders](./limit-orders/README.md) | 1 | Escrowed exact-input limit orders that anyone can fill through the pinned Hookr router. |
-| 3 | [Builder Attribution](./builder-attribution/README.md) | 3 | Registered integration partners, one-time market vouchers and the permanent attribution record of every pool opened through the attribution launcher, which deploys the pool's revenue vault and initializes the pool with a partner tax advisory paying that vault. |
+| 3 | [Builder Attribution](./builder-attribution/README.md) | 3 | Registered integration partners, one-time market vouchers and the permanent attribution record of every pool opened through the attribution launcher, which deploys the pool's revenue vault and initializes the pool with the block's `HookrDirectionalTax` advisory, which pays that vault. |
 | 3 | [Credential Gate](./credential-gate/README.md) | 1 | A fail-closed advisory for gated pools: credential lists, sanctions, curated routers and restricted subjects, plus off-market session tiers, in one advisory slot. |
 | 3 | [Directional Tax](./directional-tax/README.md) | 7 | Separate buy and sell taxes, each at most 10%, taken in the quote and credited to a claim queue per pool and direction that converts later, off the trade path. |
 | 3 | [Swap Reward Mint](./swap-reward-mint/README.md) | 2 | An advisory that takes a fixed reward slice of each swap's quote leg (at most 5%) for a reward program, which the program's minter later turns into reward tokens. |

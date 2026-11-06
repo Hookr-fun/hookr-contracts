@@ -1,6 +1,6 @@
 # Gas bench
 
-What Hookr's pieces cost in gas, measured on the live Hookr 1 contracts on Robinhood Chain (chain id 4663), and the one command that reproduces every number. Hookr's per-Hook-Block gas figures come from here: the command writes them to [`gas-figures.json`](./gas-figures.json).
+What Hookr's pieces cost in gas, measured on the release's live contracts on a fork of Robinhood Chain (chain id 4663), and the one command that reproduces every number. Hookr's per-Hook-Block gas figures come from here: the command writes them to [`gas-figures.json`](./gas-figures.json).
 
 Each figure is a whole transaction on a fork of the chain. It answers one question: how much more gas does this cost than the same action without it? "Without it" is a pool with no hook, for Hookr's own base cost, or the same Hookr pool with the piece off, for every piece on top. Only the pieces in the table below are measured; the bench says nothing about the others.
 
@@ -122,7 +122,7 @@ A piece on top of the base costs the base as well: a pool with LP Rewards costs 
 
 ## The live contracts
 
-The bench deploys none of these; it calls them at the pinned block. The Hookr 1 names and addresses are those of [`hookr-1/deployments/robinhood-4663.json`](../hookr-1/deployments/robinhood-4663.json), except the Wallet Cap Rules, deployed on 2026-10-12.
+The bench deploys none of these; it calls them at the pinned block. The release's names and addresses are those of [`hookr-1/deployments/robinhood-4663.json`](../hookr-1/deployments/robinhood-4663.json).
 
 | Contract | Address | Used for |
 | --- | --- | --- |
@@ -137,7 +137,7 @@ The bench deploys none of these; it calls them at the pinned block. The Hookr 1 
 | `HookrMarketGuard` | `0xFc5CAE364FDEE4347D97E2aEB82f3155068693A4` | Market Guard |
 | `HookrBuySellBlock` | `0xffefEA428C13813D4526fc77A8CA0df0c787626f` | Buy/Sell Block |
 | Universal Router 2.1.1 | `0x8876789976dEcBfCbBbe364623C63652db8C0904` | the router the root curates |
-| Universal Router (second) | `0x06AfBA43Fd06227fA663b0DAecF536f6EaA6bf99` | the router the root does not curate; runtime code hash `0xbe8e…02d5`, as [`deployments/robinhood-4663.v2.json`](../deployments/robinhood-4663.v2.json) records |
+| Universal Router (second) | `0x06AfBA43Fd06227fA663b0DAecF536f6EaA6bf99` | the router the root does not curate; runtime code hash `0xbe8e…02d5` |
 | ETH / USD price feed | `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9` | the feed Market Guard prices against |
 | `PoolManager`, Permit2, WETH | `0x8366a39CC670B4001A1121B8F6A443A643e40951`, `0x000000000022D473030F116dDEE9F6B43aC78BA3`, `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73` | the chain's own |
 

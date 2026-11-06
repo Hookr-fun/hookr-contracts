@@ -1,10 +1,10 @@
-# Hookr 1 tests
+# Tests
 
-These are the Hookr 1 release's own unit, fuzz and invariant tests. Here they build and run against the published sources in [`../src/`](../src/).
+These are the release's own unit, fuzz and invariant tests. Here they build and run against the published sources in [`../src/`](../src/).
 
 ## Where they come from
 
-They are the test tree of the Hookr 1 release package, the package the deployed contracts were built from. That package's `src/` is the same as [`../src/`](../src/), file for file: all 127 files match the keccak256 that [`../deployments/robinhood-4663.json`](../deployments/robinhood-4663.json) records for the verified sources. So these tests exercise the code that is on chain, up to the metadata hash (see "With Forge" in [`../README.md`](../README.md)).
+They are the test tree of the release package, the package the deployed contracts were built from. That package's `src/` is the same as [`../src/`](../src/), file for file: all 127 files match the keccak256 that [`../deployments/robinhood-4663.json`](../deployments/robinhood-4663.json) records for the verified sources. So these tests exercise the code that is on chain, up to the metadata hash (see "With Forge" in [`../README.md`](../README.md)).
 
 What differs from the package:
 
@@ -89,4 +89,4 @@ The RPC must serve state at the blocks the tests pin, so use an archive node. Ke
 
 ## Finding ids
 
-Test comments cite finding ids such as F-011, M-2 or I-12. They come from Hookr's own reviews of the release, not from an independent audit. No independent audit of Hookr 1 has been completed.
+Test comments cite finding ids such as F-011, M-2 or I-12. They come from Hookr's own reviews of the release, not from an independent audit. No independent audit has been completed.
