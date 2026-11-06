@@ -2,11 +2,15 @@
 
 The [README](./README.md) lists the contracts Hookr runs today. This page keeps what a builder still needs about the contracts that came before them. A pool never changes its hook, so a pool opened on these contracts keeps trading on them, and nothing here can retune it.
 
-Newest first: the first Agent gate, the revenue tokenizer that minted tokens before 29 October 2026, the modular roots (V2), and launch generations 3, 4 and 5.
+Newest first: the first Agent gate, the revenue tokenizer on fixed Rules, the revenue tokenizer that minted tokens before 29 October 2026, the modular roots (V2), and launch generations 3, 4 and 5.
 
 ## The first Agent gate
 
 `HookrAgentGate` at [`0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9`](https://robin.etherscan.io/address/0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9#code), an exact match on Sourcify. The pools that bound it keep it; new pools bind the Agent gate in the [README](./README.md#deployments).
+
+## The revenue tokenizer on fixed Rules
+
+`HookrRevenueTokenizer` at [`0x522723A7a09684515881568Ab8247f3846D66F43`](https://robin.etherscan.io/address/0x522723A7a09684515881568Ab8247f3846D66F43#code), its `HookrRevenueStateView` at [`0x007EA7554DDD113Fa441f37F1d16f66030E1B81E`](https://robin.etherscan.io/address/0x007EA7554DDD113Fa441f37F1d16f66030E1B81E#code) and its `HookrLegCollector` at [`0x5a28571362d1dd512299deb80b895C72F705D8c3`](https://robin.etherscan.io/address/0x5a28571362d1dd512299deb80b895C72F705D8c3#code), each an exact match on Sourcify. It takes the three Rules its constructor fixed and has minted no revenue tokens. New revenue tokens mint through the tokenizer in the [README](./README.md#deployments).
 
 ## Revenue tokens minted before 29 October 2026
 

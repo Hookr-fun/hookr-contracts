@@ -16,7 +16,7 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 | `HookrRules`, the core | [`0x342bAA22e202954593b04B7eD1663621E0565d46`](https://robin.etherscan.io/address/0x342bAA22e202954593b04B7eD1663621E0565d46#code) | Rules with the Hook Blocks built in. New pools on hookr.fun bind it. |
 | `HookrBinder` | [`0x0B0f08c381ed6902FAb74b470fe7f8A58E8EA269`](https://robin.etherscan.io/address/0x0B0f08c381ed6902FAb74b470fe7f8A58E8EA269#code) | The core's `bind` and `blockCall`, run in the core's storage. |
 | `HookrLauncher` | [`0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C`](https://robin.etherscan.io/address/0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C#code) | Launches a token on one to eight pools in one transaction, bound to the core. |
-| `HookrRules`, combined | [`0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e`](https://robin.etherscan.io/address/0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e#code) | Rules with the Hook Blocks built in. Revenue token markets and hooks of your own bind it. |
+| `HookrRules`, combined | [`0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e`](https://robin.etherscan.io/address/0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e#code) | Rules with the Hook Blocks built in. Hooks of your own bind it. |
 | `HookrRules`, the release's | [`0x4a71c270b1520F94064268102AebD744b0DE7942`](https://robin.etherscan.io/address/0x4a71c270b1520F94064268102AebD744b0DE7942#code) | Canonical Venue Token, lane and partner launches bind it. |
 | `HookrLane` | [`0x9A8a1006469BA196f8FEfc017a53505C83A060BB`](https://robin.etherscan.io/address/0x9A8a1006469BA196f8FEfc017a53505C83A060BB#code) | Arb recapture. Its executor is What The Hook's [`0x4B4c16681401454140a9dBca55e5c186BBE8D728`](https://robin.etherscan.io/address/0x4B4c16681401454140a9dBca55e5c186BBE8D728). |
 | `HookrRegistry` | [`0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602`](https://robin.etherscan.io/address/0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602#code) | Timelocked admissions of Rules and advisories, launchers and the guardian's brake on new pools. |
@@ -31,9 +31,6 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 | `HookrRevenueStateView` | [`0x83B8F1650a22b7da9Fac45A09F51e0685C47E944`](https://robin.etherscan.io/address/0x83B8F1650a22b7da9Fac45A09F51e0685C47E944#code) | Reads a revenue token's streams. |
 | `HookrLegCollector` | [`0x2b8dd989D34256b7685E3Bd8F10299A4891F1Af2`](https://robin.etherscan.io/address/0x2b8dd989D34256b7685E3Bd8F10299A4891F1Af2#code) | Takes Hookr's leg of revenue tokens and sweeps it to the treasury's target. |
 | `HookrTimeSharesFactory` | [`0x05fDb5654e1D52593Ee774cae964717d5834dF1B`](https://robin.etherscan.io/address/0x05fDb5654e1D52593Ee774cae964717d5834dF1B#code) | Time shares on those revenue tokens: lock them by the day and earn each day's income. |
-| `HookrRevenueTokenizer`, fixed Rules | [`0x522723A7a09684515881568Ab8247f3846D66F43`](https://robin.etherscan.io/address/0x522723A7a09684515881568Ab8247f3846D66F43#code) | The same, on the three Rules its constructor fixed. |
-| `HookrRevenueStateView`, fixed Rules | [`0x007EA7554DDD113Fa441f37F1d16f66030E1B81E`](https://robin.etherscan.io/address/0x007EA7554DDD113Fa441f37F1d16f66030E1B81E#code) | Reads that tokenizer's revenue tokens' streams. |
-| `HookrLegCollector`, fixed Rules | [`0x5a28571362d1dd512299deb80b895C72F705D8c3`](https://robin.etherscan.io/address/0x5a28571362d1dd512299deb80b895C72F705D8c3#code) | Takes Hookr's leg of that tokenizer's revenue tokens and sweeps it to the treasury's target. |
 | `PoolManager` | [`0x8366a39CC670B4001A1121B8F6A443A643e40951`](https://robin.etherscan.io/address/0x8366a39CC670B4001A1121B8F6A443A643e40951#code) | Uniswap v4's singleton. Every Hookr pool lives in it. |
 
 `HookrRoot` is on the allowlist of Uniswap's routing service for Robinhood Chain.
@@ -41,7 +38,7 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 ### Sources
 
 - In this repository: `HookrRoot`, the release's `HookrRules`, `HookrLane`, `HookrRegistry`, `HookrRouter`, `HookrQuoter` and `HookrTreasury`, under [`hookr-1/src/`](./hookr-1/src/). The two factories are the sources in [`hookr-1/hook-blocks/vesting-milestone/`](./hookr-1/hook-blocks/vesting-milestone/README.md) and [`hookr-1/hook-blocks/pay-later/`](./hookr-1/hook-blocks/pay-later/README.md), deployed for `HookrLauncher`. The revenue tokenizer and its time shares factory are under [`hookr-1/revenue-tokenizer-4/`](./hookr-1/revenue-tokenizer-4/README.md).
-- On [Sourcify](https://sourcify.dev) as exact matches: the core, `HookrBinder`, `HookrLauncher`, the combined `HookrRules`, `HookrOwnedRootFactoryV2`, `PayLaterFactory`, and the seven revenue tokenizer contracts in the table above.
+- On [Sourcify](https://sourcify.dev) as exact matches: the core, `HookrBinder`, `HookrLauncher`, the combined `HookrRules`, `HookrOwnedRootFactoryV2`, `PayLaterFactory`, and the four revenue tokenizer contracts in the table above.
 - Not on Sourcify yet: `HookrAgentGate` and `HookrVestingMilestoneFactory`.
 
 [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) lists the release's other contracts and the Hook Blocks, each with its source. [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) has the same set as JSON.
