@@ -1,8 +1,8 @@
-# Hookr 1
+# Release `hookr-1`
 
-Hookr 1 is a launchpad on Uniswap v4, live on Robinhood Chain (chain id 4663). Every Hookr 1 pool runs on one shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code).
+`HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code) is Hookr's shared Uniswap v4 hook on Robinhood Chain (chain id 4663). New pools on hookr.fun bind the core, `HookrRules` at [`0x342bAA22e202954593b04B7eD1663621E0565d46`](https://robin.etherscan.io/address/0x342bAA22e202954593b04B7eD1663621E0565d46#code), which the [README](../README.md#deployments) lists. This folder holds the release the core runs on, and the release's own Rules, which Canonical Venue Token, lane and partner launches bind.
 
-A creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. A pool launched on the Wallet Cap Rules also caps how much of its token one wallet can buy while its launch guard lasts. A fee right can be locked behind a revenue token, whose holders share the income the right earns. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
+On the release's Rules, a creator launches a token on one to eight pools in a single transaction, each with its own quote currency, price and range, and picks each pool's rules at launch: Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, with every parameter set by the creator. The rules are frozen when the pool opens and stay that way for the life of the pool. A pool can also take arb recapture, which keeps the profit of arbitrage against the pool's other venues with the pool's LPs and traders instead of leaving it to outside bots, and King of the Pool, a pot paid to the largest buyer of each round. A pool launched on the Wallet Cap Rules also caps how much of its token one wallet can buy while its launch guard lasts. A fee right can be locked behind a revenue token, whose holders share the income the right earns. Anyone can deploy their own unmodified copy of the hook through the owned-root factory.
 
 The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: before initialize, before add liquidity, before remove liquidity, before swap, after swap, and the before-swap and after-swap return deltas.
 
@@ -15,7 +15,7 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 | [`test/`](./test/README.md) | The release's unit, fuzz and invariant tests, which CI runs against `src/`. [`script/`](./script/) holds three helpers they import and [`snapshots/`](./snapshots/) the gas figures and code sizes their benches check. |
 | [`king-of-the-pool-whole-pot/`](./king-of-the-pool-whole-pot/README.md) | A second Rules contract whose King of the Pool pays the round's winner the whole pot. One source file differs from the release. |
 | [`wallet-cap/`](./wallet-cap/README.md) | The Wallet Cap Rules: the whole-pot Rules plus a cap on how much of a pool's token one wallet can buy while the pool's launch guard lasts. One source file is added to the whole-pot Rules' sources. |
-| [`revenue-tokenizer/`](./revenue-tokenizer/README.md) | The Revenue Tokenizer and its add-ons: lock a fee right and mint a fixed-supply revenue token whose holders share its income, 16 contracts. Their sources are added to the release's. |
+| [`revenue-tokenizer/`](./revenue-tokenizer/README.md) | `HookrRevenueTokenizer` at `0xfb3c1501c727f30883cd7B36Ec380381af7412Ef` and its add-ons: lock a fee right and mint a fixed-supply revenue token whose holders share its income, 16 contracts. Their sources are added to the release's. |
 | [`hook-blocks/`](./hook-blocks/README.md) | The 46 Hook Block contracts deployed in production waves 0 to 3 and the 7 contracts of the three HookrBook connectors, one folder per block or connector. |
 | [`deployments/robinhood-4663.json`](./deployments/robinhood-4663.json) | Every one of the 108 contracts: address, deployment, constructor arguments, linked libraries, runtime keccak256, compiler settings, and the file in this repository behind every source unit of its verified metadata. |
 | [`standard-input.mjs`](./standard-input.mjs) | Writes any of those contracts' solc standard JSON input from the files here. |
@@ -23,7 +23,7 @@ The shared hook's address carries its Uniswap v4 permission bits, `0x2acc`: befo
 
 ## Deployed contracts
 
-Every Hookr 1 contract in production on Robinhood Chain (chain id 4663) is listed below: the release's 35, the 2 of King of the Pool whole pot, the 2 of Wallet Cap, the 46 of the Hook Blocks, the 7 of the HookrBook connectors and the 16 of the Revenue Tokenizer, 108 in all.
+The contracts whose sources are in this folder, all in production on Robinhood Chain (chain id 4663): the release's 35, the 2 of King of the Pool whole pot, the 2 of Wallet Cap, the 46 of the Hook Blocks, the 7 of the HookrBook connectors and the 16 of the Revenue Tokenizer, 108 in all.
 
 Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc66a30041eb310035cfc30eab1bb9bdc0e031`. Every contract the release deploys itself goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, with a salt the factory binds to the deployer and derives from the release id and the contract's role, so nobody else can occupy these addresses. The King of the Pool whole-pot `HookrRules`, `HookrRulesWalletCap`, 37 of the Hook Block contracts, 3 of the connector contracts and 13 of the Revenue Tokenizer contracts go through the same factory. Every other contract is created by another contract in this list in its constructor, as noted. Every address below is an exact match on Sourcify, and its runtime code hashes to the value in the record.
 
@@ -31,7 +31,7 @@ Release id `hookr-1`, built from artifact packet `0x83962c12ff55df431612ffae8bfc
 
 | Contract | Address | Sourcify | What it does |
 | --- | --- | --- | --- |
-| `HookrRoot` | [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code) | [match](https://repo.sourcify.dev/4663/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc) | The shared Uniswap v4 hook of every Hookr 1 pool. Freezes each pool's terms when the pool opens. |
+| `HookrRoot` | [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code) | [match](https://repo.sourcify.dev/4663/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc) | Hookr's shared Uniswap v4 hook. Freezes each pool's terms when the pool opens. |
 | `HookrRules` | [`0x4a71c270b1520F94064268102AebD744b0DE7942`](https://robin.etherscan.io/address/0x4a71c270b1520F94064268102AebD744b0DE7942#code) | [match](https://repo.sourcify.dev/4663/0x4a71c270b1520F94064268102AebD744b0DE7942) | Anti-Snipe, Hookr dynamic fees, Auto Burn and LP Rewards, and the ledger of every claim they create. Bound to the root. |
 | `HookrRecapture` | [`0xF83569E564d70daebc35950f66a73f2e2B915583`](https://robin.etherscan.io/address/0xF83569E564d70daebc35950f66a73f2e2B915583#code) | [match](https://repo.sourcify.dev/4663/0xF83569E564d70daebc35950f66a73f2e2B915583) | The arb recapture split and King of the Pool, a module the Rules reach by DELEGATECALL. Created by `HookrRules`. |
 | `HookrLane` | [`0x9A8a1006469BA196f8FEfc017a53505C83A060BB`](https://robin.etherscan.io/address/0x9A8a1006469BA196f8FEfc017a53505C83A060BB#code) | [match](https://repo.sourcify.dev/4663/0x9A8a1006469BA196f8FEfc017a53505C83A060BB) | The root's arb recapture module, reached by DELEGATECALL. Created by `HookrRoot`. |
@@ -259,4 +259,4 @@ That command also compiles the tests in [`test/`](./test/README.md), which takes
 
 ## Status
 
-Hookr 1 is deployed and its sources are verified. No independent audit of Hookr 1 has been completed.
+The release is deployed and its sources are verified. No independent audit has been completed.

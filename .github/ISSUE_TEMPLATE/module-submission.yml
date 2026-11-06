@@ -1,38 +1,37 @@
-name: Module submission
-description: A module with code and tests, for review against the catalog's registration shape
-title: "module: "
+name: Advisory submission
+description: An advisory with code and tests, for review against IHookrAdvisory and the conformance suite
+title: "advisory: "
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
-        For a module that compiles and has tests, either under `labs/` in a pull request or in a public repository at a pinned commit. Start from `labs/templates/module`. A review here says whether the module fits the shape the catalog admits and what a registration would have to declare; it does not register anything. Registration is permanent and a registered module serves pools only once a sealed profile names it. This issue is public: no contact details, no keys, no unpublished addresses.
+        For an advisory that compiles and has tests, in a public repository at a pinned commit. Start from `hookr-1/test/kit/TemplateAdvisory.sol` and inherit `hookr-1/test/kit/AdvisoryConformance.sol` in its test. A review here says whether the advisory fits what the registry admits on HookrRoot; it admits nothing. The registry admits an advisory at its exact code hash, behind a timelock, and pools bind it at launch. This issue is public: no contact details, no keys, no unpublished addresses.
   - type: input
     id: source
     attributes:
       label: Source
-      description: A labs path on a branch or pull request, or a public repository URL plus a 40-character commit.
-      placeholder: "labs/hooks/my-module at PR #NN, or https://github.com/owner/repo at 0123…"
+      description: A public repository URL plus a 40-character commit.
+      placeholder: "https://github.com/owner/repo at 0123…"
     validations:
       required: true
   - type: textarea
     id: config
     attributes:
-      label: Config struct
-      description: The fields, their bounds, and what validateConfig rejects.
+      label: Bind data
+      description: What bind takes, its bounds, and what it rejects.
     validations:
       required: true
   - type: textarea
     id: maxima
     attributes:
       label: Requested maxima
-      description: The most the module will ever ask for, against the five registration caps. The native block's registration is maxLpFeeSurchargePips 500,000, maxSpecifiedQuoteTakeBps 4,000, maxUnspecifiedQuoteTakeBps 2,500, maxSubjectTakeBps 1,000, callbackGasLimit 2,000,000.
+      description: The most the advisory will ever ask for, as the caps and gas limit its admission would declare.
       placeholder: |
-        maxLpFeeSurchargePips:
-        maxSpecifiedQuoteTakeBps:
-        maxUnspecifiedQuoteTakeBps:
+        maxLpFeePips:
+        maxQuoteTakePips:
         maxSubjectTakeBps:
-        callbackGasLimit:
+        gasLimit:
     validations:
       required: true
   - type: input
@@ -46,18 +45,18 @@ body:
       label: Tests run
       description: The exact command and the summary line it printed.
       placeholder: |
-        forge test --root labs --match-contract MyModuleTest
-        Ran 8 tests ... 8 passed
+        forge test --match-contract MyAdvisoryConformanceTest
+        Ran 16 tests ... 16 passed
     validations:
       required: true
   - type: dropdown
     id: block
     attributes:
-      label: Does it need a new native-block version?
-      description: A read-only module (IHookrModuleV1) can be registered as it is. Anything that must hold state across swaps or execute PoolManager actions is the stateful lane, which the catalog admits once per catalog, and so is a new block version in a new sealed profile.
+      label: Does it refuse swaps or take from them?
+      description: A fail-open advisory may neither refuse a swap nor take from it. One that does either runs fail closed.
       options:
-        - No, it is a read-only module
-        - Yes, it needs the stateful lane
+        - No, it only adds a fee surcharge
+        - Yes, it refuses or takes
         - Not sure
     validations:
       required: true

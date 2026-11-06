@@ -1,4 +1,4 @@
-name: Hookr 1 tests
+name: Tests
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   format:
-    name: Hookr 1 formatting
+    name: Formatting
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -46,7 +46,7 @@ jobs:
     # One solc process compiles every test file a run selects, and all of them at once needs more memory than a
     # hosted runner has, so each job runs one group of folders. Together the groups cover every test the default and
     # lane profiles select; the fork tests are not run here (hookr-1/test/README.md).
-    name: Hookr 1 tests (${{ matrix.group }})
+    name: Tests (${{ matrix.group }})
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:

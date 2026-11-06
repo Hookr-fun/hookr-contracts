@@ -1,13 +1,13 @@
 # Wallet Cap
 
-Another Rules contract for the Hookr 1 root, deployed on 2026-10-12. While a pool's launch guard lasts, no wallet can buy more than the pool's cap of its token. Everything else is the King of the Pool whole-pot Rules: the release's Rules with the whole-pot King of the Pool. The registry admits these Rules on the Hookr 1 root next to the release's Rules and the whole-pot Rules.
+Another Rules contract for `HookrRoot`, deployed on 2026-10-12. While a pool's launch guard lasts, no wallet can buy more than the pool's cap of its token. Everything else is the King of the Pool whole-pot Rules: the release's Rules with the whole-pot King of the Pool. The registry admits these Rules on `HookrRoot` next to the release's Rules and the whole-pot Rules.
 
 | Contract | Address | Verified source |
 | --- | --- | --- |
 | `HookrRulesWalletCap` | [`0xb67b73E28C522a3AAC438bE970bf94976Deee52a`](https://robin.etherscan.io/address/0xb67b73E28C522a3AAC438bE970bf94976Deee52a#code) | [Sourcify](https://repo.sourcify.dev/4663/0xb67b73E28C522a3AAC438bE970bf94976Deee52a) |
 | `HookrRecapture`, created by those Rules in their constructor | [`0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23`](https://robin.etherscan.io/address/0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23#code) | [Sourcify](https://repo.sourcify.dev/4663/0xbbC43DC2f01F5E7882caCd78EF094A44eF0E4d23) |
 
-Both were deployed in transaction `0x111de55d14abdbf4f16434f508cfe1e775f3835125c71957b9c38d846a2e0b74` at block 87,010,819, the Rules through the same CREATE3 factory as the release, under release id `hookr-1-wallet-cap-v2` and role `HookrRulesWalletCap`. The Rules take the same constructor arguments as the release's Rules: the PoolManager, the Hookr 1 registry, the treasury, the Hookr 1 root and a 2,000 bps floor on the protocol's share of rule fees. The registry admitted them on the root with the whole-pot Rules' terms in transaction `0xb26b75215327bce5c2e7ac6de9174866d5852b190465a7be4edf8614396ade02`, and the treasury admitted them as a source it collects from in transaction `0xa3369965715a33bffbc3e51248e719f69684c93fd8fd38116b2e39d6ab8a1bf3`.
+Both were deployed in transaction `0x111de55d14abdbf4f16434f508cfe1e775f3835125c71957b9c38d846a2e0b74` at block 87,010,819, the Rules through the same CREATE3 factory as the release, under release id `hookr-1-wallet-cap-v2` and role `HookrRulesWalletCap`. The Rules take the same constructor arguments as the release's Rules: the PoolManager, the registry, the treasury, `HookrRoot` and a 2,000 bps floor on the protocol's share of rule fees. The registry admitted them on the root with the whole-pot Rules' terms in transaction `0xb26b75215327bce5c2e7ac6de9174866d5852b190465a7be4edf8614396ade02`, and the treasury admitted them as a source it collects from in transaction `0xa3369965715a33bffbc3e51248e719f69684c93fd8fd38116b2e39d6ab8a1bf3`.
 
 ## The cap
 
