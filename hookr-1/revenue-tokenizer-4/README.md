@@ -2,7 +2,7 @@
 
 `HookrRevenueTokenizer` at [`0x08De138e558a9258c6B4077E8bdeB9ad1fB46a4B`](https://robin.etherscan.io/address/0x08De138e558a9258c6B4077E8bdeB9ad1fB46a4B#code) locks fee rights and mints a fixed-supply revenue token whose holders share the income those fee rights earn, in the same transaction, and adds more streams to that token later. It keeps no list of Rules: on every launch and every new Rules stream it asks `HookrRegistry` whether that Rules is admitted on `HookrRoot`.
 
-Nothing here has an owner. Every outside address the tokenizer uses, but the Rules, is fixed in its constructor, and no function changes a pin, pauses it or moves a locked fee right before its term ends. Anyone can call it directly.
+Nothing here has an owner. Every outside address the tokenizer uses, except the Rules, is fixed in its constructor, and no function changes a pin, pauses it or moves a locked fee right before its term ends. Anyone can call it directly.
 
 ## Which Rules it takes
 
@@ -15,7 +15,7 @@ Nothing here has an owner. Every outside address the tokenizer uses, but the Rul
 
 - **Ways in.** `tokenize` locks any streams and mints the revenue token in one transaction: a new Hookr launch on `HookrRoot`, Hookr families handed in, a pool's Rules ledger, Fee Beneficiary NFTs, Uniswap v4 and v3 position NFTs, shares of another revenue token, and any outside fee right through an `IHookrRevenueSource` door. It can also open the revenue token's own market at mint.
 - **The market.** `defaultMarket(rules, token, quote, sqrtPriceX96, seed)` builds the market's terms on the Rules you name.
-- **Streams only grow.** `addStreams` locks more streams into a revenue token the tokenizer made, for as long as the token has a stream manager. A token minted with `openStreams` also takes streams from anyone, of every kind but an outside `IHookrRevenueSource` door. Nothing removes a stream or changes its door or its leg.
+- **Streams only grow.** `addStreams` locks more streams into a revenue token the tokenizer made, for as long as the token has a stream manager. A token minted with `openStreams` also takes streams from anyone, of every kind except an outside `IHookrRevenueSource` door. Nothing removes a stream or changes its door or its leg.
 - **The revenue token.** A fixed-supply ERC-20 with no owner, no pause and no second mint. It lists up to eight assets its income is paid in: native ETH first, then up to seven ERC-20s.
 - **Doors.** Each fee right reaches the token through a door: a pool's Rules ledger, the token's family door (`HookrFamilyForwarder`), a Fee Beneficiary NFT door, a v4 or v3 position door, a revenue token door, or an outside `IHookrRevenueSource` door.
 - **Sync.** `sync()`, `syncRange()` and `syncSome()` pull the doors, each on its own gas stipend, and recognize what arrived by balance delta. Anyone may call them, and the caller is paid the tip fixed at mint, at most 1% of the ETH the doors delivered, once they deliver 0.001 ETH.
@@ -23,7 +23,7 @@ Nothing here has an owner. Every outside address the tokenizer uses, but the Rul
 - **Recapture in another currency.** `addRulesCredits(i, member)` on the family door lists a recapture currency that is neither side of a pool, so that income reaches the holders. Anyone may call it.
 - **Drops.** Each revenue token has its own drop box. Anyone can drop ETH or any ERC-20 for the holders, who claim it by their balance at the end of the block before the drop.
 - **Terms.** A fee right in a family, position, Fee Beneficiary NFT or revenue token door is locked for good or for a term the creator sets, at least seven days. The account that locked it can move the end later, never earlier (`extendTerm`). At the end of a term anyone can call `release`, and the fee right goes back to that account. A Rules ledger has no term, and an outside `IHookrRevenueSource` door answers its own end, which can be revocable.
-- **Hook Blocks.** Every block the registry admits binds on a tokenized launch as on a normal one. Tax + Conversion's creator payout must name the revenue token (`AdvisoryRecipientMismatch` otherwise). Any other block admitted to take quote pays its own payee and is reported (`AdvisoryPayeeUnchecked`).
+- **Hook Blocks.** Every block the registry admits binds on a tokenized launch as on a normal one. Directional Tax's creator payout must name the revenue token (`AdvisoryRecipientMismatch` otherwise). Any other block admitted to take quote pays its own payee and is reported (`AdvisoryPayeeUnchecked`).
 
 ## The contracts
 
@@ -52,7 +52,7 @@ Deployed on 2026-11-06 between blocks 107,699,158 and 107,699,953, in ten transa
 
 ### Parts it reuses
 
-These were deployed before it and are used where they live. Each is on Sourcify.
+These were deployed before it and are used where they live. Each is on Sourcify, and their sources are in [`../revenue-tokenizer-v2/`](../revenue-tokenizer-v2/README.md#what-the-revenue-tokenizer-uses-from-here).
 
 | Contract | What it is | Address | Verified source |
 | --- | --- | --- | --- |

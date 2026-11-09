@@ -22,7 +22,7 @@ The Hook Blocks deployed beside the release in production waves 0 to 3 on Robinh
 | 3 | [Swap Reward Mint](./swap-reward-mint/README.md) | 2 | An advisory that takes a fixed reward slice of each swap's quote leg (at most 5%) for a reward program, which the program's minter later turns into reward tokens. |
 | 3 | [Zap Relay](./zap-relay/README.md) | 4 | A buy cut of up to 10% on a source pool, credited to the pool's zap vault, and a gated relay on a target pool that accepts buys only from those vaults. |
 
-Blocks that were planned but not deployed in these waves are not here.
+A Vesting Milestone or Pay Later factory takes only the pools of the launcher it was built with. On 2026-11-06 a second factory of each, 3 contracts with Pay Later's vault deployer, was deployed for the core's `HookrLauncher` `0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C`, from the same creation code; [Vesting Milestone](./vesting-milestone/README.md) and [Pay Later](./pay-later/README.md) list both.
 
 ## HookrBook connectors
 
