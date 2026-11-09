@@ -37,9 +37,14 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 
 ### Sources
 
-- In this repository: `HookrRoot`, the release's `HookrRules`, `HookrLane`, `HookrRegistry`, `HookrRouter`, `HookrQuoter` and `HookrTreasury`, under [`hookr-1/src/`](./hookr-1/src/). The two factories are the sources in [`hookr-1/hook-blocks/vesting-milestone/`](./hookr-1/hook-blocks/vesting-milestone/README.md) and [`hookr-1/hook-blocks/pay-later/`](./hookr-1/hook-blocks/pay-later/README.md), deployed for `HookrLauncher`. The revenue tokenizer and its time shares factory are under [`hookr-1/revenue-tokenizer-4/`](./hookr-1/revenue-tokenizer-4/README.md).
-- On [Sourcify](https://sourcify.dev) as exact matches: the core, `HookrBinder`, `HookrLauncher`, the combined `HookrRules`, `HookrOwnedRootFactoryV2`, `PayLaterFactory`, and the four revenue tokenizer contracts in the table above.
-- Not on Sourcify yet: `HookrAgentGate` and `HookrVestingMilestoneFactory`.
+Every contract in the table but `PoolManager` has its source in this repository, byte-identical to its verified source, and is an exact match on [Sourcify](https://sourcify.dev):
+
+- `HookrRoot`, the release's `HookrRules`, `HookrLane`, `HookrRegistry`, `HookrRouter`, `HookrQuoter` and `HookrTreasury`: [`hookr-1/src/`](./hookr-1/src/).
+- The core, `HookrBinder` and `HookrLauncher`: [`hookr-1/core-2/`](./hookr-1/core-2/README.md).
+- The combined `HookrRules` and `HookrOwnedRootFactoryV2`: [`hookr-1/combined-core/`](./hookr-1/combined-core/README.md).
+- `HookrVestingMilestoneFactory` and `PayLaterFactory`, built for `HookrLauncher`: [`hookr-1/hook-blocks/vesting-milestone/`](./hookr-1/hook-blocks/vesting-milestone/README.md) and [`hookr-1/hook-blocks/pay-later/`](./hookr-1/hook-blocks/pay-later/README.md).
+- `HookrAgentGate`: [`hookr-1/agent-gate/`](./hookr-1/agent-gate/README.md).
+- The revenue tokenizer and its time shares factory: [`hookr-1/revenue-tokenizer-4/`](./hookr-1/revenue-tokenizer-4/README.md), and the eight contracts it reuses: [`hookr-1/revenue-tokenizer-v2/`](./hookr-1/revenue-tokenizer-v2/README.md).
 
 [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) lists the release's other contracts and the Hook Blocks, each with its source. [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) has the same set as JSON.
 
@@ -48,7 +53,11 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 ```
 hookr-1/
 ├── src/                          HookrRoot, the release's Rules, registry, launcher, router, quoter and the rest
+├── core-2/                       the core, its binder, blocks and recapture module, and its launcher
+├── combined-core/                the combined Rules, owned-root factory v2, lane v2 and the swap modules
+├── agent-gate/                   the Agent gate
 ├── revenue-tokenizer-4/          the revenue tokenizer, its libraries, door factories and time shares factory
+├── revenue-tokenizer-v2/         the token code, token libraries and door factories the revenue tokenizer reuses
 ├── hook-blocks/                  Hook Blocks and the HookrBook connectors, one folder each
 ├── wallet-cap/                   Wallet Cap Rules
 ├── king-of-the-pool-whole-pot/   King of the Pool Rules that pay the round's winner the whole pot
@@ -72,7 +81,7 @@ forge build --root hookr-1
 forge test --root hookr-1
 ```
 
-The contracts were compiled with solc 0.8.37, via-IR, the optimizer at 200 runs and EVM version prague, except `hookr-1/revenue-tokenizer-4/`, whose tokenizer set uses 50 runs and whose time shares factory uses 200. Every contract in [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) rebuilds byte for byte, metadata hash included:
+The contracts were compiled with solc 0.8.37, via-IR, the optimizer at 200 runs and EVM version prague, except the tokenizer sets in `hookr-1/revenue-tokenizer-4/` and `hookr-1/revenue-tokenizer-v2/`, which use 50 runs; their add-ons use 200. Every contract in [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) rebuilds byte for byte, metadata hash included:
 
 ```sh
 node hookr-1/standard-input.mjs <address> > in.json

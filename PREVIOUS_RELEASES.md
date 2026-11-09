@@ -6,11 +6,21 @@ Newest first: the first Agent gate, the revenue tokenizer on fixed Rules, the re
 
 ## The first Agent gate
 
-`HookrAgentGate` at [`0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9`](https://robin.etherscan.io/address/0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9#code), an exact match on Sourcify. The pools that bound it keep it; new pools bind the Agent gate in the [README](./README.md#deployments).
+`HookrAgentGate` at [`0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9`](https://robin.etherscan.io/address/0x3b1aC66a6Fd9e9d8F063d145003cf29eac4Fb0C9#code), an exact match on Sourcify. The registry revoked its admission on 2026-11-06, so no new pool can bind it; the pools that bound it keep it. New pools bind the Agent gate in the [README](./README.md#deployments).
+
+Its sources are the gate and its interface in [`hookr-1/agent-gate-1/src/`](./hookr-1/agent-gate-1/src/), its ERC-8004 reads in [`hookr-1/agent-gate/src/interfaces/external/IERC8004.sol`](./hookr-1/agent-gate/src/interfaces/external/IERC8004.sol), and the release files and submodules its build names; the record in [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) maps each one, and its build rebuilds the code at its address byte for byte.
 
 ## The revenue tokenizer on fixed Rules
 
-`HookrRevenueTokenizer` at [`0x522723A7a09684515881568Ab8247f3846D66F43`](https://robin.etherscan.io/address/0x522723A7a09684515881568Ab8247f3846D66F43#code), its `HookrRevenueStateView` at [`0x007EA7554DDD113Fa441f37F1d16f66030E1B81E`](https://robin.etherscan.io/address/0x007EA7554DDD113Fa441f37F1d16f66030E1B81E#code) and its `HookrLegCollector` at [`0x5a28571362d1dd512299deb80b895C72F705D8c3`](https://robin.etherscan.io/address/0x5a28571362d1dd512299deb80b895C72F705D8c3#code), each an exact match on Sourcify. It takes the three Rules its constructor fixed and has minted no revenue tokens. New revenue tokens mint through the tokenizer in the [README](./README.md#deployments).
+Three sets of `HookrRevenueTokenizer` were deployed from the same sources, each taking the Rules its constructor fixed. None of the three has minted a revenue token. New revenue tokens mint through the tokenizer in the [README](./README.md#deployments), which reuses eight contracts built from these sources; [`hookr-1/revenue-tokenizer-v2/`](./hookr-1/revenue-tokenizer-v2/README.md) has the sources and those eight.
+
+| Deployed | `HookrRevenueTokenizer` | `HookrRevenueStateView` | `HookrLegCollector` |
+| --- | --- | --- | --- |
+| 2026-11-01 | [`0xE1968Fde816b71Afc804005329A284e034019637`](https://robin.etherscan.io/address/0xE1968Fde816b71Afc804005329A284e034019637#code) | [`0x2Ea3546912F308438e16F1a4fdEbCc27598718C6`](https://robin.etherscan.io/address/0x2Ea3546912F308438e16F1a4fdEbCc27598718C6#code) | [`0x6Cefe8cB2814E28eA1124b4e0ba330bc4d6c7315`](https://robin.etherscan.io/address/0x6Cefe8cB2814E28eA1124b4e0ba330bc4d6c7315#code) |
+| 2026-10-28 | [`0x522723A7a09684515881568Ab8247f3846D66F43`](https://robin.etherscan.io/address/0x522723A7a09684515881568Ab8247f3846D66F43#code) | [`0x007EA7554DDD113Fa441f37F1d16f66030E1B81E`](https://robin.etherscan.io/address/0x007EA7554DDD113Fa441f37F1d16f66030E1B81E#code) | [`0x5a28571362d1dd512299deb80b895C72F705D8c3`](https://robin.etherscan.io/address/0x5a28571362d1dd512299deb80b895C72F705D8c3#code) |
+| 2026-10-24 | [`0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c`](https://robin.etherscan.io/address/0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c#code) | [`0xe3280D57E4a1F9a07997E3C34499d728dc9fa275`](https://robin.etherscan.io/address/0xe3280D57E4a1F9a07997E3C34499d728dc9fa275#code) | [`0xAb5cBbC2C5b98F9b9E8f800eaa735E49C7f7A625`](https://robin.etherscan.io/address/0xAb5cBbC2C5b98F9b9E8f800eaa735E49C7f7A625#code) |
+
+The time shares and compounder factories bound to the 2026-11-01 tokenizer are [`0x4127C181a4b8E43806099e1B5a5EF7c22dd70785`](https://robin.etherscan.io/address/0x4127C181a4b8E43806099e1B5a5EF7c22dd70785#code) and [`0x977E77424a69C2C3a5E48Be9a61F5a1A54650bf8`](https://robin.etherscan.io/address/0x977E77424a69C2C3a5E48Be9a61F5a1A54650bf8#code), and to the 2026-10-28 tokenizer [`0x861e5E8f9D6a2471A1e013248265cE2cF0718dad`](https://robin.etherscan.io/address/0x861e5E8f9D6a2471A1e013248265cE2cF0718dad#code) and [`0x3D3C0538e81E169d51693c3Ac7F0fb7d672d9e46`](https://robin.etherscan.io/address/0x3D3C0538e81E169d51693c3Ac7F0fb7d672d9e46#code). Every contract of the three sets is an exact match on Sourcify, but the code halves and the add-ons' data contracts, which hold code as data and are checked against the sources there.
 
 ## Revenue tokens minted before 29 October 2026
 

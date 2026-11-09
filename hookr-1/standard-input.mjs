@@ -8,6 +8,12 @@
 //   node hookr-1/standard-input.mjs <address> > input.json
 //   solc-0.8.37 --standard-json input.json > output.json
 //
+// Lane v2 was built from a tree whose dependencies its metadata records by absolute path. The record writes that
+// prefix as <build-root>; pass it as the second argument, read from the remappings of the contract's verified
+// metadata on Sourcify, to rebuild it byte for byte:
+//
+//   node hookr-1/standard-input.mjs <address> <build root> > input.json
+//
 // Run `git submodule update --init --recursive` first: the dependency sources come from lib/.
 
 import { readFileSync } from "node:fs";
@@ -20,7 +26,7 @@ const record = JSON.parse(readFileSync(join(here, "deployments", "robinhood-4663
 
 const argument = process.argv[2];
 if (!argument || argument === "--help") {
-  console.error("usage: node hookr-1/standard-input.mjs <address> | --list");
+  console.error("usage: node hookr-1/standard-input.mjs <address> [build root] | --list");
   process.exit(2);
 }
 
@@ -38,16 +44,26 @@ if (!contract) {
   process.exit(1);
 }
 
+const PLACEHOLDER = "<build-root>";
+const buildRoot = process.argv[3];
+const settings = JSON.stringify(record.settings[contract.settings]);
+if ((settings.includes(PLACEHOLDER) || Object.keys(contract.sources).some((u) => u.includes(PLACEHOLDER))) && !buildRoot) {
+  console.error(`${contract.name}'s metadata records its dependencies under an absolute path, written ${PLACEHOLDER} here;`);
+  console.error("pass it as the second argument, as the remappings of its verified metadata on Sourcify give it");
+  process.exit(1);
+}
+const named = (text) => (buildRoot ? text.split(PLACEHOLDER).join(buildRoot) : text);
+
 const sources = {};
 for (const [unit, path] of Object.entries(contract.sources)) {
-  sources[unit] = { content: readFileSync(join(root, path), "utf8") };
+  sources[named(unit)] = { content: readFileSync(join(root, path), "utf8") };
 }
 
 const input = {
   language: "Solidity",
   sources,
   settings: {
-    ...record.settings[contract.settings],
+    ...JSON.parse(named(settings)),
     outputSelection: {
       "*": {
         "*": [

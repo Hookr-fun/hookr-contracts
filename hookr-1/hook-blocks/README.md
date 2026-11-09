@@ -24,6 +24,8 @@ The Hook Blocks deployed beside the release in production waves 0 to 3 on Robinh
 
 Blocks that were planned but not deployed in these waves are not here.
 
+A Vesting Milestone or Pay Later factory takes only the pools of the launcher it was built with. On 2026-11-06 a second factory of each, 3 contracts with Pay Later's vault deployer, was deployed for the core's `HookrLauncher` `0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C`, from the same creation code; [Vesting Milestone](./vesting-milestone/README.md) and [Pay Later](./pay-later/README.md) list both.
+
 ## HookrBook connectors
 
 Three connectors that link a family's pools, deployed after the waves: 6 contracts on 2026-10-12 (blocks 86,244,980 to 86,244,987) and the Fee Bridge's keeper-run factory on 2026-10-13 (block 87,254,611), each in its own folder beside the blocks above. Every contract here is an exact match on Sourcify, and its source files are byte-identical to the verified ones. The three were built together from the Family Pinger's folder, so their verified metadata names one another's files, and the Zap Relay files they share, as `../zap-mesh/src/...`, `../fee-bridge/src/...` and `../zap-relay/src/...`.

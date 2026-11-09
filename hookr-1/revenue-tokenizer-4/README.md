@@ -52,7 +52,7 @@ Deployed on 2026-11-06 between blocks 107,699,158 and 107,699,953, in ten transa
 
 ### Parts it reuses
 
-These were deployed before it and are used where they live. Each is on Sourcify.
+These were deployed before it and are used where they live. Each is on Sourcify, and their sources are in [`../revenue-tokenizer-v2/`](../revenue-tokenizer-v2/README.md#what-the-revenue-tokenizer-uses-from-here).
 
 | Contract | What it is | Address | Verified source |
 | --- | --- | --- | --- |
