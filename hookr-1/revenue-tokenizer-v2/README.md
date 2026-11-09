@@ -4,7 +4,7 @@ This folder holds the sources of eight contracts the revenue tokenizer in [`../r
 
 ## What the revenue tokenizer uses from here
 
-Every revenue token the tokenizer mints is created from the two code halves below and links the three token libraries below; its Pons and Long doors come from the two door factories below, and a day of its time shares wraps as an ERC-20 through the wrapper factory:
+Every revenue token the tokenizer mints is created from the two code halves and links the three token libraries; its Pons and Long doors come from the two door factories, and a day of its time shares wraps as an ERC-20 through the wrapper factory:
 
 | Contract | What it is | Address | Runtime keccak256 | Verified source |
 | --- | --- | --- | --- | --- |
@@ -19,13 +19,13 @@ Every revenue token the tokenizer mints is created from the two code halves belo
 
 The first seven were deployed on 2026-11-01 between blocks 103,733,671 and 103,733,743, and the wrapper factory on 2026-10-29 in block 100,475,160, each from `0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC` through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, release id `hookr-1`, with the contract's name as its role. Each runtime keccak256 above is the address's code hash read from the chain at block 109,974,574, the record's `checkedAtBlock`.
 
-The revenue token's creation code, 27,810 bytes linked to its three libraries, is larger than one contract's runtime may be, so the two `HookrRevenueTokenCode` contracts hold it and every revenue token is created from them. Their runtime is data, so Sourcify matches their creation code instead, and [`check-token-code.mjs`](./check-token-code.mjs) checks that the two together are the revenue token's creation code built from the sources here.
+The revenue token's creation code, 27,810 bytes linked to its three libraries, is larger than EIP-170's runtime limit of 24,576 bytes, so the two `HookrRevenueTokenCode` contracts hold it and every revenue token is created from them. Their runtime is data, so Sourcify matches their creation code instead, and [`check-token-code.mjs`](./check-token-code.mjs) checks that the two together are the revenue token's creation code built from the sources here.
 
 ## Where the files are
 
 | Folder | Holds | Build tree name |
 | --- | --- | --- |
-| [`src/`](./src/) | The tokenizer, its libraries, the code halves, the door factories, the state view, the leg collector and every contract they make, 83 files | `src/...`; `../hookrevenue-v2/src/...` for the add-ons |
+| [`src/`](./src/) | The sources of the tokenizer sets on [PREVIOUS_RELEASES.md](../../PREVIOUS_RELEASES.md), including those of the libraries, code halves and door factories above, 83 files | `src/...`; `../hookrevenue-v2/src/...` for the add-ons |
 | [`time-shares/src/`](./time-shares/src/) | The time shares add-on, 12 files | `src/...` |
 | [`compounder/src/`](./compounder/src/) | The compounder add-on, 12 files | `src/...` |
 
@@ -67,4 +67,4 @@ There is no Forge profile for these folders: their metadata records the build tr
 
 ## Status
 
-Deployed. No independent audit of the tokenizer or its add-ons has been completed.
+Deployed. No independent audit of these contracts has been completed.

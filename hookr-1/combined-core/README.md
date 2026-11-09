@@ -1,16 +1,16 @@
 # Combined core and own hooks
 
-The combined core is a Rules contract for the shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code), with every Hook Block built in. The registry admits it on the shared hook beside the release's Rules, so a pool can name it the way it names those. Owned-root factory v2 makes own hooks on it: each one a root v2 of its own with its own copy of the core, made in one transaction, sharing lane v2, and with an outside swap module when its creator picks one. The LP Time-Lock Boost is redeployed beside them. Nothing deployed earlier changes: the release, its Rules and every pool on them run as before.
+The combined core is a Rules contract for the shared hook, `HookrRoot` at [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://robin.etherscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc#code), with every Hook Block built in. The registry admits it on the shared hook beside the release's Rules, so a pool can name it the way it names those. Owned-root factory v2 makes own hooks on it: each one a root v2 of its own with its own copy of the core, made in one transaction, sharing lane v2, and with an outside swap module when its creator picks one. The LP Time-Lock Boost is redeployed beside them.
 
 ## What it does
 
 - **The core.** `HookrRules` at `0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e` carries the release's rules (Anti-Snipe, Hookr dynamic fees, Auto Burn, LP Rewards and Royalty) and the Hook Blocks in two slots: Swap Cut, Exit Clock, Holder Pot, Storm Fee and Sandwich Guard in `HookrCoreBlocks`, Wallet Cap and the buy and sell launch windows in `HookrLimitBlocks`. King of the Pool and the arb recapture split are in `HookrRecapture`. A pool's choices are frozen when it opens.
 - **Arb recapture is on by default.** A pool on the core takes the recapture lane unless its creator opts out (bit 18 of `RulesConfig.potEveryNBuys`, `NO_RECAPTURE`). The profit of arbitrage against the pool's other venues is split by `HookrRecapture`.
-- **Brake keys.** The core's constructor creates eight `HookrBlockKey` contracts by CREATE2, one per Hook Block. The registry admits a Hook Block on the core under its key, so each block can be stopped for new pools on its own. At block 100,509,391 it admits seven of the eight keys: Holder Pot's key, index 2, is not admitted yet, so the core refuses a new Holder Pot pool until the registry admits it.
+- **Brake keys.** The core's constructor creates eight `HookrBlockKey` contracts by CREATE2, one per Hook Block. The registry admits a Hook Block on the core under its key, so each block can be stopped for new pools on its own. At block 109,974,574 it admits six of the eight keys: Exit Clock's key, index 1, was revoked, and Holder Pot's key, index 2, has not been admitted, so the core refuses a new pool that picks Exit Clock or Holder Pot.
 - **Own hooks.** `HookrOwnedRootFactoryV2` makes an own hook in one transaction, with no code in the calldata: it checks the profile the creator names (a live admission of the core on the shared hook), creates root v2 by CREATE3 from the root store, creates the own hook's copy of the core by CREATE2 from the two core stores, and checks that copy's code equals the core's outside its per-root immutables. Root v2 takes the shared hook's permission flags, `0x2acc`. With the profile's `publicOpening` on, anyone may open pools on an own hook; otherwise only its owner. The factory has no owner, holds no funds and has no upgrade path; the registry admits it pinned to its runtime code hash, which commits to every store, to root v2's creation code hash and to the core's.
 - **Lane v2.** `HookrLane` holds root v2's initialization and its arb recapture lane, reached by DELEGATECALL, so it runs as the root. One lane v2 serves every root v2. A pool freezes its lane at initialization; each lane swap runs a recapture frame before it is quoted and one after it settles, each with the gas cap the executor's switch sets, and a swap below the lane's gas floor reverts, so no caller can make a recapture skip. Inside a frame the executor may leg on any lane pool of the same own hook, at most seven besides the frame's own, and the frame checks that nothing is left behind.
 - **Swap modules.** A swap module trades an outside venue while the venue beats the Hookr pool's own price after its LP fee, and the pool fills the rest. Root v2 reaches it through `HookrFill`, which gives the module exactly its admitted gas and refuses a fill worse than the pool's own price. `HookrRamsesV3Fill` fills from Ramses V3 (admitted at 1,200,000 gas) and `HookrPonsCurveFill` from Pons V2 curves, never buying a curve's last token (admitted at 400,000 gas). Neither has an owner, a setter or storage, and every venue call is caught, so a missing or failing venue fills nothing and never stops the pool. The registry admits both under the core, before the swap only.
-- **LP Boost.** `HookrLpBoost` pays time-lock boost rewards on full-range v4 positions of Hookr pools, one gauge per pool, and holds each staked position until its staker withdraws it from maturity on. Against the earlier LP Boost at `0x52536F5F4E5BC7cEA2197c8F1BB49bf2B133E7f1`, a pause now runs out after seven days, the guardian's pauses share one window and a rest of seven days, and a pause never blocks `withdraw`. The earlier one keeps its gauges and stakes.
+- **LP Boost.** `HookrLpBoost` pays time-lock boost rewards on full-range v4 positions of Hookr pools, one gauge per pool, and holds each staked position until its staker withdraws it from maturity on. A pause runs out after seven days, the guardian's pauses share one window and a rest of seven days, and a pause never blocks `withdraw`. The release's `HookrLpBoost` at `0x52536F5F4E5BC7cEA2197c8F1BB49bf2B133E7f1` keeps its own gauges and stakes.
 
 ## The contracts
 
@@ -30,7 +30,7 @@ Deployed on 2026-10-26 in blocks 98,419,467 to 98,419,487, in seven transactions
 
 The core's pins: the PoolManager `0x8366a39CC670B4001A1121B8F6A443A643e40951`, the registry `0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602`, `HookrTreasury` `0x2242F7FC75606500503075f29ea8cDA684EfB4a9` as the protocol recipient, the shared hook, and the six contracts above by address and code hash. `HookrClaims` and `HookrRecapture` are pinned to the PoolManager and the treasury, `HookrCoreBlocks` to the PoolManager.
 
-The eight brake keys, each a `HookrBlockKey` created by the core in its constructor with salt `keccak256("hookr.rules.block.v1." ++ index)`. Each one's runtime is the 57 bytes of an empty contract, keccak256 `0x4ff3630dd3d4ca59d00c08a7c8be527f6b90ffd700a7cc6a36a837de2ee4565e`, which the build here gives:
+The eight brake keys, each a `HookrBlockKey` created by the core in its constructor with salt `keccak256(abi.encodePacked("hookr.rules.block.v1.", uint8(index)))`. Each one's runtime is the 57 bytes of an empty contract, keccak256 `0x4ff3630dd3d4ca59d00c08a7c8be527f6b90ffd700a7cc6a36a837de2ee4565e`, which the build here gives:
 
 | Index | Hook Block | Address |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ The eight brake keys, each a `HookrBlockKey` created by the core in its construc
 
 ### Own hooks and the LP Boost
 
-Deployed on 2026-10-28 in blocks 100,433,558 to 100,433,591, in eight transactions from the same account (nonces 426 to 433), the same way, salt counter 1. Nineteen transactions after them (nonces 434 to 452) registered factory v2 as a root factory, admitted the two swap modules under the core and configured the LP Boost with the earlier one's reward tokens and supply bounds, each behind a 1,800-second delay, and wrote the `core` profile on the profile book, the template own hooks are made from.
+Deployed on 2026-10-28 in blocks 100,433,558 to 100,433,591, in eight transactions from the same account (nonces 426 to 433), the same way, salt counter 1. Nineteen transactions after them (nonces 434 to 452) registered factory v2 as a root factory, admitted the two swap modules under the core and configured the LP Boost with the same reward tokens and supply bounds as the release's, each behind a 1,800-second delay, and wrote the `core` profile on the profile book, the template own hooks are made from.
 
 | Contract | What it is | Address | Runtime keccak256 | Verified source |
 | --- | --- | --- | --- | --- |
@@ -78,7 +78,7 @@ These have no fixed address. Each is made per own hook or per swap module by a c
 | `HookrRules`, the own hook's copy of the core | `HookrOwnedRootFactoryV2`, by CREATE2 from the two core stores | [`core/src/core/HookrRules.sol`](./core/src/core/HookrRules.sol) |
 | `HookrFill`, one per swap module, gas limit and scope, made the first time an own hook picks it | `HookrOwnedRootFactoryV2` | [`root-v2/src/core/HookrFill.sol`](./root-v2/src/core/HookrFill.sol) |
 
-Root v2 compiles with the settings of lane v2's build. The record lists it under factory v2 as a `template`, with its sources, settings and the code hash of its creation code, `0xd342e0303f449af89275b7a2d83344f0582bb005910e395d6215341328920117`. No root v2 is verified on Sourcify; the root store and `check-code-stores.mjs` are what binds its code to these sources. Seven of its files are in no verified contract's sources: `HookrRoot.sol`, `HookrReleased.sol`, `HookrRelease.sol`, `IHookrLaneRoot.sol`, `IHookrReleased.sol`, `IHookrRootRoute.sol` and `IHookrRootState.sol`, all under [`root-v2/src/`](./root-v2/src/).
+Root v2 compiles with the settings of lane v2's build. The record lists it under factory v2 as a `template`, with its sources, settings and the code hash of its creation code, `0xd342e0303f449af89275b7a2d83344f0582bb005910e395d6215341328920117`. No root v2 is verified on Sourcify; the root store and `check-code-stores.mjs` bind its code to these sources. Seven of its files are in no verified contract's sources: `HookrRoot.sol`, `HookrReleased.sol`, `HookrRelease.sol`, `IHookrLaneRoot.sol`, `IHookrReleased.sol`, `IHookrRootRoute.sol` and `IHookrRootState.sol`, all under [`root-v2/src/`](./root-v2/src/).
 
 ### CREATE3 proxies
 
@@ -95,7 +95,7 @@ The contracts were built from four build trees, and each one's metadata names it
 | [`root-v2/src/`](./root-v2/src/) | Root v2, lane v2 and `HookrFill`, 26 files | `src/...` |
 | [`swap-modules/src/`](./swap-modules/src/) | The Ramses and Pons modules, 2 files | `src/...`; root v2's files as `../candidate-root-v2/src/...` |
 
-The dependencies are the pinned submodules in [`../../lib/`](../../lib/), 54 files, each byte-identical to the one the metadata records. The core's build names them `../../../../../contracts/lib/...`, factory v2's and the LP Boost's `../../../contracts/lib/...` and the swap modules' `../../../../contracts/lib/...`. Lane v2's and root v2's build names them by an absolute path, which the record writes as `<build-root>/contracts/lib/...`. Those names are part of the metadata hash in the deployed code; the build root is in the remappings of lane v2's verified metadata on Sourcify, and `standard-input.mjs` takes it as an argument. The core's `HookrTypes.sol` differs from the periphery's, which is one reason the trees keep folders of their own.
+The dependencies are the pinned submodules in [`../../lib/`](../../lib/), 54 files, each byte-identical to the one the metadata records. The core's build names them `../../../../../contracts/lib/...`, factory v2's and the LP Boost's `../../../contracts/lib/...` and the swap modules' `../../../../contracts/lib/...`. Lane v2's and root v2's build names them by an absolute path, which the record writes as `<build-root>/contracts/lib/...`. Those names are part of the metadata hash in the deployed code; the build root is in the remappings of lane v2's verified metadata on Sourcify, and `standard-input.mjs` takes it as an argument. The core's `HookrTypes.sol` differs from the periphery's, so the two trees cannot share a folder.
 
 Every file is byte-identical to the verified source on Sourcify, except root v2's seven files above, which no verified contract compiles and `check-code-stores.mjs` checks; each file's keccak256 is in the record's `sourceKeccak256`.
 
@@ -129,8 +129,8 @@ There is no Forge profile for these folders: their metadata records the build tr
 
 ## Verification
 
-The twelve contracts with code are exact matches on Sourcify: runtime and creation code, metadata hash included. The code stores are data: Sourcify lists core store 0 as a creation match and has no record of the root store or core store 1, and `check-code-stores.mjs` binds all three to the sources here.
+The twelve contracts with code are exact matches on Sourcify: runtime and creation code, metadata hash included. The three code stores are data: Sourcify has a creation match for core store 0 only, and `check-code-stores.mjs` binds all three to the sources here.
 
 ## Status
 
-Deployed. The release's own `HookrRoot`, its Rules and the earlier LP Boost are unchanged. No independent audit of the combined core, lane v2, root v2, factory v2, the swap modules or the LP Boost has been completed.
+Deployed. No independent audit of the combined core, lane v2, root v2, factory v2, the swap modules or the LP Boost has been completed.

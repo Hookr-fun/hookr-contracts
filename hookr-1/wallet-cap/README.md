@@ -1,6 +1,6 @@
 # Wallet Cap
 
-Another Rules contract for `HookrRoot`, deployed on 2026-10-12. While a pool's launch guard lasts, no wallet can buy more than the pool's cap of its token. Everything else is the King of the Pool whole-pot Rules: the release's Rules with the whole-pot King of the Pool. The registry admits these Rules on `HookrRoot` next to the release's Rules and the whole-pot Rules.
+Another Rules contract for `HookrRoot`, deployed on 2026-10-12. While a pool's launch guard lasts, no wallet can buy more than the pool's cap of its token. Everything else is the King of the Pool whole-pot Rules: the release's Rules with the whole-pot King of the Pool. The registry revoked their admission on `HookrRoot` on 2026-11-06 (block 107,365,907), so no new pool can bind them; the pools already on them keep them.
 
 | Contract | Address | Verified source |
 | --- | --- | --- |

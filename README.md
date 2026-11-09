@@ -37,10 +37,10 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 
 ### Sources
 
-Every contract in the table but `PoolManager` has its source in this repository, byte-identical to its verified source, and is an exact match on [Sourcify](https://sourcify.dev):
+Every contract in the table except `PoolManager` has its source in this repository, byte-identical to its verified source, and is an exact match on [Sourcify](https://sourcify.dev):
 
 - `HookrRoot`, the release's `HookrRules`, `HookrLane`, `HookrRegistry`, `HookrRouter`, `HookrQuoter` and `HookrTreasury`: [`hookr-1/src/`](./hookr-1/src/).
-- The core, `HookrBinder` and `HookrLauncher`: [`hookr-1/core-2/`](./hookr-1/core-2/README.md).
+- The core, `HookrBinder` and `HookrLauncher`: [`hookr-1/core-2/`](./hookr-1/core-2/README.md); the core's sources are the combined core's files in [`hookr-1/combined-core/core/src/`](./hookr-1/combined-core/core/src/).
 - The combined `HookrRules` and `HookrOwnedRootFactoryV2`: [`hookr-1/combined-core/`](./hookr-1/combined-core/README.md).
 - `HookrVestingMilestoneFactory` and `PayLaterFactory`, built for `HookrLauncher`: [`hookr-1/hook-blocks/vesting-milestone/`](./hookr-1/hook-blocks/vesting-milestone/README.md) and [`hookr-1/hook-blocks/pay-later/`](./hookr-1/hook-blocks/pay-later/README.md).
 - `HookrAgentGate`: [`hookr-1/agent-gate/`](./hookr-1/agent-gate/README.md).
@@ -69,11 +69,11 @@ bench/                            gas per Hook Block, measured on a fork of the 
 labs/                             templates and prototypes, by pull request
 ```
 
-The contract sources under `hookr-1/` are byte-identical to the verified sources of their contracts.
+The contract sources under `hookr-1/` are byte-identical to the verified sources of their contracts. `src/`, `deployments/`, `foundry.toml`, `SOURCE_MANIFEST.json` and `STORAGE_LAYOUT.json` at the repository root, and `hookr-1/agent-gate-1/` and `hookr-1/revenue-tokenizer/`, belong to the contracts on [PREVIOUS_RELEASES.md](./PREVIOUS_RELEASES.md).
 
 ## Build
 
-Foundry, with the v4-core and forge-std submodules:
+Foundry, with the v4-core and forge-std submodules, for the contracts in `hookr-1/src/` and their tests; the test build takes about 20 minutes and more than 20 GB of memory:
 
 ```sh
 git submodule update --init --recursive
