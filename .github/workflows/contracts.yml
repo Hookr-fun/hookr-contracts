@@ -35,6 +35,9 @@ jobs:
       - name: Verify the package boundary
         run: node check-review-boundary.mjs
 
+      - name: Keep earlier contracts on PREVIOUS_RELEASES.md only
+        run: node check-pages.mjs
+
       - name: Check formatting
         run: forge fmt --check
 

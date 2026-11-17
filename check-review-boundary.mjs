@@ -7,10 +7,8 @@ import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const ignored = new Set([".git", "cache", "dist", "legacy", "lib", "node_modules", "out"]);
 
-// The one file allowed under scripts/. It reads a release journal and rewrites
-// the addresses in docs/reference/deployments.md, deployments/robinhood-4663.v2.json
-// and the hooklist entry. It signs nothing, sends nothing and holds no key.
-const allowedPaths = new Set(["scripts/sync-from-release.mjs"]);
+// No file is allowed under scripts/.
+const allowedPaths = new Set([]);
 
 const forbiddenPaths = [
   /^app(?:\/|$)/,

@@ -1,13 +1,13 @@
 # King of the Pool, whole pot
 
-A second Rules contract for the Hookr 1 root, deployed on 2026-10-07. Its King of the Pool pays the round's winner the whole pot. Everything else is the release's Rules, unchanged. The registry admits these Rules on the Hookr 1 root next to the release's Rules.
+A second Rules contract for `HookrRoot`, deployed on 2026-10-07. Its King of the Pool pays the round's winner the whole pot. Everything else is the release's Rules, unchanged. The registry admits these Rules on `HookrRoot` next to the release's Rules.
 
 | Contract | Address | Verified source |
 | --- | --- | --- |
 | `HookrRules` | [`0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7`](https://robin.etherscan.io/address/0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7#code) | [Sourcify](https://repo.sourcify.dev/4663/0x10f684361b35C8411a2c07F68A6fB1F4B7e555F7) |
 | `HookrRecapture`, created by those Rules in their constructor | [`0x60Efc4a41498e9433be2155b6cc1677AEC31D649`](https://robin.etherscan.io/address/0x60Efc4a41498e9433be2155b6cc1677AEC31D649#code) | [Sourcify](https://repo.sourcify.dev/4663/0x60Efc4a41498e9433be2155b6cc1677AEC31D649) |
 
-Both were deployed in transaction `0x133dcefd312eb7ea3b97e75ec91852178a84987f03cf3ffb0920ac4c3c40a5e9`, the Rules through the same CREATE3 factory as the release. The Rules take the same constructor arguments as the release's Rules: the PoolManager, the Hookr 1 registry, the treasury, the Hookr 1 root and a 2,000 bps floor on the protocol's share of rule fees.
+Both were deployed in transaction `0x133dcefd312eb7ea3b97e75ec91852178a84987f03cf3ffb0920ac4c3c40a5e9`, the Rules through the same CREATE3 factory as the release. The Rules take the same constructor arguments as the release's Rules: the PoolManager, the registry, the treasury, `HookrRoot` and a 2,000 bps floor on the protocol's share of rule fees.
 
 ## What differs from the release
 

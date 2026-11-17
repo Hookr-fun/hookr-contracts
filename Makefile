@@ -1,6 +1,6 @@
-.PHONY: check fmt build sizes source boundary layout labs bench
+.PHONY: check fmt build sizes source boundary pages layout labs bench
 
-check: fmt build sizes source boundary layout labs bench
+check: fmt build sizes source boundary pages layout labs bench
 
 fmt:
 	forge fmt --check
@@ -16,6 +16,9 @@ source:
 
 boundary:
 	node check-review-boundary.mjs
+
+pages:
+	node check-pages.mjs
 
 layout:
 	node check-storage-layout.mjs

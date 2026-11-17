@@ -1,6 +1,6 @@
 # Builder Attribution
 
-Registered integration partners, one-time market vouchers and the permanent attribution record of every pool opened through the attribution launcher, which deploys the pool's revenue vault and initializes the pool with a partner tax advisory paying that vault. The launcher links the release's `HookrTokenDeployer` at `0x1B23D6d7beBcB61E39317E9F0Bc02AEB91aFCcAe`.
+Registered integration partners, one-time market vouchers and the permanent attribution record of every pool opened through the attribution launcher, which deploys the pool's revenue vault and initializes the pool with the block's `HookrDirectionalTax` advisory, which pays that vault. The launcher links the release's `HookrTokenDeployer` at `0x1B23D6d7beBcB61E39317E9F0Bc02AEB91aFCcAe`.
 
 Deployed in production wave 3 on Robinhood Chain (chain id 4663).
 
