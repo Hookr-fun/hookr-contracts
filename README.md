@@ -56,7 +56,7 @@ hookr-1/
 ├── core-2/                       the core, its binder, blocks and recapture module, and its launcher
 ├── combined-core/                the combined Rules, owned-root factory v2, lane v2 and the swap modules
 ├── agent-gate/                   the Agent gate
-├── revenue-tokenizer-4/          the revenue tokenizer, its libraries, door factories and time shares factory
+├── revenue-tokenizer-4/          the revenue tokenizer, its libraries, door factories, time shares and agent income doors
 ├── revenue-tokenizer-v2/         the token code, token libraries and door factories the revenue tokenizer reuses
 ├── hook-blocks/                  Hook Blocks and the HookrBook connectors, one folder each
 ├── wallet-cap/                   Wallet Cap Rules

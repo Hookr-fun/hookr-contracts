@@ -18,6 +18,7 @@ Nothing here has an owner. Every outside address the tokenizer uses, except the 
 - **Streams only grow.** `addStreams` locks more streams into a revenue token the tokenizer made, for as long as the token has a stream manager. A token minted with `openStreams` also takes streams from anyone, of every kind except an outside `IHookrRevenueSource` door. Nothing removes a stream or changes its door or its leg.
 - **The revenue token.** A fixed-supply ERC-20 with no owner, no pause and no second mint. It lists up to eight assets its income is paid in: native ETH first, then up to seven ERC-20s.
 - **Doors.** Each fee right reaches the token through a door: a pool's Rules ledger, the token's family door (`HookrFamilyForwarder`), a Fee Beneficiary NFT door, a v4 or v3 position door, a revenue token door, or an outside `IHookrRevenueSource` door.
+- **Agent income doors.** `HookrAgentIncomeDoorFactory` makes the address an ERC-8004 agent is paid at. Native ETH and up to two ERC-20s the door names arrive by plain transfer and wait there. Once the token has the door (`admitted()`), every sync of the revenue token forwards them as that door's income: to the token, or to its drop box for an ERC-20 the token does not list. Only the agent's owner or its agent wallet on the Identity Registry makes a door that names the agent, at an address `predict` gives before the door or the token exists. It is an outside `IHookrRevenueSource` door: `ends()` answers `REVOCABLE`, since the agent can point its payments elsewhere at any time.
 - **Sync.** `sync()`, `syncRange()` and `syncSome()` pull the doors, each on its own gas stipend, and recognize what arrived by balance delta. Anyone may call them, and the caller is paid the tip fixed at mint, at most 1% of the ETH the doors delivered, once they deliver 0.001 ETH.
 - **Income.** Each arrival is claimable as soon as a sync recognizes it, or released to holders over the token's release period when the creator sets one, up to 14 days. It is shared pro rata, without staking.
 - **Recapture in another currency.** `addRulesCredits(i, member)` on the family door lists a recapture currency that is neither side of a pool, so that income reaches the holders. Anyone may call it.
@@ -27,7 +28,7 @@ Nothing here has an owner. Every outside address the tokenizer uses, except the 
 
 ## The contracts
 
-Deployed on 2026-11-06 between blocks 107,699,158 and 107,699,953, in ten transactions from `0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC`. Each goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, release id `hookr-1`, with the contract's name as its role and salt counter 4. The tokenizer's constructor creates `HookrLegCollector`, and the time shares factory's constructor creates its two data contracts.
+All but `HookrAgentIncomeDoorFactory` were deployed on 2026-11-06 between blocks 107,699,158 and 107,699,953, in ten transactions from `0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC`. Each goes through the CREATE3 factory at `0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d`, release id `hookr-1`, with the contract's name as its role and salt counter 4. The tokenizer's constructor creates `HookrLegCollector`, and the time shares factory's constructor creates its two data contracts.
 
 | Contract | What it is | Address | Verified source |
 | --- | --- | --- | --- |
@@ -42,6 +43,11 @@ Deployed on 2026-11-06 between blocks 107,699,158 and 107,699,953, in ten transa
 | `HookrV3PositionNftDoorFactory` | Makes the v3 position doors | [`0xBA5b0171f77F28D9381FA0ED96B6BB1412D8Ce1e`](https://robin.etherscan.io/address/0xBA5b0171f77F28D9381FA0ED96B6BB1412D8Ce1e#code) | [exact match](https://repo.sourcify.dev/4663/0xBA5b0171f77F28D9381FA0ED96B6BB1412D8Ce1e) |
 | `HookrFeebAdapterFactory` | Makes the Fee Beneficiary NFT doors | [`0xb6D6C144deca5D5ef59C8Fcf3E657C50883e67B9`](https://robin.etherscan.io/address/0xb6D6C144deca5D5ef59C8Fcf3E657C50883e67B9#code) | [exact match](https://repo.sourcify.dev/4663/0xb6D6C144deca5D5ef59C8Fcf3E657C50883e67B9) |
 | `HookrRevenueTokenDoorFactory` | Makes the revenue token doors, which hold shares of another revenue token as a stream | [`0x85644897Adc52d3270b35C649CAE69989f8C583d`](https://robin.etherscan.io/address/0x85644897Adc52d3270b35C649CAE69989f8C583d#code) | [exact match](https://repo.sourcify.dev/4663/0x85644897Adc52d3270b35C649CAE69989f8C583d) |
+| `HookrAgentIncomeDoorFactory` | Makes the agent income doors, the address an ERC-8004 agent is paid at | [`0xc24ca4cdc35689B9cD41C64E4f9FfcB772FdAab7`](https://robin.etherscan.io/address/0xc24ca4cdc35689B9cD41C64E4f9FfcB772FdAab7#code) | [exact match](https://repo.sourcify.dev/4663/0xc24ca4cdc35689B9cD41C64E4f9FfcB772FdAab7) |
+
+`HookrAgentIncomeDoorFactory` was deployed on 2026-11-14 in block 113,758,985 (00:12:21 UTC), transaction `0x691e5a5948b7a7f89fcb255967d217b8ac5f51b0135928f312ab052ea71479ed` from `0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC`, by CREATE2 through the deployer at `0x4e59b44847b379578588920cA78FbF26c0B4956C` with salt `0xf6455665351b4702a220ae09c6f4930dc792a4b13178c64d4622068d7ce1c92d`. Its constructor pins the tokenizer and the ERC-8004 Identity Registry `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`. Its runtime keccak256, `0x4e7ef6a5ab1171c590c217e64aa2d796e9d4a6cb43525a87c7ccc9b91c48de7d`, is the address's code hash read from the chain at block 116,816,583.
+
+Every door it makes is `HookrAgentIncomeDoor` from the same build. The first one made is [`0x98f1e8AF93eb3507AcDD55e2397FA0221e0eE002`](https://robin.etherscan.io/address/0x98f1e8AF93eb3507AcDD55e2397FA0221e0eE002#code), in block 113,767,468, an [exact match](https://repo.sourcify.dev/4663/0x98f1e8AF93eb3507AcDD55e2397FA0221e0eE002) on Sourcify since 2026-11-17.
 
 `HookrTimeSharesFactory` writes the creation code of `HookrTimeShares` at its construction into two data contracts and creates every time shares contract from them. Each data contract's runtime is its piece of the code, so they have no source match of their own: [`time-shares/check-time-shares-code.mjs`](./time-shares/check-time-shares-code.mjs) checks them against the sources here.
 
@@ -70,12 +76,13 @@ These were deployed before it and are used where they live. Each is on Sourcify,
 | --- | --- | --- |
 | [`src/`](./src/) | The tokenizer, its libraries, its door factories, its state view and the interfaces they import | `src/...`, and `../hookrevenue-v2/src/...` from the time shares |
 | [`time-shares/src/`](./time-shares/src/) | The time shares factory and `HookrTimeShares` | `src/...` |
+| [`agent-income-door/src/`](./agent-income-door/src/) | The agent income door factory, `HookrAgentIncomeDoor` and their interfaces, 5 files | `src/...` |
 
-Every file is byte-identical to the verified source, and its keccak256 is in the record's `sourceKeccak256`. The release files they import (`../hookr-phase-one/src/...` in the metadata) are the release's own files in [`../src/`](../src/), and the dependencies are the pinned submodules in [`../../lib/`](../../lib/).
+Every file is byte-identical to the verified source, and its keccak256 is in the record's `sourceKeccak256`. The release files they import (`../hookr-phase-one/src/...` in the metadata) are the release's own files in [`../src/`](../src/), and the dependencies are the pinned submodules in [`../../lib/`](../../lib/). The agent income door factory's build names the tokenizer's files `vendor/hookrevenue-v2/src/...` and the release's `vendor/hookr-phase-one/src/...`; the record maps each to its file here.
 
 ## Building it
 
-Solc 0.8.37, via-IR, EVM version prague, the IPFS metadata hash. The optimizer runs at 50 for the tokenizer set and at 200 for the time shares factory: the record's settings profiles `revenue-tokenizer-4` and `revenue-tokenizer-4-time-shares`. The compiler input for any of the eleven comes from the record, which maps each source unit name to its file here:
+Solc 0.8.37, via-IR, EVM version prague, the IPFS metadata hash. The optimizer runs at 50 for the tokenizer set and at 200 for the time shares factory and the agent income door factory: the record's settings profiles `revenue-tokenizer-4`, `revenue-tokenizer-4-time-shares` and `revenue-tokenizer-4-agent-income-door`. The compiler input for any of the twelve comes from the record, which maps each source unit name to its file here:
 
 ```sh
 node hookr-1/standard-input.mjs 0x08De138e558a9258c6B4077E8bdeB9ad1fB46a4B > tokenizer.json

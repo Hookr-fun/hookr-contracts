@@ -286,6 +286,25 @@
       "viaIR": true,
       "libraries": {}
     },
+    "revenue-tokenizer-4-agent-income-door": {
+      "evmVersion": "prague",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        ":@openzeppelin/contracts/=../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/",
+        ":@uniswap/v4-core/=../../../contracts/lib/v4-core/",
+        ":forge-std/=../../../contracts/lib/forge-std/src/",
+        ":hookr/=vendor/hookr-phase-one/src/",
+        ":hookrevenue/=vendor/hookrevenue-v2/src/"
+      ],
+      "viaIR": true
+    },
     "revenue-tokenizer-v2": {
       "remappings": [
         ":@openzeppelin/contracts/=../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/",
@@ -7951,6 +7970,62 @@
       ]
     },
     {
+      "group": "revenue-tokenizer-4",
+      "block": "agent-income-door",
+      "name": "HookrAgentIncomeDoorFactory",
+      "address": "0xc24ca4cdc35689B9cD41C64E4f9FfcB772FdAab7",
+      "contract": "src/HookrAgentIncomeDoorFactory.sol:HookrAgentIncomeDoorFactory",
+      "deployment": {
+        "createdBy": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+        "kind": "create2",
+        "salt": "0xf6455665351b4702a220ae09c6f4930dc792a4b13178c64d4622068d7ce1c92d"
+      },
+      "creationTransaction": "0x691e5a5948b7a7f89fcb255967d217b8ac5f51b0135928f312ab052ea71479ed",
+      "constructorArguments": "0x00000000000000000000000008de138e558a9258c6b4077e8bdeb9ad1fb46a4b0000000000000000000000008004a169fb4a3325136eb29fa0ceb6d2e539a432",
+      "libraries": {},
+      "runtimeKeccak256": "0x4e7ef6a5ab1171c590c217e64aa2d796e9d4a6cb43525a87c7ccc9b91c48de7d",
+      "metadataIpfs": "QmUyF2MLFPsKCkYS4RUniqeyhxuCrxBEcDCFWE5j64Lp4X",
+      "settings": "revenue-tokenizer-4-agent-income-door",
+      "sources": {
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/interfaces/IERC5267.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/interfaces/IERC5267.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IHooks.sol": "lib/v4-core/src/interfaces/IHooks.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/external/IERC20Minimal.sol": "lib/v4-core/src/interfaces/external/IERC20Minimal.sol",
+        "../../../contracts/lib/v4-core/src/libraries/CustomRevert.sol": "lib/v4-core/src/libraries/CustomRevert.sol",
+        "../../../contracts/lib/v4-core/src/libraries/SafeCast.sol": "lib/v4-core/src/libraries/SafeCast.sol",
+        "../../../contracts/lib/v4-core/src/types/BalanceDelta.sol": "lib/v4-core/src/types/BalanceDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/BeforeSwapDelta.sol": "lib/v4-core/src/types/BeforeSwapDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/Currency.sol": "lib/v4-core/src/types/Currency.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolId.sol": "lib/v4-core/src/types/PoolId.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolKey.sol": "lib/v4-core/src/types/PoolKey.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolOperation.sol": "lib/v4-core/src/types/PoolOperation.sol",
+        "src/HookrAgentIncomeDoor.sol": "hookr-1/revenue-tokenizer-4/agent-income-door/src/HookrAgentIncomeDoor.sol",
+        "src/HookrAgentIncomeDoorFactory.sol": "hookr-1/revenue-tokenizer-4/agent-income-door/src/HookrAgentIncomeDoorFactory.sol",
+        "src/interfaces/IAgentIdentityRegistry.sol": "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IAgentIdentityRegistry.sol",
+        "src/interfaces/IHookrAgentIncomeDoor.sol": "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IHookrAgentIncomeDoor.sol",
+        "src/interfaces/IHookrAgentIncomeDoorFactory.sol": "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IHookrAgentIncomeDoorFactory.sol",
+        "vendor/hookr-phase-one/src/types/HookrTypes.sol": "hookr-1/src/types/HookrTypes.sol",
+        "vendor/hookrevenue-v2/src/base/HookrForwarding.sol": "hookr-1/revenue-tokenizer-4/src/base/HookrForwarding.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrAuthorizations.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrAuthorizations.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrBalanceHistory.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrBalanceHistory.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrDropBox.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrDropBox.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrDropHost.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrDropHost.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrERC20Authorizations.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrERC20Authorizations.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrERC20Permit.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrERC20Permit.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrForwardEvents.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrForwardEvents.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrForwarding.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrForwarding.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrIncomeRecovery.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrIncomeRecovery.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrRevenueDoor.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrRevenueDoor.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrRevenueSource.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrRevenueSource.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrRevenueToken.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrRevenueToken.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrRevenueTokenizer.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrRevenueTokenizer.sol",
+        "vendor/hookrevenue-v2/src/interfaces/IHookrRevenueTokenizerSourcePins.sol": "hookr-1/revenue-tokenizer-4/src/interfaces/IHookrRevenueTokenizerSourcePins.sol",
+        "vendor/hookrevenue-v2/src/libraries/HookrForward.sol": "hookr-1/revenue-tokenizer-4/src/libraries/HookrForward.sol",
+        "vendor/hookrevenue-v2/src/types/EndKind.sol": "hookr-1/revenue-tokenizer-4/src/types/EndKind.sol"
+      }
+    },
+    {
       "group": "revenue-tokenizer-v2",
       "name": "HookrRevenueTokenizer",
       "address": "0xAD0F7575F6476d5a37a4aBAF109Dd7f84089B90c",
@@ -14349,6 +14424,11 @@
     "hookr-1/revenue-tokenizer-4/time-shares/src/interfaces/IHookrTimeShares.sol": "0xffd33cb4d61b25e670c358783d63aeddf2093293b7d60e38e787200cbd234ce1",
     "hookr-1/revenue-tokenizer-4/time-shares/src/interfaces/IHookrTimeSharesFactory.sol": "0x789a1ed323ae78979327e2257a70cb66a346f1b368331f3704bc227fe9ba8db6",
     "hookr-1/revenue-tokenizer-4/time-shares/src/libraries/HookrDays.sol": "0x1a470091f7264d7d6eaea1e09270027d07598a2b4fe0e87a69b86ea560125191",
+    "hookr-1/revenue-tokenizer-4/agent-income-door/src/HookrAgentIncomeDoor.sol": "0x2a8b55c2cf0d598aa437df49993a4d566c1ff14933211303bd0de8c45c5cecf9",
+    "hookr-1/revenue-tokenizer-4/agent-income-door/src/HookrAgentIncomeDoorFactory.sol": "0xc1595986b5eb8b8d98dca388d768e6409809c1d6bd26e8d6b5b8ea8708c39f45",
+    "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IAgentIdentityRegistry.sol": "0x4a0c3aa3d44b432514c2e6c90bbcbd154ccd7d1e56df186541195b3012315766",
+    "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IHookrAgentIncomeDoor.sol": "0x829190d2ba1ae6e59f3c039d08ff0541ae081b59bbdb1b026bfd0614990ea404",
+    "hookr-1/revenue-tokenizer-4/agent-income-door/src/interfaces/IHookrAgentIncomeDoorFactory.sol": "0xc8aa86f821ab344912a564c0e99f412f3b7c1349002109be977bd193c0bca44d",
     "lib/v4-core/lib/openzeppelin-contracts/contracts/utils/Create2.sol": "0x2b9807d194b92f1068d868e9587d27037264a9a067c778486f86ae21c61cbd5e",
     "hookr-1/revenue-tokenizer-v2/src/HookrDropBox.sol": "0x28e65fc024b8dd7f5fcf1bb6b3f7689ece409516529979268cc3470a48c293b7",
     "hookr-1/revenue-tokenizer-v2/src/HookrLegCollector.sol": "0x738c276680a36cf31e47665435a7aac189da88b7db776c82d9343e2b7759a9be",
