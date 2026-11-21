@@ -18,7 +18,7 @@ What differs from the package:
 | Folder | What it tests |
 | --- | --- |
 | `core/` | `HookrRoot`, `HookrRules` and `HookrRegistry`: pool initialization and frozen terms, Anti-Snipe, dynamic fees, Auto Burn, LP Rewards, the minimum fee, claims, module admission and bonds, governance delays and brakes |
-| `lane/` | Arb recapture and King of the Pool: the executor's legs and frames, the splits, the pot, gas floors, and attacks by hostile executors |
+| `lane/` | Arbitrage recapture and King of the Pool: the executor's legs and frames, the splits, the pot, gas floors, and attacks by hostile executors |
 | `periphery/` | `HookrLauncher` (multi-pool launches, dev buys, exits), `HookrRouter`, `HookrQuoter`, `HookrFamilyRouter`, `HookrFamilyLock`, `HookrLpBoost` and the token deployer |
 | `owned/` | The owned-root factory, owned profiles and the owned-roots lens |
 | `factory/` | `HookrRootFactory` and pair roots |
@@ -40,7 +40,7 @@ From `hookr-1/`, after `git submodule update --init --recursive` at the reposito
 ```sh
 forge build test/fixtures/PoolManagerArtifact.sol   # v4-core's PoolManager, built with solc 0.8.26
 forge test                                          # unit, fuzz and invariant tests
-FOUNDRY_PROFILE=lane forge test                     # arb recapture and King of the Pool
+FOUNDRY_PROFILE=lane forge test                     # arbitrage recapture and King of the Pool
 ```
 
 The tests deploy the PoolManager from its artifact in `out/`, so build it first. The default profile runs 2,091 tests and the lane profile 500. The lane profile runs every call as its own transaction, so transient storage resets between calls as it does on chain.

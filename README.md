@@ -4,7 +4,7 @@ Modular infrastructure for surfacing, composing and integrating custom Uniswap h
 
 `HookrRoot` is Hookr's shared Uniswap v4 hook on Robinhood Chain. A pool on it binds a Rules contract at launch and picks its Hook Blocks and their parameters. The settings freeze when the pool opens, for the life of the pool.
 
-Arb recapture is on by default for new pools. What The Hook's executor trades the gap between a pool's price and other venues and keeps 25% of each recapture's profit. On the core, `HookrRules` at `0x342b…5d46`, Hookr takes 15%, less any integrator's slice, and the pool keeps 60%. On the other two Rules below, Hookr takes 25% and the pool keeps 50%.
+Arbitrage recapture is on by default for new pools. What The Hook's executor trades the gap between a pool's price and other venues and keeps 25% of each recapture's profit. On the core, `HookrRules` at `0x342b…5d46`, Hookr takes 15%, less any integrator's slice, and the pool keeps 60%. On the other two Rules below, Hookr takes 25% and the pool keeps 50%.
 
 ## Deployments
 
@@ -18,7 +18,7 @@ Arb recapture is on by default for new pools. What The Hook's executor trades th
 | `HookrLauncher` | [`0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C`](https://robin.etherscan.io/address/0x70a66ADF39B5c9FfEE4A9F081C182edfbb7DBD0C#code) | Launches a token on one to eight pools in one transaction, bound to the core. |
 | `HookrRules`, combined | [`0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e`](https://robin.etherscan.io/address/0x8AD0aC66DbeBcc047e8d216666C925E797e5e52e#code) | Rules with the Hook Blocks built in. Hooks of your own bind it. |
 | `HookrRules`, the release's | [`0x4a71c270b1520F94064268102AebD744b0DE7942`](https://robin.etherscan.io/address/0x4a71c270b1520F94064268102AebD744b0DE7942#code) | Canonical Venue Token, lane and partner launches bind it. |
-| `HookrLane` | [`0x9A8a1006469BA196f8FEfc017a53505C83A060BB`](https://robin.etherscan.io/address/0x9A8a1006469BA196f8FEfc017a53505C83A060BB#code) | Arb recapture. Its executor is What The Hook's [`0x4B4c16681401454140a9dBca55e5c186BBE8D728`](https://robin.etherscan.io/address/0x4B4c16681401454140a9dBca55e5c186BBE8D728). |
+| `HookrLane` | [`0x9A8a1006469BA196f8FEfc017a53505C83A060BB`](https://robin.etherscan.io/address/0x9A8a1006469BA196f8FEfc017a53505C83A060BB#code) | Arbitrage recapture. Its executor is What The Hook's [`0x4B4c16681401454140a9dBca55e5c186BBE8D728`](https://robin.etherscan.io/address/0x4B4c16681401454140a9dBca55e5c186BBE8D728). |
 | `HookrRegistry` | [`0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602`](https://robin.etherscan.io/address/0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602#code) | Timelocked admissions of Rules and advisories, launchers and the guardian's brake on new pools. |
 | `HookrRouter` | [`0xC2Bc9a3fe6c4Ce8C2F7EB4655b0869b01D8c93C9`](https://robin.etherscan.io/address/0xC2Bc9a3fe6c4Ce8C2F7EB4655b0869b01D8c93C9#code) | Swaps on Hookr pools. |
 | `HookrQuoter` | [`0x445D7891381Aa7F91F5048EdBC6a611ccBDe7865`](https://robin.etherscan.io/address/0x445D7891381Aa7F91F5048EdBC6a611ccBDe7865#code) | Quotes. |
@@ -54,7 +54,7 @@ Every contract in the table except `PoolManager` has its source in this reposito
 hookr-1/
 ├── src/                          HookrRoot, the release's Rules, registry, launcher, router, quoter and the rest
 ├── core-2/                       the core, its binder, blocks and recapture module, and its launcher
-├── combined-core/                the combined Rules, owned-root factory v2, lane v2 and the swap modules
+├── combined-core/                the combined Rules, owned-root factory v2, lane v2 and the venue adapters
 ├── agent-gate/                   the Agent gate
 ├── revenue-tokenizer-4/          the revenue tokenizer, its libraries, door factories, time shares and agent income doors
 ├── revenue-tokenizer-v2/         the token code, token libraries and door factories the revenue tokenizer reuses
