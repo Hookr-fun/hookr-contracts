@@ -1,0 +1,361 @@
+{
+  "chainId": 143,
+  "release": "hookr-1",
+  "recordedAtBlock": 117551339,
+  "recordedAtBlockHash": "0x02d260d692b0226d14f7c067e151d5ba161484ab2d1887884f792273dbf9d849",
+  "note": "33 of the release's contracts on Monad, at the addresses the CREATE3 factory gives the release's deployer for each role, the same addresses as on Robinhood Chain, each with how it is deployed. 20 of them also have the keccak256 of their runtime code, as the release's deployment manifest for this chain gives it; recordedAtBlock is the block that manifest names. The other 13 have no runtime keccak256 here. This record maps no sources: the sources in this repository are the Robinhood Chain build's.",
+  "poolManager": {
+    "address": "0x188d586Ddcf52439676Ca21A244753fA19F9Ea8e",
+    "runtimeKeccak256": "0xf5d7a45765367807b101f825ec74004078c79bd96c621e481c608ee22f7336d4"
+  },
+  "contracts": [
+    {
+      "group": "core",
+      "name": "HookrAccountCalls",
+      "address": "0x0579a95A7760070E2d6D34e5beCe571e5F1c4818",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrAccountCalls"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrCompliance",
+      "address": "0x9D205e8a68464761A9d84bdeCcEa0C3CB1e7B1EC",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrCompliance"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrComplianceGuard",
+      "address": "0x6CD70db1ac99344416a6fD7184e23FA8f09f313A",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrComplianceGuard"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrFamilyLock",
+      "address": "0xfAFEcE64099C1E791C4B46189c277f00c0c7e00b",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrFamilyLock"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrFamilyRouter",
+      "address": "0x854f3Fa7AC342B244DF0d9A8c8F597b051aAE559",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrFamilyRouter"
+      },
+      "runtimeKeccak256": "0x0e83db549d0ac378e92c4aa29835a5aaa3a151fc596a7dda70d6d7e35aef5751"
+    },
+    {
+      "group": "core",
+      "name": "HookrFeeAdvisory",
+      "address": "0x3B6b3f00684987B831fcF9EB5f0d5B806afF7306",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrFeeAdvisory"
+      },
+      "runtimeKeccak256": "0x35f8380c6dce51ffcab43c4daea313555346414e70e57e0a8112c85789c5ac9b"
+    },
+    {
+      "group": "core",
+      "name": "HookrForwarder",
+      "address": "0xe7863CC0E2Fb783b44c279aB159bcD812c2ceA1c",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrForwarder"
+      },
+      "runtimeKeccak256": "0x3242bd3dea1be9c1ffd17b23475f2d1d11fb5ee9cdbe8328b309b7adb8427043"
+    },
+    {
+      "group": "core",
+      "name": "HookrLane",
+      "address": "0x9A8a1006469BA196f8FEfc017a53505C83A060BB",
+      "deployment": {
+        "createdBy": "0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc",
+        "kind": "contract-create"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrLaunchChecks",
+      "address": "0x8567369a70100828611BB6F44ec051B48F10fb59",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrLaunchChecks"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrLauncher",
+      "address": "0x1cf2748A6670572425eAbf9Ab9e5BC4eb2eB8Ef4",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrLauncher"
+      },
+      "runtimeKeccak256": "0x48ab4577a4768ffd5e0a9545471bceb794e359360d4245710e0834267f564537"
+    },
+    {
+      "group": "core",
+      "name": "HookrLiquidityVault",
+      "address": "0xA408923EF811945Ef119Bc700B1950Dab65467Fc",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrLiquidityVault"
+      },
+      "runtimeKeccak256": "0x1b2bb258d0c96640e28a75595c19e031fdcf8949859b6924f50e500748f5eda5"
+    },
+    {
+      "group": "core",
+      "name": "HookrLpBoost",
+      "address": "0x52536F5F4E5BC7cEA2197c8F1BB49bf2B133E7f1",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrLpBoost"
+      },
+      "runtimeKeccak256": "0x7bcbf095013e6a0f350fd4857972b715813cb3b00cde0c1736fdfc8038704739"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedProfiles",
+      "address": "0xb46c318B6AEA2d6274f5566da414b09fDa6CC325",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrOwnedProfiles"
+      },
+      "runtimeKeccak256": "0x008495d29a2a0a4e977b963da62907d411643b5d4fb3b226accd341d108f6b58"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedRootFactory",
+      "address": "0xA6c2a401597301dFf57A59bC8F70a9622499f3ec",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrOwnedRootFactory"
+      },
+      "runtimeKeccak256": "0x813706251f0842bc999fa00f3b887a4db8cb684f58bb8422b0a52a60d54564ce"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedRootsLens",
+      "address": "0x6Bb5c9d21dD095F788cb8373d0143429ad277366",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrOwnedRootsLens"
+      },
+      "runtimeKeccak256": "0x3cb48f7cb5c742b48896e55a4a40e54558bea1632eea5326d85784b97a778f8f"
+    },
+    {
+      "group": "core",
+      "name": "HookrPaymaster",
+      "address": "0x1c4682915092E742231ea038C4fcA61e96a83c99",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrPaymaster"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrPaymasterAdmin",
+      "address": "0x1d81F4B131832f741392edf7B91b4CF099FbB008",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrPaymasterAdmin"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrPrograms",
+      "address": "0x9fA204AC99176782Fd20615b2b2A516D1F8C328F",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrPrograms"
+      },
+      "runtimeKeccak256": "0xba7eeca254e96c1100c70225e39da1018f18b0c04ab8db1150a8f4aba13fdfad"
+    },
+    {
+      "group": "core",
+      "name": "HookrProgramsAdmin",
+      "address": "0x40B40D65543E70a9C757eda1A2208517a8BC7292",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrProgramsAdmin"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrQuoter",
+      "address": "0x445D7891381Aa7F91F5048EdBC6a611ccBDe7865",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrQuoter"
+      },
+      "runtimeKeccak256": "0x299dd44a563ab092856a9edf1fe143402d254c42469027daa00b931ccce947c4"
+    },
+    {
+      "group": "core",
+      "name": "HookrRecapture",
+      "address": "0xF83569E564d70daebc35950f66a73f2e2B915583",
+      "deployment": {
+        "createdBy": "0x4a71c270b1520F94064268102AebD744b0DE7942",
+        "kind": "contract-create"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrReferralDistributor",
+      "address": "0x690539c53212899A9c6AEEE3b4B6737A5c4851d9",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrReferralDistributor"
+      },
+      "runtimeKeccak256": "0x66b72c0818a51f1f22b8d7e2c053e02606dc170754917d6fbd815fc42701ba9d"
+    },
+    {
+      "group": "core",
+      "name": "HookrReferralRegistry",
+      "address": "0xefD1DfBA80c06E72F793601706c3a1c71aab3057",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrReferralRegistry"
+      },
+      "runtimeKeccak256": "0xb1a73b3ab62266a7b202eaf819ab6f8919628d3fe918fce0ca96f4981ec29d62"
+    },
+    {
+      "group": "core",
+      "name": "HookrRegistry",
+      "address": "0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRegistry"
+      },
+      "runtimeKeccak256": "0x8377e1b209c0ca86c22a839073de781fe9c0c4327b692d1d74c8f7b766c05cba"
+    },
+    {
+      "group": "core",
+      "name": "HookrRegistryAdmin",
+      "address": "0x675ac2102E8c69E2467F64656E3c235AF3901Ac1",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRegistryAdmin"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrRegistryChecks",
+      "address": "0xB9F5c54E5Cc7ac6c7a96335E5A334Cf4eA496E98",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRegistryChecks"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrRoot",
+      "address": "0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRoot"
+      },
+      "runtimeKeccak256": "0x2bc8e82dbbe191b15b173bf92826112c8c9069162b8f892be4c76ce6b338f083"
+    },
+    {
+      "group": "core",
+      "name": "HookrRootFactory",
+      "address": "0x21E438FaBE10770afb4407cF6b09d32369CBdCE4",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRootFactory"
+      },
+      "runtimeKeccak256": "0xf931c0bb9ddb1b753010ff616a8c91de627304e80ada1d4c8e6ff74998f5515c"
+    },
+    {
+      "group": "core",
+      "name": "HookrRouter",
+      "address": "0xC2Bc9a3fe6c4Ce8C2F7EB4655b0869b01D8c93C9",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRouter"
+      },
+      "runtimeKeccak256": "0xb060e8d827b8e9dad05f29d3c8582d962bf586beb8e3a814be4152887f2ee4ea"
+    },
+    {
+      "group": "core",
+      "name": "HookrRules",
+      "address": "0x4a71c270b1520F94064268102AebD744b0DE7942",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrRules"
+      },
+      "runtimeKeccak256": "0x41a21e5b8039cbe626f48989d768aad93750abba2d9103b90a1ef1dbf8660580"
+    },
+    {
+      "group": "core",
+      "name": "HookrSessionAdvisory",
+      "address": "0x78Bc6b7302Dda8632e661c8d74966bdBea1c66b1",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrSessionAdvisory"
+      },
+      "runtimeKeccak256": "0xfaf317cc9e80121f0b076ea60741ec008372da4664ce33111820c6c683836377"
+    },
+    {
+      "group": "core",
+      "name": "HookrTokenDeployer",
+      "address": "0x1B23D6d7beBcB61E39317E9F0Bc02AEB91aFCcAe",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrTokenDeployer"
+      }
+    },
+    {
+      "group": "core",
+      "name": "HookrTreasury",
+      "address": "0x2242F7FC75606500503075f29ea8cDA684EfB4a9",
+      "deployment": {
+        "factory": "0xc7c662Fc760FE1d5cB97fd8A68cb43A046da3F7d",
+        "kind": "create3",
+        "role": "HookrTreasury"
+      },
+      "runtimeKeccak256": "0x998c2155ed137a295b6ca27393a3d5ddd1f9b0a9f964fa61b1dd8bf5ff36e0f7"
+    }
+  ]
+}

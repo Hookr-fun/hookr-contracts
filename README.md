@@ -31,19 +31,36 @@ Arbitrage recapture is on by default for new pools. What The Hook's executor tra
 | `HookrRevenueStateView` | [`0x83B8F1650a22b7da9Fac45A09F51e0685C47E944`](https://robin.etherscan.io/address/0x83B8F1650a22b7da9Fac45A09F51e0685C47E944#code) | Reads a revenue token's streams. |
 | `HookrLegCollector` | [`0x2b8dd989D34256b7685E3Bd8F10299A4891F1Af2`](https://robin.etherscan.io/address/0x2b8dd989D34256b7685E3Bd8F10299A4891F1Af2#code) | Takes Hookr's leg of revenue tokens and sweeps it to the treasury's target. |
 | `HookrTimeSharesFactory` | [`0x05fDb5654e1D52593Ee774cae964717d5834dF1B`](https://robin.etherscan.io/address/0x05fDb5654e1D52593Ee774cae964717d5834dF1B#code) | Time shares on those revenue tokens: lock them by the day and earn each day's income. |
+| `HookrMatchVault` | [`0x1Ea7141a4603139D84a02E1270130C63F889f9c0`](https://robin.etherscan.io/address/0x1Ea7141a4603139D84a02E1270130C63F889f9c0#code) | Matches an approved asset with HOOKR on the asset's approved pool and holds the two positions it mints until the match unlocks. |
+| `HookrPriceLog` | [`0x28b6493639bCAd4A0DDd7A3d6fe961EDa29BF817`](https://robin.etherscan.io/address/0x28b6493639bCAd4A0DDd7A3d6fe961EDa29BF817#code) | A shared price log for Uniswap v4 pools, with no owner. The match vault checks a pool's price against it. |
+| `HookrLogLock` | [`0xDa9DdAf447bA0cB93f595ae63925B8F28f038e3D`](https://robin.etherscan.io/address/0xDa9DdAf447bA0cB93f595ae63925B8F28f038e3D#code) | Opens a Chop log for a token and holds its staked liquidity until an unlock time. |
 | `PoolManager` | [`0x8366a39CC670B4001A1121B8F6A443A643e40951`](https://robin.etherscan.io/address/0x8366a39CC670B4001A1121B8F6A443A643e40951#code) | Uniswap v4's singleton. Every Hookr pool lives in it. |
 
 `HookrRoot` is on the allowlist of Uniswap's routing service for Robinhood Chain.
 
+### Monad, Arbitrum One and Elysium
+
+`HookrRoot` and its release are also deployed on three more chains, at the addresses they have on Robinhood Chain.
+
+| Chain | `HookrRoot` | Uniswap v4 `PoolManager` | Record |
+| --- | --- | --- | --- |
+| Monad (143) | [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://monadscan.com/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc) | [`0x188d586Ddcf52439676Ca21A244753fA19F9Ea8e`](https://monadscan.com/address/0x188d586Ddcf52439676Ca21A244753fA19F9Ea8e) | [`monad-143.json`](./hookr-1/deployments/monad-143.json) |
+| Arbitrum One (42161) | [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://arbiscan.io/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc) | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://arbiscan.io/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) | [`arbitrum-42161.json`](./hookr-1/deployments/arbitrum-42161.json) |
+| Elysium (99901) | [`0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc`](https://elysium.kinetiq.xyz/explorer/address/0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc) | [`0xE2e105d3F7209A9DA11f83cCf3E7398a753823F1`](https://elysium.kinetiq.xyz/explorer/address/0xE2e105d3F7209A9DA11f83cCf3E7398a753823F1) | [`elysium-99901.json`](./hookr-1/deployments/elysium-99901.json) |
+
+Each record lists contracts of the release on its chain; [`hookr-1/README.md`](./hookr-1/README.md#other-chains) says what each record holds. The sources and the byte-for-byte build below are Robinhood Chain's.
+
 ### Sources
 
-Every contract in the table except `PoolManager` has its source in this repository, byte-identical to its verified source, and is an exact match on [Sourcify](https://sourcify.dev):
+Every contract in the Robinhood Chain table except `PoolManager` has its source in this repository, byte-identical to its verified source, and is an exact match on [Sourcify](https://sourcify.dev):
 
 - `HookrRoot`, the release's `HookrRules`, `HookrLane`, `HookrRegistry`, `HookrRouter`, `HookrQuoter` and `HookrTreasury`: [`hookr-1/src/`](./hookr-1/src/).
 - The core, `HookrBinder` and `HookrLauncher`: [`hookr-1/core-2/`](./hookr-1/core-2/README.md); the core's sources are the combined core's files in [`hookr-1/combined-core/core/src/`](./hookr-1/combined-core/core/src/).
 - The combined `HookrRules` and `HookrOwnedRootFactoryV2`: [`hookr-1/combined-core/`](./hookr-1/combined-core/README.md).
 - `HookrVestingMilestoneFactory` and `PayLaterFactory`, built for `HookrLauncher`: [`hookr-1/hook-blocks/vesting-milestone/`](./hookr-1/hook-blocks/vesting-milestone/README.md) and [`hookr-1/hook-blocks/pay-later/`](./hookr-1/hook-blocks/pay-later/README.md).
 - `HookrAgentGate`: [`hookr-1/agent-gate/`](./hookr-1/agent-gate/README.md).
+- `HookrMatchVault` and `HookrPriceLog`: [`hookr-1/match-vault/`](./hookr-1/match-vault/README.md).
+- `HookrLogLock`: [`hookr-1/chop-log-lock/`](./hookr-1/chop-log-lock/README.md).
 - The revenue tokenizer and its time shares factory: [`hookr-1/revenue-tokenizer-4/`](./hookr-1/revenue-tokenizer-4/README.md), and the eight contracts it reuses: [`hookr-1/revenue-tokenizer-v2/`](./hookr-1/revenue-tokenizer-v2/README.md).
 
 [`hookr-1/README.md`](./hookr-1/README.md#deployed-contracts) lists the release's other contracts and the Hook Blocks, each with its source. [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) has the same set as JSON.
@@ -56,13 +73,15 @@ hookr-1/
 ├── core-2/                       the core, its binder, blocks and recapture module, and its launcher
 ├── combined-core/                the combined Rules, owned-root factory v2, lane v2 and the venue adapters
 ├── agent-gate/                   the Agent gate
+├── match-vault/                  the match vault and the price log it reads
+├── chop-log-lock/                the Chop log lock
 ├── revenue-tokenizer-4/          the revenue tokenizer, its libraries, door factories, time shares and agent income doors
 ├── revenue-tokenizer-v2/         the token code, token libraries and door factories the revenue tokenizer reuses
 ├── hook-blocks/                  Hook Blocks and the HookrBook connectors, one folder each
 ├── wallet-cap/                   Wallet Cap Rules
 ├── king-of-the-pool-whole-pot/   King of the Pool Rules that pay the round's winner the whole pot
 ├── test/                         unit, fuzz and invariant tests
-├── deployments/                  every address, deployment and build setting, as JSON
+├── deployments/                  every address, deployment and build setting, as JSON, one record per chain
 ├── standard-input.mjs            a contract's solc input, from the files here
 └── check-runtime.mjs             a build against the code on chain, byte for byte
 bench/                            gas per Hook Block, measured on a fork of the chain
@@ -81,7 +100,7 @@ forge build --root hookr-1
 forge test --root hookr-1
 ```
 
-The contracts were compiled with solc 0.8.37, via-IR, the optimizer at 200 runs and EVM version prague, except the tokenizer sets in `hookr-1/revenue-tokenizer-4/` and `hookr-1/revenue-tokenizer-v2/`, which use 50 runs; their add-ons use 200. Every contract in [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) rebuilds byte for byte, metadata hash included:
+The contracts were compiled with solc 0.8.37, via-IR, the optimizer at 200 runs and EVM version prague, except the tokenizer sets in `hookr-1/revenue-tokenizer-4/` and `hookr-1/revenue-tokenizer-v2/`, which use 50 runs; their add-ons use 200. `HookrLogLock` and `HookrPriceLog` were compiled with solc 0.8.26 and EVM version cancun, and build with `solc-0.8.26` in the commands below. Every contract in [`hookr-1/deployments/robinhood-4663.json`](./hookr-1/deployments/robinhood-4663.json) rebuilds byte for byte, metadata hash included:
 
 ```sh
 node hookr-1/standard-input.mjs <address> > in.json

@@ -511,6 +511,60 @@
         ":solmate/=../../../contracts/lib/v4-core/lib/solmate/"
       ],
       "viaIR": true
+    },
+    "match-vault-price-log": {
+      "evmVersion": "cancun",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        ":@openzeppelin/contracts/=../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/",
+        ":@uniswap/v4-core/=../../../contracts/lib/v4-core/",
+        ":forge-std/=../../../contracts/lib/forge-std/src/",
+        ":hookr-1/=vendor/hookr-1/src/",
+        ":solmate/=../../../contracts/lib/v4-core/lib/solmate/"
+      ],
+      "viaIR": true
+    },
+    "match-vault": {
+      "evmVersion": "prague",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        ":@openzeppelin/contracts/=../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/",
+        ":@uniswap/v4-core/=../../../contracts/lib/v4-core/",
+        ":forge-std/=../../../contracts/lib/forge-std/src/",
+        ":hookr-1/=vendor/hookr-1/src/",
+        ":solmate/=../../../contracts/lib/v4-core/lib/solmate/"
+      ],
+      "viaIR": true
+    },
+    "chop-log-lock": {
+      "evmVersion": "cancun",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        ":@openzeppelin/contracts/=../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/",
+        ":forge-std/=../../../contracts/lib/forge-std/src/"
+      ],
+      "viaIR": true
     }
   },
   "contracts": [
@@ -13922,6 +13976,153 @@
         "src/interfaces/external/IERC8004.sol": "hookr-1/agent-gate/src/interfaces/external/IERC8004.sol",
         "src/interfaces/external/IPositionManagerView.sol": "hookr-1/agent-gate/src/interfaces/external/IPositionManagerView.sol"
       }
+    },
+    {
+      "group": "match-vault",
+      "block": "price-log",
+      "name": "HookrPriceLog",
+      "address": "0x28b6493639bCAd4A0DDd7A3d6fe961EDa29BF817",
+      "contract": "vendor/price-log/HookrPriceLog.sol:HookrPriceLog",
+      "deployment": {
+        "deployer": "0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC",
+        "kind": "create",
+        "nonce": 599
+      },
+      "creationTransaction": "0x2da13e6899ff06bccaced86f9349f5f70016fa2ec6a5529971d5c3cc85e78dce",
+      "constructorArguments": "0x0000000000000000000000008366a39cc670b4001a1121b8f6a443a643e40951",
+      "libraries": {},
+      "runtimeKeccak256": "0x34d3d6e5de5031f679633e62c9922e30a7e6483e9c417e9f7f1db23f0a1db130",
+      "metadataIpfs": "QmXr78q7BQw6owUrpwfjXc6jXmF62aafL6k9SWbhg1Fa3W",
+      "compiler": "0.8.26+commit.8a97fa7a",
+      "settings": "match-vault-price-log",
+      "sources": {
+        "../../../contracts/lib/v4-core/src/interfaces/IExtsload.sol": "lib/v4-core/src/interfaces/IExtsload.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IExttload.sol": "lib/v4-core/src/interfaces/IExttload.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IHooks.sol": "lib/v4-core/src/interfaces/IHooks.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IPoolManager.sol": "lib/v4-core/src/interfaces/IPoolManager.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IProtocolFees.sol": "lib/v4-core/src/interfaces/IProtocolFees.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/external/IERC20Minimal.sol": "lib/v4-core/src/interfaces/external/IERC20Minimal.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/external/IERC6909Claims.sol": "lib/v4-core/src/interfaces/external/IERC6909Claims.sol",
+        "../../../contracts/lib/v4-core/src/libraries/BitMath.sol": "lib/v4-core/src/libraries/BitMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/CurrencyReserves.sol": "lib/v4-core/src/libraries/CurrencyReserves.sol",
+        "../../../contracts/lib/v4-core/src/libraries/CustomRevert.sol": "lib/v4-core/src/libraries/CustomRevert.sol",
+        "../../../contracts/lib/v4-core/src/libraries/FixedPoint128.sol": "lib/v4-core/src/libraries/FixedPoint128.sol",
+        "../../../contracts/lib/v4-core/src/libraries/FullMath.sol": "lib/v4-core/src/libraries/FullMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/LiquidityMath.sol": "lib/v4-core/src/libraries/LiquidityMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/Lock.sol": "lib/v4-core/src/libraries/Lock.sol",
+        "../../../contracts/lib/v4-core/src/libraries/NonzeroDeltaCount.sol": "lib/v4-core/src/libraries/NonzeroDeltaCount.sol",
+        "../../../contracts/lib/v4-core/src/libraries/Position.sol": "lib/v4-core/src/libraries/Position.sol",
+        "../../../contracts/lib/v4-core/src/libraries/SafeCast.sol": "lib/v4-core/src/libraries/SafeCast.sol",
+        "../../../contracts/lib/v4-core/src/libraries/StateLibrary.sol": "lib/v4-core/src/libraries/StateLibrary.sol",
+        "../../../contracts/lib/v4-core/src/libraries/TickMath.sol": "lib/v4-core/src/libraries/TickMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/TransientStateLibrary.sol": "lib/v4-core/src/libraries/TransientStateLibrary.sol",
+        "../../../contracts/lib/v4-core/src/types/BalanceDelta.sol": "lib/v4-core/src/types/BalanceDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/BeforeSwapDelta.sol": "lib/v4-core/src/types/BeforeSwapDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/Currency.sol": "lib/v4-core/src/types/Currency.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolId.sol": "lib/v4-core/src/types/PoolId.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolKey.sol": "lib/v4-core/src/types/PoolKey.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolOperation.sol": "lib/v4-core/src/types/PoolOperation.sol",
+        "vendor/price-log/HookrPriceLog.sol": "hookr-1/match-vault/price-log/src/HookrPriceLog.sol"
+      }
+    },
+    {
+      "group": "match-vault",
+      "name": "HookrMatchVault",
+      "address": "0x1Ea7141a4603139D84a02E1270130C63F889f9c0",
+      "contract": "src/HookrMatchVault.sol:HookrMatchVault",
+      "deployment": {
+        "deployer": "0x0c0967485A25F18E70262a2Ee80c7595CC64a5fC",
+        "kind": "create",
+        "nonce": 600
+      },
+      "creationTransaction": "0x38b6242f9ff0b2ffb162823e48ee66f2bdd7ec030d219f70fbd5103b2f88e17f",
+      "constructorArguments": "0x00000000000000000000000058daec3116aae6d93017baaea7749052e8a04fa700000000000000000000000089c9fb50d1f03192230ffb1c279bb6e7d3fe6acc00000000000000000000000018e674231a58c239dc7daedcffe15ec3a24cff5c00000000000000000000000028b6493639bcad4a0ddd7a3d6fe961eda29bf8170000000000000000000000008fdfaa25e2e4dda297f301ea06458f22186d6be900000000000000000000000000000000000000000000000000000000000007080000000000000000000000000000000000000000000000000000000000001770000000000000000000000000000000000000000000000000000000000000271000000000000000000000000000000000000000000000000000000000001baf8000000000000000000000000000000000000000000000010f0cf064dd592000000000000000000000000000000000000000000000000052e741ed4019f5b0000000000000000000000000000000000000000000000000d3c21bcecceda10000000000000000000000000000000000000000000000000052e741ed4019f5b000000000000000000000000000008fdfaa25e2e4dda297f301ea06458f22186d6be9",
+      "libraries": {},
+      "runtimeKeccak256": "0x973f0cc76a65db492b62bc2f7e082a0418f5a23dde5214a9d96cd34d0f550c2d",
+      "metadataIpfs": "QmVX68Yfzr3XBvfELmvh3qzBxmHWgxsQpMyvwx37eGsgon",
+      "settings": "match-vault",
+      "sources": {
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/utils/Address.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/utils/Address.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IExtsload.sol": "lib/v4-core/src/interfaces/IExtsload.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IExttload.sol": "lib/v4-core/src/interfaces/IExttload.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IHooks.sol": "lib/v4-core/src/interfaces/IHooks.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IPoolManager.sol": "lib/v4-core/src/interfaces/IPoolManager.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/IProtocolFees.sol": "lib/v4-core/src/interfaces/IProtocolFees.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/external/IERC20Minimal.sol": "lib/v4-core/src/interfaces/external/IERC20Minimal.sol",
+        "../../../contracts/lib/v4-core/src/interfaces/external/IERC6909Claims.sol": "lib/v4-core/src/interfaces/external/IERC6909Claims.sol",
+        "../../../contracts/lib/v4-core/src/libraries/BitMath.sol": "lib/v4-core/src/libraries/BitMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/CurrencyReserves.sol": "lib/v4-core/src/libraries/CurrencyReserves.sol",
+        "../../../contracts/lib/v4-core/src/libraries/CustomRevert.sol": "lib/v4-core/src/libraries/CustomRevert.sol",
+        "../../../contracts/lib/v4-core/src/libraries/FixedPoint128.sol": "lib/v4-core/src/libraries/FixedPoint128.sol",
+        "../../../contracts/lib/v4-core/src/libraries/FixedPoint96.sol": "lib/v4-core/src/libraries/FixedPoint96.sol",
+        "../../../contracts/lib/v4-core/src/libraries/FullMath.sol": "lib/v4-core/src/libraries/FullMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/LPFeeLibrary.sol": "lib/v4-core/src/libraries/LPFeeLibrary.sol",
+        "../../../contracts/lib/v4-core/src/libraries/LiquidityMath.sol": "lib/v4-core/src/libraries/LiquidityMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/Lock.sol": "lib/v4-core/src/libraries/Lock.sol",
+        "../../../contracts/lib/v4-core/src/libraries/NonzeroDeltaCount.sol": "lib/v4-core/src/libraries/NonzeroDeltaCount.sol",
+        "../../../contracts/lib/v4-core/src/libraries/Pool.sol": "lib/v4-core/src/libraries/Pool.sol",
+        "../../../contracts/lib/v4-core/src/libraries/Position.sol": "lib/v4-core/src/libraries/Position.sol",
+        "../../../contracts/lib/v4-core/src/libraries/ProtocolFeeLibrary.sol": "lib/v4-core/src/libraries/ProtocolFeeLibrary.sol",
+        "../../../contracts/lib/v4-core/src/libraries/SafeCast.sol": "lib/v4-core/src/libraries/SafeCast.sol",
+        "../../../contracts/lib/v4-core/src/libraries/SqrtPriceMath.sol": "lib/v4-core/src/libraries/SqrtPriceMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/StateLibrary.sol": "lib/v4-core/src/libraries/StateLibrary.sol",
+        "../../../contracts/lib/v4-core/src/libraries/SwapMath.sol": "lib/v4-core/src/libraries/SwapMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/TickBitmap.sol": "lib/v4-core/src/libraries/TickBitmap.sol",
+        "../../../contracts/lib/v4-core/src/libraries/TickMath.sol": "lib/v4-core/src/libraries/TickMath.sol",
+        "../../../contracts/lib/v4-core/src/libraries/TransientStateLibrary.sol": "lib/v4-core/src/libraries/TransientStateLibrary.sol",
+        "../../../contracts/lib/v4-core/src/libraries/UnsafeMath.sol": "lib/v4-core/src/libraries/UnsafeMath.sol",
+        "../../../contracts/lib/v4-core/src/types/BalanceDelta.sol": "lib/v4-core/src/types/BalanceDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/BeforeSwapDelta.sol": "lib/v4-core/src/types/BeforeSwapDelta.sol",
+        "../../../contracts/lib/v4-core/src/types/Currency.sol": "lib/v4-core/src/types/Currency.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolId.sol": "lib/v4-core/src/types/PoolId.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolKey.sol": "lib/v4-core/src/types/PoolKey.sol",
+        "../../../contracts/lib/v4-core/src/types/PoolOperation.sol": "lib/v4-core/src/types/PoolOperation.sol",
+        "../../../contracts/lib/v4-core/src/types/Slot0.sol": "lib/v4-core/src/types/Slot0.sol",
+        "src/HookrMatchVault.sol": "hookr-1/match-vault/src/HookrMatchVault.sol",
+        "src/interfaces/IHookrMatchVault.sol": "hookr-1/match-vault/src/interfaces/IHookrMatchVault.sol",
+        "src/interfaces/IHookrPriceLog.sol": "hookr-1/match-vault/src/interfaces/IHookrPriceLog.sol",
+        "src/libraries/MatchMath.sol": "hookr-1/match-vault/src/libraries/MatchMath.sol",
+        "vendor/hookr-1/src/base/HookrGoverned.sol": "hookr-1/src/base/HookrGoverned.sol",
+        "vendor/hookr-1/src/interfaces/IHookrFactoryRegistry.sol": "hookr-1/src/interfaces/IHookrFactoryRegistry.sol",
+        "vendor/hookr-1/src/interfaces/IHookrGoverned.sol": "hookr-1/src/interfaces/IHookrGoverned.sol",
+        "vendor/hookr-1/src/interfaces/IHookrRegistry.sol": "hookr-1/src/interfaces/IHookrRegistry.sol",
+        "vendor/hookr-1/src/interfaces/IHookrRoot.sol": "hookr-1/src/interfaces/IHookrRoot.sol",
+        "vendor/hookr-1/src/interfaces/external/IPositionManagerMinimal.sol": "hookr-1/src/interfaces/external/IPositionManagerMinimal.sol",
+        "vendor/hookr-1/src/libraries/HookrDelegation.sol": "hookr-1/src/libraries/HookrDelegation.sol",
+        "vendor/hookr-1/src/types/HookrTypes.sol": "hookr-1/src/types/HookrTypes.sol"
+      }
+    },
+    {
+      "group": "chop-log-lock",
+      "name": "HookrLogLock",
+      "address": "0xDa9DdAf447bA0cB93f595ae63925B8F28f038e3D",
+      "contract": "src/HookrLogLock.sol:HookrLogLock",
+      "deployment": {
+        "createdBy": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+        "kind": "create2",
+        "salt": "0x486f6f6b7220486f6f6b724c6f674c6f636b2031000000000000000000000000"
+      },
+      "creationTransaction": "0xbc37423458216b6b475ea90bb2ddf9b424bc2c6c6c8d7bf7666201f1147557d6",
+      "constructorArguments": "0x000000000000000000000000f2a26110396b4162d48a16ee8683372a6a2c3b760000000000000000000000008fdfaa25e2e4dda297f301ea06458f22186d6be900000000000000000000000000000000000000000000000000000000000001f4",
+      "libraries": {},
+      "runtimeKeccak256": "0x497835c053d79b345552566917c06a92b4ba1c9a804b7f10021289e1fd88d135",
+      "metadataIpfs": "Qmd9iFm9dHb6AicCziiwfXTXaLfopUN2nDNhUqkARCpvjb",
+      "compiler": "0.8.26+commit.8a97fa7a",
+      "settings": "chop-log-lock",
+      "sources": {
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/utils/Address.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/utils/Address.sol",
+        "../../../contracts/lib/v4-core/lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol": "lib/v4-core/lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol",
+        "src/HookrLogLock.sol": "hookr-1/chop-log-lock/src/HookrLogLock.sol",
+        "src/interfaces/IChop.sol": "hookr-1/chop-log-lock/src/interfaces/IChop.sol",
+        "src/interfaces/IHookrLogLock.sol": "hookr-1/chop-log-lock/src/interfaces/IHookrLogLock.sol"
+      }
     }
   ],
   "sourceKeccak256": {
@@ -14673,6 +14874,14 @@
     "hookr-1/core-2/src/core/HookrBinder.sol": "0xdd497cd1ee68ddcff58ad4ebc86bdb75f7b6ac52aeedf4efc210ef5e9e4da59d",
     "hookr-1/core-2/src/libraries/HookrRulesChecks.sol": "0xe4df4e264b4a6fe923e2a50afd6f147a4507fa1c87bee31b2591e94c7acb4f5c",
     "hookr-1/core-2/src/libraries/HookrSettings.sol": "0x3231280a7bab920a2021026e2697cde3cb9e8b7a7a32b267bc04ae60824fe837",
+    "hookr-1/chop-log-lock/src/HookrLogLock.sol": "0x96fbc346d3bbe84a1116f0049aeb6396bf5598c4507c11a572bcf9b64aff125e",
+    "hookr-1/chop-log-lock/src/interfaces/IChop.sol": "0x33c815df9fc85bf6492e433819b28702ca90a0c9d99445950a9493646464c0fd",
+    "hookr-1/chop-log-lock/src/interfaces/IHookrLogLock.sol": "0x01da441ccf578e17ebbedb776984999a5d3d4dd0c888178603e60a9d245b6aee",
+    "hookr-1/match-vault/price-log/src/HookrPriceLog.sol": "0x8b9701530555351b97b2b9cc141bea24f692477cd468110bb532f62c30d18895",
+    "hookr-1/match-vault/src/HookrMatchVault.sol": "0xa27379ccd7857fdc18e94ef3b62e5399869e95e9249871c2039d805fc1b3e220",
+    "hookr-1/match-vault/src/interfaces/IHookrMatchVault.sol": "0xd55ba56809fa155d4f66b11c6fe29f699cf501d9c10413384e142ce2170489c9",
+    "hookr-1/match-vault/src/interfaces/IHookrPriceLog.sol": "0xb320b15c2769c23a95d794ccff95900b2cc36dd14cdeb9f085fad06e2e13d65a",
+    "hookr-1/match-vault/src/libraries/MatchMath.sol": "0x75c23fe7de1e2ad84eb2962c288b6c671c7ae2a174b49fa96c1f6890fd3e24a6",
     "lib/v4-core/lib/solmate/src/tokens/ERC20.sol": "0xcdfd8db76b2a3415620e4d18cc5545f3d50de792dbf2c3dd5adb40cbe6f94b10",
     "hookr-1/agent-gate/src/interfaces/external/IERC8004.sol": "0xbaf4cda49921130d6e4b8801735f8c703cadc6f6a1fec716f5e3146caf2ac704",
     "hookr-1/agent-gate-1/src/HookrAgentGate.sol": "0x46b6815d338880739b7b5b6919fa1c7d8fd0e1a7abd3d9b99140c6964d215ca8",

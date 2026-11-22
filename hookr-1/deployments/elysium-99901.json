@@ -1,0 +1,133 @@
+{
+  "chainId": 99901,
+  "release": "hookr-1",
+  "recordedAtBlock": 3631764,
+  "recordedAtBlockHash": "0x0ee7922ecb4a8fca6ede35d184323c8169c6a7a34aecb92ef4854b7436f0d7dc",
+  "note": "20 of the release's contracts on Elysium, at the same addresses as on Robinhood Chain, each with the keccak256 of its runtime code as the release's deployment manifest for this chain gives it. recordedAtBlock is the block that manifest names. This record maps no sources: the sources in this repository are the Robinhood Chain build's.",
+  "poolManager": {
+    "address": "0xE2e105d3F7209A9DA11f83cCf3E7398a753823F1",
+    "runtimeKeccak256": "0xbb5fb2091cfd38e71f56d14a2b6b5e71a22ac2b8e5881faa422ccf92b40df7a1"
+  },
+  "contracts": [
+    {
+      "group": "core",
+      "name": "HookrFamilyRouter",
+      "address": "0x854f3Fa7AC342B244DF0d9A8c8F597b051aAE559",
+      "runtimeKeccak256": "0xb4cb007dd8f00a16c1454af87be0c32bac362722bc24c09ed11f4a035b961a39"
+    },
+    {
+      "group": "core",
+      "name": "HookrFeeAdvisory",
+      "address": "0x3B6b3f00684987B831fcF9EB5f0d5B806afF7306",
+      "runtimeKeccak256": "0x4066350fb42127f1b22a9517ffab5f004122dce7dafbe3ddfa2ed10d1a716ffd"
+    },
+    {
+      "group": "core",
+      "name": "HookrForwarder",
+      "address": "0xe7863CC0E2Fb783b44c279aB159bcD812c2ceA1c",
+      "runtimeKeccak256": "0x3242bd3dea1be9c1ffd17b23475f2d1d11fb5ee9cdbe8328b309b7adb8427043"
+    },
+    {
+      "group": "core",
+      "name": "HookrLauncher",
+      "address": "0x1cf2748A6670572425eAbf9Ab9e5BC4eb2eB8Ef4",
+      "runtimeKeccak256": "0x968e3a7f5cf5731863c67a34f8ea5f878ad1251a8a579dced4c9e67cd5948438"
+    },
+    {
+      "group": "core",
+      "name": "HookrLiquidityVault",
+      "address": "0xA408923EF811945Ef119Bc700B1950Dab65467Fc",
+      "runtimeKeccak256": "0x48305fa293c7843fc90e9f221b9ae162ed6b65327fd9767154ccb0ecaf9b6e28"
+    },
+    {
+      "group": "core",
+      "name": "HookrLpBoost",
+      "address": "0x52536F5F4E5BC7cEA2197c8F1BB49bf2B133E7f1",
+      "runtimeKeccak256": "0xbb9e2edd4bce86cabd1d13c7462de7b71cb782d9f722a07f28d2334b26c71672"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedProfiles",
+      "address": "0xb46c318B6AEA2d6274f5566da414b09fDa6CC325",
+      "runtimeKeccak256": "0x008495d29a2a0a4e977b963da62907d411643b5d4fb3b226accd341d108f6b58"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedRootFactory",
+      "address": "0xA6c2a401597301dFf57A59bC8F70a9622499f3ec",
+      "runtimeKeccak256": "0x98850eb59d70f2ec6ad0c4934b8884c0d7562386f59834b4937ce20c7e714601"
+    },
+    {
+      "group": "core",
+      "name": "HookrOwnedRootsLens",
+      "address": "0x6Bb5c9d21dD095F788cb8373d0143429ad277366",
+      "runtimeKeccak256": "0x3cb48f7cb5c742b48896e55a4a40e54558bea1632eea5326d85784b97a778f8f"
+    },
+    {
+      "group": "core",
+      "name": "HookrPrograms",
+      "address": "0x9fA204AC99176782Fd20615b2b2A516D1F8C328F",
+      "runtimeKeccak256": "0xa2aeb2fbe21a812aab843bc864dd2c24c687f163f4011baaee82cc7fc9c17736"
+    },
+    {
+      "group": "core",
+      "name": "HookrQuoter",
+      "address": "0x445D7891381Aa7F91F5048EdBC6a611ccBDe7865",
+      "runtimeKeccak256": "0xff692c892169a1aa7722750f7826f2a99feb545dc403c28ce6e24c84c9fd3bc0"
+    },
+    {
+      "group": "core",
+      "name": "HookrReferralDistributor",
+      "address": "0x690539c53212899A9c6AEEE3b4B6737A5c4851d9",
+      "runtimeKeccak256": "0x66b72c0818a51f1f22b8d7e2c053e02606dc170754917d6fbd815fc42701ba9d"
+    },
+    {
+      "group": "core",
+      "name": "HookrReferralRegistry",
+      "address": "0xefD1DfBA80c06E72F793601706c3a1c71aab3057",
+      "runtimeKeccak256": "0x6653632db361c487e3ceda6da7a8577beec30e4d9e8311ff45b34581c1d95790"
+    },
+    {
+      "group": "core",
+      "name": "HookrRegistry",
+      "address": "0x463c82beA1a52F4Cc05ca0741a24F0AD24bA4602",
+      "runtimeKeccak256": "0x236bd6a64cfa6b20951eaaae2543c96cb0d8a9192069f81241c67b436081a2bd"
+    },
+    {
+      "group": "core",
+      "name": "HookrRoot",
+      "address": "0x89c9FB50d1f03192230FFB1c279BB6E7d3Fe6aCc",
+      "runtimeKeccak256": "0x9eb16764b6a25766436f8a466545cede514bed8ae52a7df10ff72cc155bde3ea"
+    },
+    {
+      "group": "core",
+      "name": "HookrRootFactory",
+      "address": "0x21E438FaBE10770afb4407cF6b09d32369CBdCE4",
+      "runtimeKeccak256": "0x90b075afc484e3cef2123ba7746ec37a903e57122686a82df2962bb0913d460b"
+    },
+    {
+      "group": "core",
+      "name": "HookrRouter",
+      "address": "0xC2Bc9a3fe6c4Ce8C2F7EB4655b0869b01D8c93C9",
+      "runtimeKeccak256": "0xe230b7b416acc81754b0dc869127d1d8f6e655b1d813723968078b99726a62c2"
+    },
+    {
+      "group": "core",
+      "name": "HookrRules",
+      "address": "0x4a71c270b1520F94064268102AebD744b0DE7942",
+      "runtimeKeccak256": "0x9a8d454b702e815f280893dfc3643d0da4d3585c1d4b875c415d68ce0255db2d"
+    },
+    {
+      "group": "core",
+      "name": "HookrSessionAdvisory",
+      "address": "0x78Bc6b7302Dda8632e661c8d74966bdBea1c66b1",
+      "runtimeKeccak256": "0xda71b4d816204e18f53cc9b09a2803101d60edfeddb92b11e233921f3a337193"
+    },
+    {
+      "group": "core",
+      "name": "HookrTreasury",
+      "address": "0x2242F7FC75606500503075f29ea8cDA684EfB4a9",
+      "runtimeKeccak256": "0x8bda38cca53e4ea766f1080a2495a467ebeefe470ab39b8958c5bf7e0c1e458c"
+    }
+  ]
+}
