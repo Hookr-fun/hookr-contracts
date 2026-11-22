@@ -3,7 +3,7 @@
 // Keeps every page on the contracts Hookr runs today. Earlier releases have one page,
 // PREVIOUS_RELEASES.md, and no other page names them: not their words, not their addresses.
 // A page is a Markdown file, an issue template or a workflow. lib/ is third-party code, and
-// legacy/ keeps an earlier workspace whole, as published; PREVIOUS_RELEASES.md points to it.
+// legacy/ keeps an earlier workspace; PREVIOUS_RELEASES.md points to it.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";

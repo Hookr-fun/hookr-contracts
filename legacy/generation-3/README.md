@@ -1,6 +1,6 @@
 # Hookr contracts, generation 3
 
-This is the generation 3 workspace as it was published, kept whole: the launchpad, the shared hook, the router, the tests, the scripts and the broadcast records. Generation 3 is live on Robinhood Chain and stays live; the current release is described in the [root README](../../README.md) and does not change anything here. The text below is the original README, with only this note added.
+This is the generation 3 workspace: the launchpad, the shared hook, the router, the tests, the scripts and the broadcast records. Generation 3 is live on Robinhood Chain and stays live; the current release is described in the [root README](../../README.md) and does not change anything here. The text below is the original README, with this note added and its lines about files that are no longer here taken out.
 
 ---
 
@@ -41,7 +41,7 @@ Superseded generations stay on chain and immutable, with their broadcast records
 ## Layout
 
 ```text
-contracts/src/       launchpad, shared hook, token, production router, leverage research lane
+contracts/src/       launchpad, shared hook, token, production router
 contracts/test/      unit, fuzz, adversarial, invariant, exhaustive-stack, and fork integration tests
 contracts/script/    dry-run/deployment scripts and user-confirmed canary scripts
 contracts/audit-poc/ proof-of-concept exploits and their verifications
@@ -56,7 +56,6 @@ docs/                utility terms and chain-extension notes
 - `HookrHook.sol` — shared v4 hook implementing all five blocks.
 - `HookrSwapRouter.sol` — live-pool router with bound recipient/hook data, deadline, execution-time min/max, measured settlement, native refund, and callback/reentrancy guards.
 - `HookrToken.sol` — fixed 1 billion supply ERC-20 without owner mint, pause, blacklist, or transfer tax.
-- `Leverage*.sol` — leveraged-hooks research lane: deployed for verification, writes closed. See [`LEVERAGED_HOOKS_ARCHITECTURE.md`](contracts/LEVERAGED_HOOKS_ARCHITECTURE.md) and [`AUDIT.md`](contracts/AUDIT.md).
 
 ## Build and test
 
@@ -72,7 +71,6 @@ Key suites:
 - `Curve.t.sol`, `Regression.t.sol`, `RegressionLaunchpad.t.sol` — unit behavior and historical regressions;
 - `AdversarialAudit.t.sol` — atomic slot farming, recipient binding, JIT LP, payout recovery, solvency;
 - `InstantLaunch*.t.sol`, `GuardPartialFillAudit.t.sol` — instant-lane previews, locked liquidity, replay safety;
-- `Leverage*` tests — exploit reproductions, invariants, and math checks for the research lane;
 - `Fork.t.sol` — candidate integration against the canonical Robinhood Chain PoolManager.
 
 Robinhood's public RPC is pruned, so fork replay of older blocks needs an archive-capable endpoint.
