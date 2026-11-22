@@ -309,7 +309,7 @@
     {
       "id": "arb-recapture.buy",
       "piece": "arb-recapture",
-      "label": "Arb recapture lane with an idle executor: a buy",
+      "label": "Arbitrage recapture lane with an idle executor: a buy",
       "action": "buy",
       "gas": 190028,
       "baseline": "same-pool-without-piece",
@@ -319,7 +319,7 @@
     {
       "id": "arb-recapture.sell",
       "piece": "arb-recapture",
-      "label": "Arb recapture lane with an idle executor: a sell",
+      "label": "Arbitrage recapture lane with an idle executor: a sell",
       "action": "sell",
       "gas": 188218,
       "baseline": "same-pool-without-piece",

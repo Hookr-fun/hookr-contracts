@@ -4,7 +4,7 @@
 
 ## What it does
 
-- **Fail closed.** The gate is admitted on the registry as an ADVISORY and bound before the swap, so a swap or an add it refuses reverts. By default (`CHECK_BENEFICIARY`, a flag frozen at bind) a buyer's recipient must be an agent too. Legs traded by the pool's frozen arb recapture executor pass on the root's word alone while the pool's lane is on.
+- **Fail closed.** The gate is admitted on the registry as an ADVISORY and bound before the swap, so a swap or an add it refuses reverts. By default (`CHECK_BENEFICIARY`, a flag frozen at bind) a buyer's recipient must be an agent too. Legs traded by the pool's frozen arbitrage recapture executor pass on the root's word alone while the pool's lane is on.
 - **Adds through Uniswap's PositionManager.** An add through the PositionManager is screened on the wallet the PositionManager names through `msgSender()`, never on the PositionManager itself. The gate pins the PositionManager by address and code at construction.
 - **Contract wallets.** A wallet with ordinary runtime code is an agent only through a link it made itself, proved with its own ERC-1271 signature over the gate's link digest (`linkWithProof`). A wallet without code, or an EIP-7702 delegated one, passes by its balance and links without a proof (`link`).
 - **The creator.** The launch's family owner is screened at bind: a launch a non-agent would own reverts with `InvalidPoolConfig(11)`, a revenue token's stream launch included.

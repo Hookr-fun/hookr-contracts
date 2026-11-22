@@ -48,7 +48,7 @@ abstract contract QuoteClassesForkFixture is PeripheryFixture {
     address internal constant UNI = 0xF177d86a28b520e3E396E4F3B96cd8e72D7dabd8;
     address internal constant PAXG = 0xc700C81925D1d1C10F996fA7c0Dee83a54C4Bb8D;
     address internal constant USD1 = 0xFa44874cFc252349153730421BaabB9c30Ab2330;
-    /// @dev An Ondo tokenized stock bridged from Ethereum, in no catalog: an any-quote mode quote only.
+    /// @dev An Ondo stock token bridged from Ethereum, in no catalog: an any-quote mode quote only.
     address internal constant HOODON = 0xfB5b5778d45AE47F15323fb59B666c655174A79C;
     /// @dev A Robinhood stock token the issuer has not minted yet (zero supply at the assets pin).
     address internal constant ARM = 0x666716999E75d2652398FF830Bbc2e485946E140;

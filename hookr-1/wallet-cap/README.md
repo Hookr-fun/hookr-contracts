@@ -15,7 +15,7 @@ Both were deployed in transaction `0x111de55d14abdbf4f16434f508cfe1e775f3835125c
 - Every pool here has a launch guard and a nonzero cap; a pool without them launches on the release's Rules. The guard ends at a block the creator sets, 1 to 100,000 blocks after the launch, counted in `block.number`, which on Robinhood Chain is Ethereum's block height, about 12 seconds a block.
 - A buy counts the tokens it delivers, after any Auto Burn, against its wallet: the payer that `HookrRouter`, `HookrForwarder` or the Universal Router names, or the transaction's signer for a swap that names none.
 - The count adds up across the pools of one launch, the token's pools opened in the same transaction. A later launch of the same token counts on its own, and selling frees no room.
-- The launch buy (`HookrLauncher`'s dev buy, which the launcher bounds itself) and the swaps of the pool's arb recapture executor do not count.
+- The launch buy (`HookrLauncher`'s dev buy, which the launcher bounds itself) and the swaps of the pool's arbitrage recapture executor do not count.
 - A buy that would take its wallet past the cap reverts with `GuardWalletLimit(wallet, total, cap)`. When the guard ends, so does the cap.
 - `extsload(bytes32)` returns any word of the Rules' storage, as Uniswap v4's `Extsload` does. A wallet's count is `State.bought[token][launch][wallet]`, a mapping at the `erc7201:hookr.rules` root plus 13, and a pool's launch is the top 32 bits of the first word of its `State.pools` entry. The cap less the count is what the wallet can still buy.
 

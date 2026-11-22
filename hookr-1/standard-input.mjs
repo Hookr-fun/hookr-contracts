@@ -2,7 +2,8 @@
 
 // Writes the solc standard JSON input of one deployed contract, rebuilt from the files in this
 // repository and the record in deployments/robinhood-4663.json. Compiling it with solc 0.8.37 gives the
-// contract's verified bytecode, metadata hash included.
+// contract's verified bytecode, metadata hash included. A contract built with another compiler names it on its entry
+// in the record (`compiler`); compile its input with that version.
 //
 //   node hookr-1/standard-input.mjs --list
 //   node hookr-1/standard-input.mjs <address> > input.json

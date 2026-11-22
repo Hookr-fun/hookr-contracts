@@ -29,12 +29,12 @@ The first `HookrRevenueTokenizer`, deployed on 2026-10-19 with four add-ons, min
 Two Uniswap v4 hooks on one registry, `HookrStackRegistryV2`, sharing one accounting kernel, one module, one coordinator, one router, one quoter and one treasury forwarder. Both addresses are mined so their low fourteen bits equal `0x28cc`. A pool names one root and freezes its configuration at creation.
 
 - **The default root**, `HookrModularHookV6`, runs five rules: a surge LP fee that rises with trade size against in-range depth, a guard window on new launches, an auto-burn on exact-input buys, an in-swap LP reward and an Nth-buy pot. Uniswap's routing service allowlists it on Robinhood Chain.
-- **The arb recapture root**, `HookrModularHookV6WthV5`, runs the same five rules and, on every swap of an ETH-quoted pool, asks What The Hook's executor through `HookrWthExecutorAdapterV1` to trade the pool's price gap against its other venues. Its profit splits 40% to the pool's creator, 20% to the trader, 20% to the pool's LPs, 10% to What The Hook and 10% to Hookr.
+- **The arbitrage recapture root**, `HookrModularHookV6WthV5`, runs the same five rules and, on every swap of an ETH-quoted pool, asks What The Hook's executor through `HookrWthExecutorAdapterV1` to trade the pool's price gap against its other venues. Its profit splits 40% to the pool's creator, 20% to the trader, 20% to the pool's LPs, 10% to What The Hook and 10% to Hookr.
 
 | Contract | Address | What it is |
 | --- | --- | --- |
 | `HookrModularHookV6` | [`0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC`](https://robinhoodchain.blockscout.com/address/0xb3cA29cF721380CEe8b8e4755F3865Ebc68Fe8cC) | Default root. Kernel id `0x1be0c118b1c6520d97de31ee9f0c33069f0e715ffcdcb16c87a343752bb5be14` |
-| `HookrModularHookV6WthV5` | [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC) | Arb recapture root. Kernel id `0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a` |
+| `HookrModularHookV6WthV5` | [`0xb914f955294799de4b891bd2EA8AF628Fa1c68CC`](https://robinhoodchain.blockscout.com/address/0xb914f955294799de4b891bd2EA8AF628Fa1c68CC) | Arbitrage recapture root. Kernel id `0xd8b6c165b82efc3b7498081f071ea4f2476e2fb9c61b2e614aba2a016f94555a` |
 | `HookrStackRegistryV2` | [`0x5b7f1A117A83aaac15B0698Aa4eB9D53fE5f5BA3`](https://robinhoodchain.blockscout.com/address/0x5b7f1A117A83aaac15B0698Aa4eB9D53fE5f5BA3) | Registry: sealed root profiles, one frozen stack per pool |
 | `HookrModuleCatalogV1` | [`0x6a3561d5B6305E2229F30EDF66702e8Bc4fA19D1`](https://robinhoodchain.blockscout.com/address/0x6a3561d5B6305E2229F30EDF66702e8Bc4fA19D1) | Catalog: admits module implementations |
 | `HookrMarketCoordinatorV5` | [`0x53A192A3fCeE94Da77916B461E0cCa2Dd6402442`](https://robinhoodchain.blockscout.com/address/0x53A192A3fCeE94Da77916B461E0cCa2Dd6402442) | Coordinator: opens markets on both roots |
@@ -55,12 +55,12 @@ The libraries linked into them, and the factory the roots were mined through:
 | `HookrMarketCoordinatorKernelReservationLibV1` | the coordinator | [`0x8C2E208eDFf0eF7535B20AE8F13dfBF71133521d`](https://robinhoodchain.blockscout.com/address/0x8C2E208eDFf0eF7535B20AE8F13dfBF71133521d) |
 | `HookrStatefulSettlementLibV1` | the kernel | [`0xde7Ae40c713D5C9EC2C8e2E28810C6C7Eb791706`](https://robinhoodchain.blockscout.com/address/0xde7Ae40c713D5C9EC2C8e2E28810C6C7Eb791706) |
 | `HookrModularCorrectionLibV2` | the default root | [`0xd2832D5F64C7116bE2c7B32D8c06d60023b479D8`](https://robinhoodchain.blockscout.com/address/0xd2832D5F64C7116bE2c7B32D8c06d60023b479D8) |
-| `HookrModularCorrectionLibV3` | the arb recapture root; its address holds no verified source | [`0x11996B4e04571718d49454fC52830dc7fA0FF99C`](https://robinhoodchain.blockscout.com/address/0x11996B4e04571718d49454fC52830dc7fA0FF99C) |
+| `HookrModularCorrectionLibV3` | the arbitrage recapture root; its address holds no verified source | [`0x11996B4e04571718d49454fC52830dc7fA0FF99C`](https://robinhoodchain.blockscout.com/address/0x11996B4e04571718d49454fC52830dc7fA0FF99C) |
 | `HookrReleaseCreate2FactoryV1` | the factory both roots were mined through | [`0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe`](https://robinhoodchain.blockscout.com/address/0xBc54e888C1A5B71744B035DfeC5611B4DC69ccDe) |
 
 The deployer, and the owner of the registry, catalog, coordinator and forwarder, is [`0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE`](https://robinhoodchain.blockscout.com/address/0xF4Ab4698554D5c95874986d5e956c62e5E6aB3eE).
 
-Three arb recapture roots came before `HookrModularHookV6WthV5` on the same registry. Each was superseded by the next, and their only pools are Hookr's own canary and rehearsal pools: [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) (first, verified on Blockscout as `HookrModularHookV6Wth`), [`0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc`](https://robinhoodchain.blockscout.com/address/0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc) (third) and [`0xE5429dB8f63912E632E86733905667AaEb6ea8cC`](https://robinhoodchain.blockscout.com/address/0xE5429dB8f63912E632E86733905667AaEb6ea8cC) (fourth).
+Three arbitrage recapture roots came before `HookrModularHookV6WthV5` on the same registry. Each was superseded by the next, and their only pools are Hookr's own canary and rehearsal pools: [`0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC`](https://robinhoodchain.blockscout.com/address/0xc7c516CD5546bCB2592Fe3f8aa91C2A4bA3768CC) (first, verified on Blockscout as `HookrModularHookV6Wth`), [`0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc`](https://robinhoodchain.blockscout.com/address/0xa99902a2922014bBe2Bf2dCF15742ac5104828Cc) (third) and [`0xE5429dB8f63912E632E86733905667AaEb6ea8cC`](https://robinhoodchain.blockscout.com/address/0xE5429dB8f63912E632E86733905667AaEb6ea8cC) (fourth).
 
 ### Sources
 
@@ -77,7 +77,7 @@ node check-source-manifest.mjs
 node check-storage-layout.mjs
 ```
 
-A build reproduces the runtime bytes, metadata trailer included, of the twelve contracts behind the default root, the arb recapture root and its adapter; each is a full match on Blockscout and an exact match on Sourcify. The three reused libraries and the CREATE2 factory were compiled with their source text in the metadata, so their trailers take `use_literal_content = true`. `HookrModularCorrectionLibV3` holds no verified source; its code matches the build up to its trailer. No independent audit of these contracts has been completed.
+A build reproduces the runtime bytes, metadata trailer included, of the twelve contracts behind the default root, the arbitrage recapture root and its adapter; each is a full match on Blockscout and an exact match on Sourcify. The three reused libraries and the CREATE2 factory were compiled with their source text in the metadata, so their trailers take `use_literal_content = true`. `HookrModularCorrectionLibV3` holds no verified source; its code matches the build up to its trailer. No independent audit of these contracts has been completed.
 
 The full documentation of these roots is at [`docs/` in commit `5ba9dfc`](https://github.com/Hookr-fun/hookr-contracts/tree/5ba9dfc9cc3d1b463315518f17dda8bb07f48d3b/docs).
 
@@ -93,4 +93,4 @@ The launchers that came before the modular roots. Pools opened on them keep runn
 
 Generation 5 also has a burner at [`0x8Cee20FA000aF3266AC2cD2cBeEFbcD19D98FD89`](https://robinhoodchain.blockscout.com/address/0x8Cee20FA000aF3266AC2cD2cBeEFbcD19D98FD89) that turns collected pool fees into HOOKR and burns it. All three use the Uniswap v4 PoolManager at [`0x8366a39CC670B4001A1121B8F6A443A643e40951`](https://robinhoodchain.blockscout.com/address/0x8366a39CC670B4001A1121B8F6A443A643e40951) and HOOKR at [`0x18E674231A58c239Dc7DaeDcffE15Ec3A24cff5c`](https://robinhoodchain.blockscout.com/address/0x18E674231A58c239Dc7DaeDcffE15Ec3A24cff5c).
 
-Generation 3's workspace, with its sources, tests, scripts and broadcast records, is kept whole under [`legacy/generation-3/`](./legacy/generation-3/README.md). The sources of generations 4 and 5 are not in this repository; they are verified on the explorer at the addresses above.
+Generation 3's workspace, with its sources, tests, scripts and broadcast records, is kept under [`legacy/generation-3/`](./legacy/generation-3/README.md). The sources of generations 4 and 5 are not in this repository; they are verified on the explorer at the addresses above.
