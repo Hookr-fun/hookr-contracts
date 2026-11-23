@@ -78,6 +78,7 @@ contract TollLaunchCheckModuleForkTest is Test {
     bytes32 internal constant POOL_ID = keccak256("pool");
     address internal constant KERNEL = address(0xB3CA);
     address internal constant QUOTE = address(0);
+    uint32 internal constant ACTIVE_FOR_BLOCKS = 7_200;
 
     TollLaunchCheckModule internal module;
     KernelCallHarness internal harness;
@@ -95,7 +96,7 @@ contract TollLaunchCheckModuleForkTest is Test {
 
     function _config(address subject, uint16 maxFirstBlockBps, uint16 maxFundingLinkedBps, bool blockUnread)
         internal
-        pure
+        view
         returns (bytes memory)
     {
         return abi.encode(
@@ -106,7 +107,9 @@ contract TollLaunchCheckModuleForkTest is Test {
                 quote: QUOTE,
                 maxFirstBlockBps: maxFirstBlockBps,
                 maxFundingLinkedBps: maxFundingLinkedBps,
-                blockUnread: blockUnread
+                blockUnread: blockUnread,
+                startBlock: uint64(block.number),
+                activeForBlocks: ACTIVE_FOR_BLOCKS
             })
         );
     }
@@ -249,6 +252,15 @@ contract TollLaunchCheckModuleForkTest is Test {
         assertTrue(ok);
         emit log_named_uint("buy, unseen token, one read (gas)", gasUsed);
         assertLt(gasUsed, PROPOSED_CALLBACK_GAS);
+    }
+
+    function test_fork_gas_buyAfterTheWindowNoRead() public onlyRobinhoodFork {
+        bytes memory config = _config(OVER_LIMIT, 2500, 2000, true);
+        vm.roll(block.number + ACTIVE_FOR_BLOCKS);
+        (bool ok,, uint256 gasUsed) =
+            harness.callBeforeSwap(address(module), PROPOSED_CALLBACK_GAS, _swap(OVER_LIMIT, true), config);
+        assertTrue(ok);
+        emit log_named_uint("buy after the window, no read (gas)", gasUsed);
     }
 
     function test_fork_gas_sellNoRead() public onlyRobinhoodFork {

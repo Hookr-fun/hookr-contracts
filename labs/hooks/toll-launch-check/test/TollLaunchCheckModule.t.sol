@@ -78,10 +78,15 @@ contract TollLaunchCheckModuleTest is Test {
     address internal constant DETECTOR = address(0xD7EC);
     address internal constant OTHER_DETECTOR = address(0xBAD);
 
+    /// @dev The window every config here uses unless a test says otherwise: blocks 1,000 to 1,099.
+    uint64 internal constant START = 1_000;
+    uint32 internal constant ACTIVE = 100;
+
     bytes32 internal FIRST_BLOCK_SHARE;
     bytes32 internal FUNDING_LINKED_SHARE;
 
     function setUp() public {
+        vm.roll(START);
         registry = new MockLaunchObservations();
         module = new TollLaunchCheckModule(registry, DETECTOR);
         harness = new KernelCallHarness();
@@ -101,7 +106,9 @@ contract TollLaunchCheckModuleTest is Test {
             quote: QUOTE,
             maxFirstBlockBps: maxFirstBlockBps,
             maxFundingLinkedBps: maxFundingLinkedBps,
-            blockUnread: blockUnread
+            blockUnread: blockUnread,
+            startBlock: START,
+            activeForBlocks: ACTIVE
         });
     }
 
@@ -143,7 +150,7 @@ contract TollLaunchCheckModuleTest is Test {
 
     function test_identity() public view {
         assertEq(module.moduleKey(), keccak256("LABS_TOLL_LAUNCH_CHECK"));
-        assertEq(module.moduleVersion(), 1);
+        assertEq(module.moduleVersion(), 2);
         assertEq(module.configSchemaHash(), module.CONFIG_SCHEMA_HASH());
         assertEq(address(module.registry()), address(registry));
         assertEq(module.detector(), DETECTOR);
@@ -237,6 +244,34 @@ contract TollLaunchCheckModuleTest is Test {
         module.validateConfig(abi.encode(c));
     }
 
+    function test_validateConfigRejectsAZeroWindowOrAZeroStart() public {
+        TollLaunchCheckModule.Config memory c = _cfg(2500, 2000, false);
+        c.activeForBlocks = 0;
+        vm.expectRevert(TollLaunchCheckModule.InvalidConfig.selector);
+        module.validateConfig(abi.encode(c));
+        c = _cfg(2500, 2000, false);
+        c.startBlock = 0;
+        vm.expectRevert(TollLaunchCheckModule.InvalidConfig.selector);
+        module.validateConfig(abi.encode(c));
+    }
+
+    /// @dev At stack creation the window may not start in a later block and must still be open, so
+    ///      the check ends at most `activeForBlocks` blocks after the stack is created.
+    function test_validateStackRejectsAWindowThatStartsLaterOrIsOver() public {
+        TollLaunchCheckModule.Config memory c = _cfg(2500, 2000, false);
+        c.startBlock = START + 1;
+        vm.expectRevert(TollLaunchCheckModule.InvalidConfig.selector);
+        module.validateStack(POOL_ID, KERNEL, SUBJECT, QUOTE, abi.encode(c));
+
+        c = _cfg(2500, 2000, false);
+        c.startBlock = START - ACTIVE;
+        vm.expectRevert(TollLaunchCheckModule.InvalidConfig.selector);
+        module.validateStack(POOL_ID, KERNEL, SUBJECT, QUOTE, abi.encode(c));
+
+        c.startBlock = START - ACTIVE + 1;
+        module.validateStack(POOL_ID, KERNEL, SUBJECT, QUOTE, abi.encode(c));
+    }
+
     function test_validateStackRejectsAConfigForAnotherStack() public {
         bytes memory config = _config(2500, 2000, false);
         vm.expectRevert(TollLaunchCheckModule.ConfigNotForThisStack.selector);
@@ -324,6 +359,60 @@ contract TollLaunchCheckModuleTest is Test {
             new TollLaunchCheckModule(ILaunchObservationsReader(address(new RevertingRegistry())), DETECTOR);
         vm.expectRevert();
         m.beforeSwap(_swap(true, true), _config(2500, 2000, false));
+    }
+
+    // --- the window ---------------------------------------------------------------------------------
+
+    function test_buyIsRefusedInTheWindowAndPassesFromItsEnd() public {
+        _observe(3356, 9000);
+        bytes memory config = _config(2500, 2000, true);
+        vm.roll(START + ACTIVE - 1);
+        vm.expectRevert(_refusal(module.FIRST_BLOCK(), 3356));
+        module.beforeSwap(_swap(true, true), config);
+
+        vm.roll(START + ACTIVE);
+        _assertZero(module.beforeSwap(_swap(true, true), config));
+        _assertZero(module.beforeSwap(_swap(true, false), config));
+        (bool allowed, bytes32 reason, uint256 value) = module.check(SUBJECT, _cfg(2500, 2000, true));
+        assertTrue(allowed);
+        assertEq(reason, module.EXPIRED());
+        assertEq(value, 0);
+
+        vm.roll(START + ACTIVE + 10_000_000);
+        _assertZero(module.beforeSwap(_swap(true, true), config));
+    }
+
+    function test_unreadTokenPassesAfterTheWindowEvenWithBlockUnread() public {
+        bytes memory config = _config(2500, 2000, true);
+        vm.expectRevert(_refusal(module.NOT_OBSERVED(), 0));
+        module.beforeSwap(_swap(true, true), config);
+        vm.roll(START + ACTIVE);
+        _assertZero(module.beforeSwap(_swap(true, true), config));
+    }
+
+    /// @dev After the window the registry is not read: a reverting registry no longer refuses buys.
+    function test_afterTheWindowTheRegistryIsNotRead() public {
+        TollLaunchCheckModule m =
+            new TollLaunchCheckModule(ILaunchObservationsReader(address(new RevertingRegistry())), DETECTOR);
+        vm.roll(START + ACTIVE);
+        _assertZero(m.beforeSwap(_swap(true, true), _config(2500, 2000, true)));
+    }
+
+    /// @dev Over any block: before the window's end the limits decide, from it on every buy passes.
+    function testFuzz_theWindowDecides(uint256 blockNumber, uint32 active) public {
+        active = uint32(bound(active, 1, type(uint32).max));
+        blockNumber = bound(blockNumber, START, uint256(START) + active + 1_000);
+        _observe(3356, 0);
+        TollLaunchCheckModule.Config memory c = _cfg(2500, 0, false);
+        c.activeForBlocks = active;
+        vm.roll(blockNumber);
+        if (blockNumber < uint256(START) + active) {
+            vm.expectRevert(_refusal(module.FIRST_BLOCK(), 3356));
+            module.beforeSwap(_swap(true, true), abi.encode(c));
+        } else {
+            _assertZero(module.beforeSwap(_swap(true, true), abi.encode(c)));
+        }
+        _assertZero(module.beforeSwap(_swap(false, true), abi.encode(c)));
     }
 
     // --- sells -------------------------------------------------------------------------------------
