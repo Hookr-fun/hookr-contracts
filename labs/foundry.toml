@@ -18,6 +18,9 @@ optimizer_runs = 200
 via_ir = true
 evm_version = "cancun"
 auto_detect_remappings = false
+# hooks/toll-launch-check/advisory/ is a Foundry project of its own: an advisory for HookrRoot builds against hookr-1/
+# with solc 0.8.37, so it is built from its own root, not from this one.
+skip = ["hooks/toll-launch-check/advisory/**"]
 remappings = [
     "@uniswap/v4-core/=../lib/v4-core/",
     "forge-std/=../lib/forge-std/src/",

@@ -1,0 +1,44 @@
+# The advisory port of the launch check is its own Foundry project, because an advisory for HookrRoot builds against
+# hookr-1/ with solc 0.8.37 (CONTRIBUTING.md) and labs/ builds with 0.8.26. It compiles nothing under hookr-1/ into a
+# file of its own: it imports hookr-1/'s sources and conformance kit read-only through the `hookr-1/` remapping and
+# the root submodules. Compiler settings are hookr-1's. No RPC endpoint table and no secrets: a fork test takes its
+# RPC from `--fork-url` on the command line.
+#
+#   forge test --root labs/hooks/toll-launch-check/advisory
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+cache_path = "cache"
+libs = ["../../../../lib"]
+allow_paths = ["../../../../lib", "../../../../hookr-1"]
+remappings = [
+    "@uniswap/v4-core/=../../../../lib/v4-core/",
+    "forge-std/=../../../../lib/forge-std/src/",
+    "@openzeppelin/contracts/=../../../../lib/v4-core/lib/openzeppelin-contracts/contracts/",
+    "solmate/=../../../../lib/v4-core/lib/solmate/",
+    "hookr-1/=../../../../hookr-1/",
+]
+auto_detect_remappings = false
+auto_detect_solc = true
+compilation_restrictions = [
+    { paths = "src/**", version = "=0.8.37" },
+    { paths = "test/PoolManagerArtifact.sol", version = "=0.8.26" },
+]
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+evm_version = "prague"
+bytecode_hash = "ipfs"
+# The conformance kit reads the advisory's build artifact from out/.
+fs_permissions = [{ access = "read", path = "./out" }]
+
+[profile.default.fuzz]
+runs = 64
+
+[fmt]
+line_length = 120
+
+[lint]
+lint_on_build = false
